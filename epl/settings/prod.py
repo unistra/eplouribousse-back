@@ -1,4 +1,6 @@
 from .base import *
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 
 ##########################
@@ -43,3 +45,12 @@ SECRET_KEY = '{{ secret_key }}'
 
 DIPSTRAP_VERSION = '{{ dipstrap_version }}'
 DIPSTRAP_STATIC_URL += '%s/' % DIPSTRAP_VERSION
+
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    environment="prod",
+    integrations=[DjangoIntegration()],
+)

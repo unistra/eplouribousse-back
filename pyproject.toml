@@ -11,7 +11,8 @@ dependencies = [
     "django (>=4.2,<5.0)",
     "django-extensions (>=3.2.3,<4.0.0)",
     "ipython (>=9.0.2,<10.0.0)",
-    "psycopg2-binary (>=2.9.10,<3.0.0)"
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "sentry-sdk (>=2.25.0,<3.0.0)"
 ]
 
 
