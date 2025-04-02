@@ -237,10 +237,16 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'epl',
+    'epl.apps.user',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
+#######################
+# User authentication #
+#######################
+
+AUTH_USER_MODEL = "user.User"
 
 #########################
 # Session configuration #
