@@ -1,0 +1,39 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+exclude: "^`.tox*|fabfile.*"
+fail_fast: true
+repos:
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.23.1
+    hooks:
+      - id: django-upgrade
+        args: [--target-version, "4.2" ]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.2
+    hooks:
+    - id: ruff
+      types_or: [ python, pyi ]
+      args: [ --fix ]
+    - id: ruff-format
+      types_or: [ python, pyi ]
+    
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 'v5.0.0'
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        types: [python]
+      - id: check-json
+
+  - repo: https://git.unistra.fr/community/poem
+    rev: 1.0.0
+    hooks:
+      - id: poetry-check
+      - id: poetry-lock
+        args: [--only=develop]
+      - id: export-common-requirements
+      - id: export-dev-requirements
+      - id: export-test-requirements
+      - id: export-preprod-requirements
+      - id: export-prod-requirements
