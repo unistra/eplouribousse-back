@@ -22,6 +22,11 @@ django-extensions==3.2.3 ; python_version == "3.13" \
 django==4.2.20 ; python_version == "3.13" \
     --hash=sha256:213381b6e4405f5c8703fffc29cd719efdf189dec60c67c04f76272b3dc845b9 \
     --hash=sha256:92bac5b4432a64532abb73b2ac27203f485e40225d2640a7fbef2b62b876e789
+djangorestframework-camel-case==1.4.2 ; python_version == "3.13" \
+    --hash=sha256:cdae75846648abb6585c7470639a1d2fb064dc45f8e8b62aaa50be7f1a7a61f4
+djangorestframework==3.16.0 ; python_version == "3.13" \
+    --hash=sha256:bea7e9f6b96a8584c5224bfb2e4348dfb3f8b5e34edbecb98da258e892089361 \
+    --hash=sha256:f022ff46613584de994c0c6a4aebbace5fd700555fbe9d33b865ebf173eba6c9
 executing==2.2.0 ; python_version == "3.13" \
     --hash=sha256:11387150cad388d62750327a53d3339fad4888b39a6fe233c3afbb54ecffd3aa \
     --hash=sha256:5d108c028108fe2551d1a7b2e8b713341e2cb4fc0aa7dcf966fa4327a5226755
@@ -40,7 +45,7 @@ matplotlib-inline==0.1.7 ; python_version == "3.13" \
 parso==0.8.4 ; python_version == "3.13" \
     --hash=sha256:a418670a20291dacd2dddc80c377c5c3791378ee1e8d12bffc35420643d43f18 \
     --hash=sha256:eb3a7b58240fb99099a345571deecc0f9540ea5f4dd2fe14c2a99d6b281ab92d
-pexpect==4.9.0 ; python_version == "3.13" and sys_platform != "win32" and sys_platform != "emscripten" \
+pexpect==4.9.0 ; sys_platform != "win32" and sys_platform != "emscripten" and python_version == "3.13" \
     --hash=sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523 \
     --hash=sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f
 prompt-toolkit==3.0.50 ; python_version == "3.13" \
@@ -59,7 +64,6 @@ psycopg2-binary==2.9.10 ; python_version == "3.13" \
     --hash=sha256:245159e7ab20a71d989da00f280ca57da7641fa2cdcf71749c193cea540a74f7 \
     --hash=sha256:26540d4a9a4e2b096f1ff9cce51253d0504dca5a85872c7f7be23be5a53eb18d \
     --hash=sha256:270934a475a0e4b6925b5f804e3809dd5f90f8613621d062848dd82f9cd62007 \
-    --hash=sha256:27422aa5f11fbcd9b18da48373eb67081243662f9b46e6fd07c3eb46e4535142 \
     --hash=sha256:2ad26b467a405c798aaa1458ba09d7e2b6e5f96b1ce0ac15d82fd9f95dc38a92 \
     --hash=sha256:2b3d2491d4d78b6b14f76881905c7a8a8abcf974aad4a8a0b065273a0ed7a2cb \
     --hash=sha256:2ce3e21dc3437b1d960521eca599d57408a695a0d3c26797ea0f72e834c7ffe5 \
@@ -115,7 +119,7 @@ psycopg2-binary==2.9.10 ; python_version == "3.13" \
     --hash=sha256:f758ed67cab30b9a8d2833609513ce4d3bd027641673d4ebc9c067e4d208eec1 \
     --hash=sha256:f8157bed2f51db683f31306aa497311b560f2265998122abe1dce6428bd86567 \
     --hash=sha256:ffe8ed017e4ed70f68b7b371d84b7d4a790368db9203dfc2d222febd3a9c8863
-ptyprocess==0.7.0 ; python_version == "3.13" and sys_platform != "win32" and sys_platform != "emscripten" \
+ptyprocess==0.7.0 ; sys_platform != "win32" and sys_platform != "emscripten" and python_version == "3.13" \
     --hash=sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35 \
     --hash=sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220
 pure-eval==0.2.3 ; python_version == "3.13" \
@@ -139,7 +143,7 @@ stack-data==0.6.3 ; python_version == "3.13" \
 traitlets==5.14.3 ; python_version == "3.13" \
     --hash=sha256:9ed0579d3502c94b4b3732ac120375cda96f923114522847de4b3bb98b96b6b7 \
     --hash=sha256:b74e89e397b1ed28cc831db7aea759ba6640cb3de13090ca145426688ff1ac4f
-tzdata==2025.2 ; python_version == "3.13" and sys_platform == "win32" \
+tzdata==2025.2 ; sys_platform == "win32" and python_version == "3.13" \
     --hash=sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8 \
     --hash=sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9
 urllib3==2.3.0 ; python_version == "3.13" \
