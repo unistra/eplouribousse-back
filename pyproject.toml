@@ -3,7 +3,10 @@ name = "epl"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "mfreyder",email = "mfreyder@unistra.fr"}
+    {name = "dnum-dip-unistra",email = "dnum-dip@unistra.fr"}
+]
+maintainers = [
+    {name = "dnum-dip-unistra",email = "dnum-dip@unistra.fr"}
 ]
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
