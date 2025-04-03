@@ -1,5 +1,6 @@
 from pathlib import Path
 
+SENTRY_DSN = "https://1ec47dc3f4a500ba87705bb8830b5549@sentry.app.unistra.fr/66"
 
 ######################
 # Path configuration #
@@ -233,14 +234,21 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'django_extensions',
+    'rest_framework',
 ]
 
 LOCAL_APPS = [
     'epl',
+    'epl.apps.user',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
+#######################
+# User authentication #
+#######################
+
+AUTH_USER_MODEL = "user.User"
 
 #########################
 # Session configuration #
@@ -314,4 +322,23 @@ LOGGING = {
             'propagate': True
         }
     }
+}
+
+##################
+# REST Framework #
+##################
+
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
+        "djangorestframework_camel_case.render.CamelCaseBrowsableAPIRenderer",
+    ],
+    "JSON_UNDERSCOREIZE": {
+        "no_underscore_before_number": True,
+    },
+    "DEFAULT_PARSER_CLASSES": [
+        "djangorestframework_camel_case.parser.CamelCaseFormParser",
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
+    ],
 }

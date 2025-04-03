@@ -3,21 +3,22 @@ name = "epl"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "mfreyder",email = "mfreyder@unistra.fr"}
+    {name = "dnum-dip-unistra",email = "dnum-dip@unistra.fr"}
+]
+maintainers = [
+    {name = "dnum-dip-unistra",email = "dnum-dip@unistra.fr"}
 ]
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "django (>=4.2,<5.0)",
     "django-extensions (>=3.2.3,<4.0.0)",
+    "djangorestframework (>=3.16.0,<4.0.0)",
+    "djangorestframework-camel-case (>=1.4.2,<2.0.0)",
     "ipython (>=9.0.2,<10.0.0)",
-    "psycopg2-binary (>=2.9.10,<3.0.0)"
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "sentry-sdk (>=2.25.0,<3.0.0)"
 ]
-
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 package-mode = false
@@ -61,6 +62,6 @@ exclude = [
 
 [tool.ruff.lint]
 extend-select = [
-    "UP", "W", "I", "S",
+    "UP", "W", "I", "S", "DJ", "PTH", "C4", "INT"
 ]
 ignore = ["UP031"] # pour ignorer les f-string de traduction
