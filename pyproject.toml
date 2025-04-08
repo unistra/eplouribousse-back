@@ -9,7 +9,7 @@ maintainers = [
     {name = "dnum-dip-unistra",email = "dnum-dip@unistra.fr"}
 ]
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "django (>=4.2,<5.0)",
     "django-extensions (>=3.2.3,<4.0.0)",
@@ -51,7 +51,7 @@ waitress = "3.0.2"
 
 [tool.ruff]
 line-length = 120
-target-version = "py313"
+target-version = "py312"
 exclude = [
     ".venv",
     "*/migrations/*",

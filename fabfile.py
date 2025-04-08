@@ -17,7 +17,7 @@ env.application_name = "epl"  # name of webapp
 env.root_package_name = "epl"  # name of app in webapp
 
 env.remote_home = "/home/django"  # remote home root
-env.remote_python_version = "3.11"  # python version
+env.remote_python_version = "3.12"  # python version
 env.remote_virtualenv_root = join(env.remote_home, ".virtualenvs")  # venv root
 env.remote_virtualenv_dir = join(
     env.remote_virtualenv_root, env.application_name
