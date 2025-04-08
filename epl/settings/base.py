@@ -198,8 +198,24 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_cas.middleware.CASMiddleware',
 ]
 
+######################
+# CAS authentication #
+######################
+
+def username_format(username):
+    return username.strip().lower()
+
+CAS_SERVER_URL = 'https://cas.unistra.fr/cas/'
+CAS_LOGOUT_COMPLETELY = True
+CAS_USERNAME_FORMAT = username_format
+
+AUTHENTICATION_BACKENDS = [
+    'django_cas.backends.CASBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 #####################
 # Url configuration #
@@ -235,6 +251,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     'django_extensions',
     'rest_framework',
+    'django_cas',
 ]
 
 LOCAL_APPS = [

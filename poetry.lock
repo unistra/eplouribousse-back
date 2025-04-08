@@ -386,6 +386,20 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-cas-sso"
+version = "1.2.8"
+description = "Django Cas SSO Client (inherited from django-cas)"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "django-cas-sso-1.2.8.tar.gz", hash = "sha256:237af44b7493e9c5199b6a0ef946ea93606afc94db265b0caeb7ecc7d6d37c80"},
+]
+
+[package.dependencies]
+six = "*"
+
+[[package]]
 name = "django-debug-toolbar"
 version = "5.1.0"
 description = "A configurable set of panels that display various debug information about the current request/response."
@@ -1218,7 +1232,7 @@ version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
-groups = ["preprod", "prod", "test"]
+groups = ["main", "preprod", "prod", "test"]
 files = [
     {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
     {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
@@ -1545,4 +1559,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "72b9fd210553abdd8b4cc57c72dd3c08f98d80e83562650655db4d9c9a5a049b"
+content-hash = "8ccf59a53bd77f2dd7cb2ba81acdb36c4b127915569f2e5ba98e8cbd77c3e300"

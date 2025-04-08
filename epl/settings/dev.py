@@ -41,6 +41,13 @@ DATABASES = {
 
 ALLOWED_HOSTS = ['*']
 
+######################
+# CAS authentication #
+######################
+
+CAS_SERVER_URL = 'https://cas-dev.unistra.fr/cas/'
+
+
 
 #####################
 # Log configuration #

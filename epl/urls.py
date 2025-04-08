@@ -11,6 +11,8 @@ urlpatterns = [
     path("", home, name="home"),
     # path('app/', include('apps.app.urls')),
     path("admin/", admin.site.urls),
+    # django-cas
+    path("cas/", include("django_cas.urls", namespace="django_cas")),
 ]
 
 # debug toolbar for dev
