@@ -21,6 +21,8 @@ django-cas-sso==1.2.8 ; python_version == "3.12" \
 django-extensions==3.2.3 ; python_version == "3.12" \
     --hash=sha256:44d27919d04e23b3f40231c4ab7af4e61ce832ef46d610cc650d53e68328410a \
     --hash=sha256:9600b7562f79a92cbf1fde6403c04fee314608fefbb595502e34383ae8203401
+django-tenants==3.7.0 ; python_version == "3.12" \
+    --hash=sha256:3836a2bae2c88504889a3226525930dfac8d3621f577cefdfde03db8115e88ac
 django==4.2.20 ; python_version == "3.12" \
     --hash=sha256:213381b6e4405f5c8703fffc29cd719efdf189dec60c67c04f76272b3dc845b9 \
     --hash=sha256:92bac5b4432a64532abb73b2ac27203f485e40225d2640a7fbef2b62b876e789
