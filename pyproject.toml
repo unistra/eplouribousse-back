@@ -3,10 +3,10 @@ name = "epl"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "dnum-dip-unistra",email = "dnum-dip@unistra.fr"}
+    { name = "DIP, Direction du numérique, Unistra", email = "dnum-dip@unistra.fr" }
 ]
 maintainers = [
-    {name = "dnum-dip-unistra",email = "dnum-dip@unistra.fr"}
+    { name = "DIP, Direction du numérique, Unistra", email = "dnum-dip@unistra.fr" }
 ]
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
@@ -61,6 +61,8 @@ exclude = [
     "*/migrations/*",
     "epl/settings/*",
     "fabfile",
+    "fabfile.py",
+    "setup.py",
 ]
 
 
