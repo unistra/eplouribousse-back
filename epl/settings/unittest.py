@@ -15,13 +15,13 @@ DEBUG = True
 ##########################
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': environ.get('DEFAULT_DB_TEST_NAME', 'epl'),
-        'USER': environ.get('DEFAULT_DB_TEST_USER', 'epl'),
-        'PASSWORD': environ.get('DEFAULT_DB_TEST_PASSWORD', 'epl'),
-        'HOST': environ.get('DEFAULT_DB_TEST_HOST', 'postgres'),
-        'PORT': environ.get('DEFAULT_DB_TEST_PORT', ''),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": environ.get("DEFAULT_DB_TEST_NAME", "epl"),
+        "USER": environ.get("DEFAULT_DB_TEST_USER", "epl"),
+        "PASSWORD": environ.get("DEFAULT_DB_TEST_PASSWORD", "epl"),
+        "HOST": environ.get("DEFAULT_DB_TEST_HOST", "postgres"),
+        "PORT": environ.get("DEFAULT_DB_TEST_PORT", ""),
     }
 }
 
@@ -29,19 +29,19 @@ DATABASES = {
 # Allowed hosts & Security #
 ############################
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 #####################
 # Log configuration #
 #####################
 
-LOGGING['handlers']['file']['filename'] = environ.get(
-    'LOG_DIR',
-    Path('/tmp').resolve(strict=True) / f'test_{SITE_NAME}.log',
+LOGGING["handlers"]["file"]["filename"] = environ.get(
+    "LOG_DIR",
+    Path("/tmp").resolve(strict=True) / f"test_{SITE_NAME}.log",
 )
-LOGGING['handlers']['file']['level'] = 'DEBUG'
+LOGGING["handlers"]["file"]["level"] = "DEBUG"
 
-for logger in LOGGING['loggers']:
-    LOGGING['loggers'][logger]['level'] = 'DEBUG'
+for logger in LOGGING["loggers"]:
+    LOGGING["loggers"][logger]["level"] = "DEBUG"
 
-TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+TEST_RUNNER = "django.test.runner.DiscoverRunner"
