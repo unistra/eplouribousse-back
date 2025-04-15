@@ -8,7 +8,7 @@ from epl.models import UUIDPrimaryKeyField
 class Consortium(TenantMixin):
     id = UUIDPrimaryKeyField()
     name = models.CharField(_("Tenant name"), max_length=100)
-    settings = models.JSONField(_("Tenant settings"), default=dict)
+    tenant_settings = models.JSONField(_("Tenant settings"), default=dict)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
 
     auto_create_schema = True
