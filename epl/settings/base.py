@@ -215,6 +215,38 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
 )
 
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+    {
+        "NAME": "epl.apps.user.validators.ZxcvbnPasswordValidator",
+        "OPTIONS": {"min_score": 3},
+    },
+]
+
+
+def load_key(keyfile):
+    try:
+        keyfile = SITE_ROOT / "keys" / keyfile
+        with open(keyfile, "rb") as f:
+            return f.read()
+    except FileNotFoundError:
+        return b""
+
+
+SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "UPDATE_LAST_LOGIN": True,
+    "USER_ID_CLAIM": "user_id",
+    "SIGNING_KEY": load_key("jwtRS256.key"),
+    "VERIFYING_KEY": load_key("jwtRS256.key.pub"),
+}
+
+
 ######################
 # CAS authentication #
 ######################
@@ -266,8 +298,8 @@ SHARED_APPS = [
     "django_extensions",
     "rest_framework",
     "django_cas",
-    'rest_framework_simplejwt',
-    'corsheaders'
+    "rest_framework_simplejwt",
+    "corsheaders",
     # Shared local apps
 ]
 
@@ -368,22 +400,6 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
-}
-
-def load_key(keyfile):
-    try:
-        keyfile = SITE_ROOT / "keys" / keyfile
-        with open(keyfile, "rb") as f:
-            return f.read()
-    except FileNotFoundError:
-        return b""
-
-SIMPLE_JWT = {
-    "ALGORITHM": "RS256",
-    "UPDATE_LAST_LOGIN": True,
-    "USER_ID_CLAIM": "user_id",
-    "SIGNING_KEY":  load_key("jwtRS256.key"),
-    "VERIFYING_KEY": load_key("jwtRS256.key.pub"),
 }
 
 ########
