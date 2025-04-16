@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-14 13:59+0200\n"
+"POT-Creation-Date: 2025-04-16 10:11+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,18 +23,26 @@ msgid "Tenant name"
 msgstr "Nom du tenant"
 
 #: epl/apps/tenant/models.py:11
+msgid "Tenant settings"
+msgstr "Configuration du tenant"
+
+#: epl/apps/tenant/models.py:12
 msgid "Created at"
 msgstr "Créé le"
 
-#: epl/apps/tenant/models.py:18
+#: epl/apps/tenant/models.py:19
 msgid "Frontend domain"
 msgstr "Domain du frontend"
 
-#: epl/apps/user/models.py:12
+#: epl/apps/user/models.py:10
+msgid "Email address"
+msgstr "Adresse email"
+
+#: epl/apps/user/models.py:13
 msgid "User"
 msgstr "Utilisateur"
 
-#: epl/apps/user/models.py:13
+#: epl/apps/user/models.py:14
 msgid "Users"
 msgstr "Utilisateurs"
 
