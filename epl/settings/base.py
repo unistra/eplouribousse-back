@@ -193,6 +193,7 @@ MIDDLEWARE = [
     "django_tenants.middleware.main.TenantMainMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -201,9 +202,7 @@ MIDDLEWARE = [
 ]
 
 # Tenant configuration
-DATABASE_ROUTERS = (
-    "django_tenants.routers.TenantSyncRouter",
-)
+DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 
 TENANT_MODEL = "tenant.Consortium"
 TENANT_DOMAIN_MODEL = "tenant.Domain"
@@ -254,7 +253,6 @@ SHARED_APPS = [
     "django_tenants",
     "epl.apps.tenant",
     "epl.apps.user",
-
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -268,14 +266,16 @@ SHARED_APPS = [
     "django_extensions",
     "rest_framework",
     "django_cas",
+    'rest_framework_simplejwt',
+    'corsheaders'
     # Shared local apps
 ]
 
 TENANT_APPS = [
-    'django.contrib.contenttypes',
-    'django.contrib.admin',
-    'django.contrib.sessions',
-    'django.contrib.messages',
+    "django.contrib.contenttypes",
+    "django.contrib.admin",
+    "django.contrib.sessions",
+    "django.contrib.messages",
     "epl.apps.user",
 ]
 
@@ -367,4 +367,36 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.parser.CamelCaseJSONParser",
         "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
     ],
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
 }
+
+def load_key(keyfile):
+    try:
+        keyfile = SITE_ROOT / "keys" / keyfile
+        with open(keyfile, "rb") as f:
+            return f.read()
+    except FileNotFoundError:
+        return b""
+
+SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "UPDATE_LAST_LOGIN": True,
+    "USER_ID_CLAIM": "user_id",
+    "SIGNING_KEY":  load_key("jwtRS256.key"),
+    "VERIFYING_KEY": load_key("jwtRS256.key.pub"),
+}
+
+########
+# CORS #
+########
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_HEADERS = (
+    "x-requested-with",
+    "content-type",
+    "accept",
+    "origin",
+    "authorization",
+    "x-csrftoken",
+    "range",
+)

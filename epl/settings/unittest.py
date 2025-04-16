@@ -16,11 +16,11 @@ DEBUG = True
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django_tenants.postgresql_backend",
         "NAME": environ.get("DEFAULT_DB_TEST_NAME", "epl"),
         "USER": environ.get("DEFAULT_DB_TEST_USER", "epl"),
         "PASSWORD": environ.get("DEFAULT_DB_TEST_PASSWORD", "epl"),
-        "HOST": environ.get("DEFAULT_DB_TEST_HOST", "postgres"),
+        "HOST": environ.get("DEFAULT_DB_TEST_HOST", "localhost"),
         "PORT": environ.get("DEFAULT_DB_TEST_PORT", ""),
     }
 }

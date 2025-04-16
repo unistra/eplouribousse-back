@@ -1,4 +1,11 @@
 [run]
 source = epl/
 omit = epl/settings/*
+       fabfile/*
+       epl/apps/*/migrations/*
+       epl/apps/*/tests/*
+       epl/tests/*
        epl/wsgi.py
+       setup.py
+       run_tests.py
+       manage.py
