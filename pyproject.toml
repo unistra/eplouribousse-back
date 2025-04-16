@@ -62,7 +62,6 @@ exclude = [
     "*/migrations/*",
     "epl/settings/*",
     "fabfile",
-    "fabfile.py",
     "setup.py",
 ]
 
