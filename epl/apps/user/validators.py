@@ -24,8 +24,8 @@ class ZxcvbnPasswordValidator:
 
         results = zxcvbn(password, user_inputs=user_inputs)
         if results.get("score", 0) < self.min_score:
-            msg = _("The password is too weak.")
+            msg = _("The password is too weak")
             raise ValidationError(
-                [msg, results.get("feedback", {}).get("warning", [])],
+                {msg, results.get("feedback", {}).get("warning", [])},
                 code=self.code,
             )
