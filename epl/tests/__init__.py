@@ -21,7 +21,7 @@ class TenantClient(OriginalTenantClient):
         headers=None,
         **extra,
     ):
-        if user := extra.pop("user"):
+        if user := extra.pop("user", None):
             self.force_authenticate(user)
         if self._token:
             super().get(
@@ -46,7 +46,7 @@ class TenantClient(OriginalTenantClient):
         headers=None,
         **extra,
     ):
-        if user := extra.pop("user"):
+        if user := extra.pop("user", None):
             self.force_authenticate(user)
         if self._token:
             return super().patch(
