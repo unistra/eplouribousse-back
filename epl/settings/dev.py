@@ -1,3 +1,4 @@
+from datetime import timedelta
 from os import environ
 from pathlib import Path
 
@@ -89,3 +90,7 @@ MIDDLEWARE += [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 INTERNAL_IPS = ["127.0.0.1", "0.0.0.0"]
+
+SIMPLE_JWT.update({
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
+})
