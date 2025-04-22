@@ -10,7 +10,6 @@ variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
   PYTHON_VERSION: "3.12"
-  SAFETY_ARGS: "-i 66963,74429"
 
 services:
   - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:12
@@ -30,8 +29,21 @@ sonarqube-check:
   rules:
     - if: $CI_COMMIT_BRANCH == 'develop'
 
+safety-audit:
+  stage: test
+  tags:
+    - cluster
+  image: registry.app.unistra.fr/docker/python$PYTHON_VERSION-ci:latest
+  script:
+    - pip3 install -U pip setuptools
+    - pip3 install -r requirements/dev.txt
+    - pip3 install pip-audit
+    - pip-audit -r requirements/dev.txt
+  only:
+    - develop
+    - master
+    - safety-ci
+
 include:
   - project: "docker/template"
     file: "python-unittest.gitlab-ci.yml"
-  - project: "docker/template"
-    file: "python-safety.gitlab-ci.yml"
