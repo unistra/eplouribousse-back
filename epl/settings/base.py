@@ -207,27 +207,6 @@ DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 TENANT_MODEL = "tenant.Consortium"
 TENANT_DOMAIN_MODEL = "tenant.Domain"
 
-# Authentication configuration
-AUTH_USER_MODEL = "user.User"
-
-AUTHENTICATION_BACKENDS = (
-    "django_cas.backends.CASBackend",
-    "django.contrib.auth.backends.ModelBackend",
-)
-
-######################
-# CAS authentication #
-######################
-
-
-def username_format(username):
-    return username.strip().lower()
-
-
-CAS_SERVER_URL = "https://cas.unistra.fr/cas/"
-CAS_LOGOUT_COMPLETELY = True
-CAS_USERNAME_FORMAT = username_format
-
 
 #####################
 # Url configuration #
@@ -266,8 +245,8 @@ SHARED_APPS = [
     "django_extensions",
     "rest_framework",
     "django_cas",
-    'rest_framework_simplejwt',
-    'corsheaders'
+    "rest_framework_simplejwt",
+    "corsheaders",
     # Shared local apps
 ]
 
@@ -282,11 +261,37 @@ TENANT_APPS = [
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 
+#########################
+# Session configuration #
+#########################
+
+SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
+
+
 #######################
 # User authentication #
 #######################
 
-SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
+AUTH_USER_MODEL = "user.User"
+
+AUTHENTICATION_BACKENDS = (
+    "django_cas.backends.CASBackend",
+    "django.contrib.auth.backends.ModelBackend",
+)
+
+
+######################
+# CAS authentication #
+######################
+
+
+def username_format(username):
+    return username.strip().lower()
+
+
+CAS_SERVER_URL = "https://cas.unistra.fr/cas/"
+CAS_LOGOUT_COMPLETELY = True
+CAS_USERNAME_FORMAT = username_format
 
 
 #####################
@@ -370,6 +375,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
 }
 
+
 def load_key(keyfile):
     try:
         keyfile = SITE_ROOT / "keys" / keyfile
@@ -378,11 +384,12 @@ def load_key(keyfile):
     except FileNotFoundError:
         return b""
 
+
 SIMPLE_JWT = {
     "ALGORITHM": "RS256",
     "UPDATE_LAST_LOGIN": True,
     "USER_ID_CLAIM": "user_id",
-    "SIGNING_KEY":  load_key("jwtRS256.key"),
+    "SIGNING_KEY": load_key("jwtRS256.key"),
     "VERIFYING_KEY": load_key("jwtRS256.key.pub"),
 }
 
