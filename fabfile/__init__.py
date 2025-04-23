@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-"""
-"""
-
 from os.path import join
 
 import pydiploy
 from fabric.api import env, execute, roles, task
+
+from . import sentry
+from .migrate import deploy_backend as custom_deploy_backend
 
 # edit config here !
 
@@ -19,11 +19,9 @@ env.root_package_name = "epl"  # name of app in webapp
 env.remote_home = "/home/django"  # remote home root
 env.remote_python_version = "3.12"  # python version
 env.remote_virtualenv_root = join(env.remote_home, ".virtualenvs")  # venv root
-env.remote_virtualenv_dir = join(
-    env.remote_virtualenv_root, env.application_name
-)  # venv for webapp dir
+env.remote_virtualenv_dir = join(env.remote_virtualenv_root, env.application_name)  # venv for webapp dir
 # git repository url
-env.remote_repo_url = "git@git.net:epl.git"
+env.remote_repo_url = "git@git.unistra.fr:di/eplouribousse/eplback.git"
 env.local_tmp_dir = "/tmp"  # tmp dir
 env.remote_static_root = "/var/www/static/"  # root of static files
 env.locale = "fr_FR.UTF-8"  # locale to use on remote
@@ -31,7 +29,7 @@ env.timezone = "Europe/Paris"  # timezone for remote
 env.keep_releases = 2  # number of old releases to keep before cleaning
 env.extra_goals = ["preprod"]  # add extra goal(s) to defaults (test,dev,prod)
 env.dipstrap_version = "latest"
-env.verbose_output = False  # True for verbose output
+env.verbose_output = True  # True for verbose output
 
 # optional parameters
 
@@ -57,8 +55,8 @@ env.verbose_output = False  # True for verbose output
 env.no_circus_web = True  # Avoid using circusweb dashboard (buggy in last releases)
 # env.circus_backend = 'gevent' # name of circus backend to use
 
-env.chaussette_backend = "waitress"  # name of chaussette backend to use. You need to add this backend in the app requirement file.
-
+env.chaussette_backend = "waitress"  # name of chaussette backend to use.
+env.sentry_application_name = "eplouribousse-back"
 
 # env.nginx_location_extra_directives = ['proxy_read_timeout 120'] # add directive(s) to nginx config file in location part
 # env.nginx_start_confirmation = True # if True when nginx is not started
@@ -90,23 +88,29 @@ def dev():
 def test():
     """Define test stage"""
     env.roledefs = {
-        "web": ["epl-test.net"],
-        "lb": ["lb.epl-test.net"],
+        "web": ["django-test2.di.unistra.fr"],
+        "lb": ["django-test2.di.unistra.fr"],
     }
     # env.user = 'root'  # user for ssh
     env.backends = ["127.0.0.1"]
-    env.server_name = "epl-test.net"
-    env.short_server_name = "epl-test"
+    env.server_name = "eplouribousse-api-test.app.unistra.fr"
+    env.short_server_name = "eplouribousse-api-test"
     env.static_folder = "/site_media/"
     env.server_ip = ""
     env.no_shared_sessions = False
     env.server_ssl_on = True
-    env.path_to_cert = "/etc/ssl/certs/epl.net.pem"
-    env.path_to_cert_key = "/etc/ssl/private/epl.net.key"
+    env.path_to_cert = "/etc/ssl/certs/mega_wildcard.pem"
+    env.path_to_cert_key = "/etc/ssl/private/mega_wildcard.key"
     env.goal = "test"
-    env.socket_port = ""
+    env.socket_port = "8022"
     env.socket_host = "127.0.0.1"
-    env.map_settings = {}
+    env.map_settings = {
+        "default_db_host": 'DATABASES["default"]["HOST"]',
+        "default_db_user": 'DATABASES["default"]["USER"]',
+        "default_db_password": 'DATABASES["default"]["PASSWORD"]',
+        "default_db_name": 'DATABASES["default"]["NAME"]',
+        "secret_key": "SECRET_KEY",
+    }
     execute(build_env)
 
 
@@ -207,6 +211,7 @@ def pre_install_frontend():
 def deploy(update_pkg=False):
     """Deploy code on server"""
     execute(deploy_backend, update_pkg)
+    execute(declare_release_to_sentry)
     execute(deploy_frontend)
 
 
@@ -214,7 +219,7 @@ def deploy(update_pkg=False):
 @task
 def deploy_backend(update_pkg=False):
     """Deploy code on server"""
-    execute(pydiploy.django.deploy_backend, update_pkg)
+    execute(custom_deploy_backend, update_pkg)
 
 
 @roles("lb")
@@ -309,3 +314,8 @@ def custom_manage_cmd(cmd):
 def update_python_version():
     """Update python version"""
     execute(pydiploy.django.update_python_version)
+
+
+@task
+def declare_release_to_sentry():
+    execute(sentry.declare_release, release_name=sentry.get_release_name())
