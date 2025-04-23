@@ -7,6 +7,7 @@ from os.path import join
 
 import pydiploy
 from fabric.api import env, execute, roles, task
+from . import sentry
 
 # edit config here !
 
@@ -212,6 +213,7 @@ def pre_install_frontend():
 def deploy(update_pkg=False):
     """Deploy code on server"""
     execute(deploy_backend, update_pkg)
+    execute(declare_release_to_sentry)
     execute(deploy_frontend)
 
 
@@ -314,3 +316,7 @@ def custom_manage_cmd(cmd):
 def update_python_version():
     """Update python version"""
     execute(pydiploy.django.update_python_version)
+
+@task
+def declare_release_to_sentry():
+    execute(sentry.declare_release, release_name=sentry.get_release_name())
