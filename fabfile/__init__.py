@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-"""
-"""
-
 from os.path import join
 
 import pydiploy
 from fabric.api import env, execute, roles, task
+
 from . import sentry
+from .migrate import deploy_backend as custom_deploy_backend
 
 # edit config here !
 
@@ -20,9 +19,7 @@ env.root_package_name = "epl"  # name of app in webapp
 env.remote_home = "/home/django"  # remote home root
 env.remote_python_version = "3.12"  # python version
 env.remote_virtualenv_root = join(env.remote_home, ".virtualenvs")  # venv root
-env.remote_virtualenv_dir = join(
-    env.remote_virtualenv_root, env.application_name
-)  # venv for webapp dir
+env.remote_virtualenv_dir = join(env.remote_virtualenv_root, env.application_name)  # venv for webapp dir
 # git repository url
 env.remote_repo_url = "git@git.unistra.fr:di/eplouribousse/eplback.git"
 env.local_tmp_dir = "/tmp"  # tmp dir
@@ -58,7 +55,7 @@ env.verbose_output = True  # True for verbose output
 env.no_circus_web = True  # Avoid using circusweb dashboard (buggy in last releases)
 # env.circus_backend = 'gevent' # name of circus backend to use
 
-env.chaussette_backend = "waitress"  # name of chaussette backend to use. You need to add this backend in the app requirement file.
+env.chaussette_backend = "waitress"  # name of chaussette backend to use.
 env.sentry_application_name = "eplouribousse-back"
 
 # env.nginx_location_extra_directives = ['proxy_read_timeout 120'] # add directive(s) to nginx config file in location part
@@ -222,7 +219,7 @@ def deploy(update_pkg=False):
 @task
 def deploy_backend(update_pkg=False):
     """Deploy code on server"""
-    execute(pydiploy.django.deploy_backend, update_pkg)
+    execute(custom_deploy_backend, update_pkg)
 
 
 @roles("lb")
@@ -317,6 +314,7 @@ def custom_manage_cmd(cmd):
 def update_python_version():
     """Update python version"""
     execute(pydiploy.django.update_python_version)
+
 
 @task
 def declare_release_to_sentry():
