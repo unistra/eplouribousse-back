@@ -54,3 +54,10 @@ sentry_sdk.init(
     environment="test",
     integrations=[DjangoIntegration()],
 )
+
+
+##############
+# SECRET_KEY #
+##############
+
+SECRET_KEY = "{{ secret_key }}"
