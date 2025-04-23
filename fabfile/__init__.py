@@ -23,7 +23,7 @@ env.remote_virtualenv_dir = join(
     env.remote_virtualenv_root, env.application_name
 )  # venv for webapp dir
 # git repository url
-env.remote_repo_url = "git@git.net:epl.git"
+env.remote_repo_url = "git@git.unistra.fr:di/eplouribousse/eplback.git"
 env.local_tmp_dir = "/tmp"  # tmp dir
 env.remote_static_root = "/var/www/static/"  # root of static files
 env.locale = "fr_FR.UTF-8"  # locale to use on remote
@@ -31,7 +31,7 @@ env.timezone = "Europe/Paris"  # timezone for remote
 env.keep_releases = 2  # number of old releases to keep before cleaning
 env.extra_goals = ["preprod"]  # add extra goal(s) to defaults (test,dev,prod)
 env.dipstrap_version = "latest"
-env.verbose_output = False  # True for verbose output
+env.verbose_output = True  # True for verbose output
 
 # optional parameters
 
@@ -58,7 +58,7 @@ env.no_circus_web = True  # Avoid using circusweb dashboard (buggy in last relea
 # env.circus_backend = 'gevent' # name of circus backend to use
 
 env.chaussette_backend = "waitress"  # name of chaussette backend to use. You need to add this backend in the app requirement file.
-
+env.sentry_application_name = "eplouribousse-back"
 
 # env.nginx_location_extra_directives = ['proxy_read_timeout 120'] # add directive(s) to nginx config file in location part
 # env.nginx_start_confirmation = True # if True when nginx is not started
@@ -90,23 +90,28 @@ def dev():
 def test():
     """Define test stage"""
     env.roledefs = {
-        "web": ["epl-test.net"],
-        "lb": ["lb.epl-test.net"],
+        "web": ["django-test2.di.unistra.fr"],
+        "lb": ["django-test2.di.unistra.fr"],
     }
     # env.user = 'root'  # user for ssh
     env.backends = ["127.0.0.1"]
-    env.server_name = "epl-test.net"
-    env.short_server_name = "epl-test"
+    env.server_name = "eplouribousse-api-test.app.unistra.fr"
+    env.short_server_name = "eplouribousse-api-test"
     env.static_folder = "/site_media/"
     env.server_ip = ""
     env.no_shared_sessions = False
     env.server_ssl_on = True
-    env.path_to_cert = "/etc/ssl/certs/epl.net.pem"
-    env.path_to_cert_key = "/etc/ssl/private/epl.net.key"
+    env.path_to_cert = "/etc/ssl/certs/mega_wildcard.pem"
+    env.path_to_cert_key = "/etc/ssl/private/mega_wildcard.key"
     env.goal = "test"
-    env.socket_port = ""
+    env.socket_port = "8042"
     env.socket_host = "127.0.0.1"
-    env.map_settings = {}
+    env.map_settings = {
+        "default_db_host": 'DATABASES["default"]["HOST"]',
+        "default_db_user": 'DATABASES["default"]["USER"]',
+        "default_db_password": 'DATABASES["default"]["PASSWORD"]',
+        "default_db_name": 'DATABASES["default"]["NAME"]',
+    }
     execute(build_env)
 
 
