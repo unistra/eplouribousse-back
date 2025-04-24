@@ -20,11 +20,13 @@ dependencies = [
     "djangorestframework (>=3.16.0,<4.0.0)",
     "djangorestframework-camel-case (>=1.4.2,<2.0.0)",
     "djangorestframework-simplejwt (>=5.5.0,<6.0.0)",
+    "djangosaml2 (>=1.10.1,<2.0.0)",
+    "drf-spectacular (>=0.28.0,<0.29.0)",
     "ipython (>=9.0.2,<10.0.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "pyopenssl (>=24.0.0,<25.0.0)",
     "sentry-sdk (>=2.25.0,<3.0.0)",
     "zxcvbn (>=4.5.0,<5.0.0)",
-    "drf-spectacular (>=0.28.0,<0.29.0)"
 ]
 
 [tool.poetry]
