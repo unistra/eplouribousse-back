@@ -118,26 +118,26 @@ def test():
 def preprod():
     """Define preprod stage"""
     env.roledefs = {
-        "web": ["epl-pprd.net"],
-        "lb": ["lb.epl-pprd.net"],
+        "web": ["django-pprd-w3.di.unistra.fr", "django-pprd-w4.di.unistra.fr"],
+        "lb": ["rp-dip-pprd-public.di.unistra.fr"],
     }
     # env.user = 'root'  # user for ssh
     env.backends = env.roledefs["web"]
-    env.server_name = "epl-pprd.net"
-    env.short_server_name = "epl-pprd"
+    env.server_name = "eplouribousse-api-pprd.app.unistra.fr"
+    env.short_server_name = "eplouribousse-api-pprd"
     env.static_folder = "/site_media/"
-    env.server_ip = ""
+    env.server_ip = "130.79.245.212"
     env.no_shared_sessions = False
     env.server_ssl_on = True
-    env.path_to_cert = "/etc/ssl/certs/epl.net.pem"
-    env.path_to_cert_key = "/etc/ssl/private/epl.net.key"
+    env.path_to_cert = "/etc/ssl/certs/mega_wildcard.pem"
+    env.path_to_cert_key = "/etc/ssl/private/mega_wildcard.key"
     env.goal = "preprod"
-    env.socket_port = ""
+    env.socket_port = "8059"
     env.map_settings = {
-        "default_db_host": "DATABASES['default']['HOST']",
-        "default_db_user": "DATABASES['default']['USER']",
-        "default_db_password": "DATABASES['default']['PASSWORD']",
-        "default_db_name": "DATABASES['default']['NAME']",
+        "default_db_host": 'DATABASES["default"]["HOST"]',
+        "default_db_user": 'DATABASES["default"]["USER"]',
+        "default_db_password": 'DATABASES["default"]["PASSWORD"]',
+        "default_db_name": 'DATABASES["default"]["NAME"]',
         "secret_key": "SECRET_KEY",
     }
     execute(build_env)
@@ -163,10 +163,10 @@ def prod():
     env.goal = "prod"
     env.socket_port = ""
     env.map_settings = {
-        "default_db_host": "DATABASES['default']['HOST']",
-        "default_db_user": "DATABASES['default']['USER']",
-        "default_db_password": "DATABASES['default']['PASSWORD']",
-        "default_db_name": "DATABASES['default']['NAME']",
+        "default_db_host": 'DATABASES["default"]["HOST"]',
+        "default_db_user": 'DATABASES["default"]["USER"]',
+        "default_db_password": 'DATABASES["default"]["PASSWORD"]',
+        "default_db_name": 'DATABASES["default"]["NAME"]',
         "secret_key": "SECRET_KEY",
     }
     execute(build_env)

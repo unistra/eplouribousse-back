@@ -28,6 +28,7 @@ ALLOWED_HOSTS = [
     ".unistra.fr",
 ]
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTOCOL", "ssl")
 
 #####################
 # Log configuration #
