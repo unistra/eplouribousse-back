@@ -29,21 +29,8 @@ sonarqube-check:
   rules:
     - if: $CI_COMMIT_BRANCH == 'develop'
 
-safety-audit:
-  stage: test
-  tags:
-    - cluster
-  image: registry.app.unistra.fr/docker/python$PYTHON_VERSION-ci:latest
-  script:
-    - pip3 install -U pip setuptools
-    - pip3 install -r requirements/dev.txt
-    - pip3 install pip-audit
-    - pip-audit -r requirements/dev.txt
-  only:
-    - develop
-    - master
-    - safety-ci
-
 include:
   - project: "docker/template"
     file: "python-unittest.gitlab-ci.yml"
+  - project: "docker/template"
+    file: "python-pip-audit.gitlab-ci.yml"
