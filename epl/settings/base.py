@@ -53,7 +53,6 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 
 ######################
 # Site configuration #
@@ -166,7 +165,7 @@ SECRET_KEY = "ma8r116)33!-#pty4!sht8tsa(1bfe%(+!&9xfack+2e9alah!"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [DJANGO_ROOT / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -400,3 +399,11 @@ CORS_ALLOW_HEADERS = (
     "x-csrftoken",
     "range",
 )
+
+#########
+# EMAILS #
+#########
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+DEFAULT_FROM_EMAIL = "ne-pas-repondre@eplouribousse.fr"
+EMAIL_SUPPORT = "support@eplouribousse.fr"

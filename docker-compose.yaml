@@ -5,13 +5,22 @@ services:
     container_name: epl_db
     restart: unless-stopped
     environment:
-    - POSTGRES_PASSWORD=epl
-    - POSTGRES_USER=epl
-    - POSTGRES_DB=epl
+      - POSTGRES_PASSWORD=epl
+      - POSTGRES_USER=epl
+      - POSTGRES_DB=epl
     ports:
-    - "5432:5432"
+      - "5432:5432"
     volumes:
-    - epl_db:/var/lib/postgresql/data
+      - epl_db:/var/lib/postgresql/data
+
+  maildev:
+    image: "maildev/maildev:2.2.1"
+    container_name: maildev
+    restart: unless-stopped
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
 
 volumes:
   epl_db:
