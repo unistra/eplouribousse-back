@@ -94,3 +94,14 @@ INTERNAL_IPS = ["127.0.0.1", "0.0.0.0"]
 SIMPLE_JWT.update({
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
 })
+
+
+##########
+# Emails #
+##########
+
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 1025
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
+EMAIL_USE_TLS = False
