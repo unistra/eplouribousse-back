@@ -94,7 +94,7 @@ msgstr "Si vous avez initié ce changement"
 #: epl/templates/emails/password_changed.html:19
 #: epl/templates/emails/password_changed.txt:8
 msgid "you can ignore this email"
-msgstr "Vous pouvez ignorer cet email"
+msgstr "vous pouvez ignorer cet email"
 
 #: epl/templates/emails/password_changed.html:22
 msgid "If you did not make this change"

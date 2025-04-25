@@ -17,7 +17,7 @@ def send_password_change_email(user: Request.user):
     )
 
     user.email_user(
-        subject=f"{_('Password Change')} - Eplouribousse",
+        subject=f"[eplouribousse] {_('Password Change')}",
         from_email=settings.DEFAULT_FROM_EMAIL,
         fail_silently=True,
         message=email_content,
