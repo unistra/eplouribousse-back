@@ -4,6 +4,7 @@ omit = epl/settings/*
        fabfile/*
        epl/apps/*/migrations/*
        epl/apps/*/tests/*
+       epl/templatetags/dipstrapfiles.py
        epl/tests/*
        epl/wsgi.py
        setup.py

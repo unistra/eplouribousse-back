@@ -28,6 +28,7 @@ ALLOWED_HOSTS = [
     ".unistra.fr",
 ]
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTOCOL", "ssl")
 
 #####################
 # Log configuration #
@@ -54,3 +55,10 @@ sentry_sdk.init(
     environment="test",
     integrations=[DjangoIntegration()],
 )
+
+
+##############
+# SECRET_KEY #
+##############
+
+SECRET_KEY = "{{ secret_key }}"
