@@ -1,17 +1,35 @@
 from django.utils.translation import gettext_lazy as _
-from rest_framework import status
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from epl.apps.user.serializers import PasswordChangeSerializer
+from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
 from epl.services.user.email import send_password_change_email
 
 
+@extend_schema(
+    tags=["User"],
+    summary=_("Change the user's password"),
+    request=PasswordChangeSerializer,
+    responses={
+        status.HTTP_200_OK: inline_serializer(
+            name="PasswordChangedSerializer",
+            fields={"detail": serializers.CharField(help_text=_("Confirmation message"))},
+        ),
+        status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+        status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+    },
+)
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def change_password(request: Request) -> Response:
+    """
+    Change the user's password and send an email confirming the change
+    """
     serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
     serializer.is_valid(raise_exception=True)
     serializer.save()
