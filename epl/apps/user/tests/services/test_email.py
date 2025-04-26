@@ -20,7 +20,7 @@ class TestUserEmailServices(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
         # Verify email subject
-        expected_subject = f"{_('Password Change')} - Eplouribousse"
+        expected_subject = f"[eplouribousse] {_('Password Change')}"
         self.assertEqual(mail.outbox[0].subject, expected_subject)
 
         # Verify email recipient
