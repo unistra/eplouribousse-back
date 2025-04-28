@@ -7,6 +7,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from epl.apps.tenant.views import consortium_info
+
 from .views import home
 
 admin.autodiscover()
@@ -18,6 +20,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # django-cas
     path("cas/", include("django_cas.urls", namespace="django_cas")),
+    path("api/consortium/", consortium_info, name="consortium"),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/user/", include("epl.apps.user.urls")),
