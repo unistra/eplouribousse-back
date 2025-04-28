@@ -33,7 +33,7 @@ class TenantClient(OriginalTenantClient):
                 HTTP_AUTHORIZATION=f"Bearer {self._token}",
                 **extra,
             )
-        super().get(path, data=data, follow=follow, secure=secure, headers=headers, **extra)
+        return super().get(path, data=data, follow=follow, secure=secure, headers=headers, **extra)
 
     def patch(
         self,
