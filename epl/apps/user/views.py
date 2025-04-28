@@ -6,9 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from epl.apps.user.serializers import PasswordChangeSerializer
+from epl.apps.user.serializers import PasswordChangeSerializer, PasswordResetSerializer
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
-from epl.services.user.email import send_password_change_email
+from epl.services.user.email import send_password_change_email, send_password_reset_email
 
 
 @extend_schema(
@@ -36,3 +36,18 @@ def change_password(request: Request) -> Response:
 
     send_password_change_email(request.user)
     return Response({"detail": _("Your password has been changed successfully.")}, status=status.HTTP_200_OK)
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def reset_password(request: Request) -> Response:
+    serializer = PasswordResetSerializer(data=request.data, context={"request": request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response({"detail": _("Your password has been resetted successfully.")}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def send_reset_email(request: Request) -> Response:
+    send_password_reset_email(request.user, request.data)
