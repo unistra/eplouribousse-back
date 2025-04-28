@@ -14,5 +14,5 @@ class ConsortiumViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], self.tenant.name)
-        self.assertEqual(response.data["tenant_settings"], self.tenant.tenant_settings)
+        self.assertEqual(response.data["settings"], self.tenant.tenant_settings)
         self.assertIn("id", response.data)
