@@ -228,6 +228,7 @@ WSGI_APPLICATION = "%s.wsgi.application" % SITE_NAME
 SHARED_APPS = [
     # Shared Django apps
     "django_tenants",
+    "epl",
     "epl.apps.tenant",
     "epl.apps.user",
     "django.contrib.auth",
