@@ -294,6 +294,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGIN_REDIRECT_URL = "login_success"
+
 
 #####################
 # JWT configuration #
