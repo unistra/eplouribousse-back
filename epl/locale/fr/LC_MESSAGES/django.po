@@ -167,8 +167,8 @@ msgstr ""
 "récemment effectuée"
 
 #: epl/templates/emails/password_reset.txt:8
-msgid "use the token below to validate your operation"
-msgstr "Utilisez le jeton ci joint pour valider votre opération"
+msgid "click on the link below to validate your operation"
+msgstr "utilisez le jeton ci joint pour valider votre opération"
 
 #: epl/templates/emails/password_reset.txt:9
 msgid ""

@@ -45,10 +45,10 @@ class PasswordResetSerializer(serializers.Serializer):
         try:
             signer.unsign(attrs, max_age=60 * 60 * 24)
             self.email = signer.unsign(attrs, max_age=60 * 60 * 24)
-        except BadSignature:
-            raise serializers.ValidationError("Signature does not match")
         except SignatureExpired:
-            raise serializers.ValidationError("Signature has expired")
+            raise serializers.ValidationError("signatureHasExpired")
+        except BadSignature:
+            raise serializers.ValidationError("signatureDoesNotMatch")
         return attrs
 
     def validate(self, attrs):
@@ -64,7 +64,6 @@ class PasswordResetSerializer(serializers.Serializer):
     def save(self, **kwargs):
         try:
             user = User.objects.get(email=self.email)
-            print(self.validated_data["new_password"])
             user.set_password(self.validated_data["new_password"])
             user.save()
             return user

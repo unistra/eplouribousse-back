@@ -65,8 +65,12 @@ def reset_password(request: Request) -> Response:
 def send_reset_email(request: Request) -> Response:
     email = request.data["email"]
     try:
+        protocol = request.scheme
+        domain = request.tenant.domains.get(is_primary=True)
         user = User.objects.get(email=email)
-        send_password_reset_email(user, email)
-        return Response({"detail": _("Email has benn sent successfully.")}, status=status.HTTP_200_OK)
+        if protocol == "http":
+            port = ":5173"
+        send_password_reset_email(user, email, domain.front_domain, protocol, port)
+        return Response({"detail": _("Email has been sent successfully.")}, status=status.HTTP_200_OK)
     except ObjectDoesNotExist:
         return Response({"detail": _("Associated user not found.")}, status=status.HTTP_404_NOT_FOUND)

@@ -25,13 +25,16 @@ def send_password_change_email(user: Request.user):
     )
 
 
-def send_password_reset_email(user, email):
+def send_password_reset_email(user, email, domain, protocol, port=""):
     signer = TimestampSigner(salt="reset-password")
     token = signer.sign(email)
     email_content = render_to_string(
         "emails/password_reset.txt",
         {
             "user": user,
+            "domain": domain,
+            "protocol": protocol,
+            "port": port,
             "year": datetime.now().year,
             "token": token,
             "email_support": settings.EMAIL_SUPPORT,
