@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-25 07:52+0200\n"
+"POT-Creation-Date: 2025-04-28 09:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -34,28 +34,80 @@ msgstr "Créé le"
 msgid "Frontend domain"
 msgstr "Domain du frontend"
 
-#: epl/apps/user/models.py:10
+#: epl/apps/user/models.py:18
+msgid "The Email must be set"
+msgstr ""
+
+#: epl/apps/user/models.py:34
 msgid "Email address"
 msgstr "Adresse email"
 
-#: epl/apps/user/models.py:13
+#: epl/apps/user/models.py:39
 msgid "User"
 msgstr "Utilisateur"
 
-#: epl/apps/user/models.py:14
+#: epl/apps/user/models.py:40
 msgid "Users"
 msgstr "Utilisateurs"
 
-#: epl/apps/user/serializers.py:15
+#: epl/apps/user/serializers.py:16
 msgid "Old password is incorrect"
 msgstr "L'ancien mot de passe est incorrect"
 
-#: epl/apps/user/serializers.py:20
+#: epl/apps/user/serializers.py:21 epl/apps/user/serializers.py:54
 msgid "New password and confirm password do not match"
 msgstr "Les mots de passe ne correspondent pas"
 
-#: epl/apps/user/views.py:23
+#: epl/apps/user/tests/services/test_email.py:35
+#: epl/templates/emails/password_changed.txt:5
+msgid ""
+"We inform you that the password for your Eplouribousse account has been "
+"recently changed"
+msgstr ""
+"Nous vous informons que le mot de passe de votre compte Eplouribousse a été "
+"récemment changé"
+
+#: epl/apps/user/tests/services/test_email.py:37
+#: epl/templates/emails/password_changed.txt:8
+#: epl/templates/emails/password_reset.txt:8
+msgid "If you initiated this change"
+msgstr "Si vous avez initié ce changement"
+
+#: epl/apps/user/tests/services/test_email.py:38
+#: epl/templates/emails/password_changed.txt:9
+#: epl/templates/emails/password_reset.txt:10
+#, fuzzy
+#| msgid "If you did not make this change"
+msgid "If you did NOT make this change"
+msgstr "Si vous n'avez PAS effectué ce changement"
+
+#: epl/apps/user/validators.py:13
+msgid ""
+"The min_score parameter of the ZxcvbnPasswordValidator must be an integer."
+msgstr ""
+
+#: epl/apps/user/validators.py:27
+#, fuzzy
+#| msgid "Old password is incorrect"
+msgid "The password is too weak"
+msgstr "L'ancien mot de passe est incorrect"
+
+#: epl/apps/user/views.py:16
+msgid "Change the user's password"
+msgstr ""
+
+#: epl/apps/user/views.py:21
+msgid "Confirmation message"
+msgstr ""
+
+#: epl/apps/user/views.py:38
 msgid "Your password has been changed successfully."
+msgstr "Votre mot de passe a été changé avec succès."
+
+#: epl/apps/user/views.py:48
+#, fuzzy
+#| msgid "Your password has been changed successfully."
+msgid "Your password has been resetted successfully."
 msgstr "Votre mot de passe a été changé avec succès."
 
 #: epl/templates/404.html:6
@@ -66,50 +118,24 @@ msgstr "Page non trouvée"
 msgid "Error"
 msgstr "Erreur"
 
-#: epl/templates/emails/password_changed.html:13
 #: epl/templates/emails/password_changed.txt:3
 msgid "Password Change"
 msgstr "Changement de mot de passe"
 
-#: epl/templates/emails/password_changed.html:15
-#, fuzzy
-#| msgid "Hello,"
-msgid "Hello"
-msgstr "Bonjour"
-
-#: epl/templates/emails/password_changed.html:17
-#: epl/templates/emails/password_changed.txt:5
-msgid ""
-"We inform you that the password for your Eplouribousse account has been "
-"recently changed"
-msgstr ""
-"Nous vous informons que le mot de passe de votre compte Eplouribousse a été "
-"récemment changé"
-
-#: epl/templates/emails/password_changed.html:19
-#: epl/templates/emails/password_changed.txt:8
-msgid "If you initiated this change"
-msgstr "Si vous avez initié ce changement"
-
-#: epl/templates/emails/password_changed.html:19
 #: epl/templates/emails/password_changed.txt:8
 msgid "you can ignore this email"
 msgstr "vous pouvez ignorer cet email"
 
-#: epl/templates/emails/password_changed.html:22
-msgid "If you did not make this change"
-msgstr "Si vous n'avez pas effectué ce changement"
-
-#: epl/templates/emails/password_changed.html:22
 #: epl/templates/emails/password_changed.txt:9
+#: epl/templates/emails/password_reset.txt:10
 msgid ""
 "please contact the site administrator immediately at the following address"
 msgstr ""
 "merci de contacter immédiatement l'administrateur du site à l'adresse "
 "suivante"
 
-#: epl/templates/emails/password_changed.html:28
-#: epl/templates/emails/password_changed.txt:12
+#: epl/templates/emails/password_changed.txt:13
+#: epl/templates/emails/password_reset.txt:14
 msgid ""
 "For security reasons, we recommend that you change your password as soon as "
 "possible"
@@ -117,16 +143,47 @@ msgstr ""
 "Pour des raisons de sécurité, nous vous recommandons de changer votre mot de "
 "passe dès que possible"
 
-#: epl/templates/emails/password_changed.html:34
-#: epl/templates/emails/password_changed.txt:16
+#: epl/templates/emails/password_changed.txt:17
+#: epl/templates/emails/password_reset.txt:18
 msgid "This is an automated message, please do not reply"
 msgstr "Ceci est un message automatique, merci de ne pas répondre"
 
-#: epl/templates/emails/password_changed.txt:9
+#: epl/templates/emails/password_reset.txt:3
 #, fuzzy
-#| msgid "If you did not make this change"
-msgid "If you did NOT make this change"
-msgstr "Si vous n'avez PAS effectué ce changement"
+#| msgid "Password Change"
+msgid "Password Reset"
+msgstr "Réinitialisation du mot de passe"
+
+#: epl/templates/emails/password_reset.txt:5
+#, fuzzy
+#| msgid ""
+#| "We inform you that the password for your Eplouribousse account has been "
+#| "recently changed"
+msgid ""
+"We inform you that an attempt to reset yout Eplouribousse password has been "
+"made"
+msgstr ""
+"Nous vous informons qu'une tentative de réinitialisation de mot de passe a été "
+"récemment effectuée"
+
+#: epl/templates/emails/password_reset.txt:8
+msgid "use the token below to validate your operation"
+msgstr "Utilisez le jeton ci joint pour valider votre opération"
+
+#: epl/templates/emails/password_reset.txt:9
+msgid ""
+"This token has an expiration time, you have one day to reset your password"
+msgstr "" 
+"Ce jeton a une date d'expiration, vous avez un jour pour réinitialiser "
+"votre mot de passe"
+
+#, fuzzy
+#~| msgid "Hello,"
+#~ msgid "Hello"
+#~ msgstr "Bonjour"
+
+#~ msgid "If you did not make this change"
+#~ msgstr "Si vous n'avez pas effectué ce changement"
 
 #~ msgid ""
 #~ "Password changed successfully, but confirmation email could not be sent."

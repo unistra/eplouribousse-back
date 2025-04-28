@@ -1,8 +1,10 @@
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+
+from epl.apps.user.models import User
 
 
 class PasswordChangeSerializer(serializers.Serializer):
@@ -39,10 +41,10 @@ class PasswordResetSerializer(serializers.Serializer):
     confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
 
     def validate_token(self, attrs):
-        _user = self.context["request"].user
         signer = TimestampSigner(salt="reset-password")
         try:
-            _email = signer.unsign(attrs["token"], max_age=60 * 60 * 24)
+            signer.unsign(attrs, max_age=60 * 60 * 24)
+            self.email = signer.unsign(attrs, max_age=60 * 60 * 24)
         except BadSignature:
             raise serializers.ValidationError("Signature does not match")
         except SignatureExpired:
@@ -60,7 +62,11 @@ class PasswordResetSerializer(serializers.Serializer):
         return attrs
 
     def save(self, **kwargs):
-        user = self.context["request"].user
-        user.set_password(self.validated_data["new_password"])
-        user.save()
-        return user
+        try:
+            user = User.objects.get(email=self.email)
+            print(self.validated_data["new_password"])
+            user.set_password(self.validated_data["new_password"])
+            user.save()
+            return user
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError("Associated user does not exists")

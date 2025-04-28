@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers, status
@@ -6,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from epl.apps.user.models import User
 from epl.apps.user.serializers import PasswordChangeSerializer, PasswordResetSerializer
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
 from epl.services.user.email import send_password_change_email, send_password_reset_email
@@ -38,8 +40,19 @@ def change_password(request: Request) -> Response:
     return Response({"detail": _("Your password has been changed successfully.")}, status=status.HTTP_200_OK)
 
 
+@extend_schema(
+    tags=["User"],
+    summary=_("Reset the user's password"),
+    request=PasswordResetSerializer,
+    responses={
+        status.HTTP_200_OK: inline_serializer(
+            name="PasswordResettedSerializer",
+            fields={"detail": serializers.CharField(help_text=_("Confirmation message"))},
+        ),
+        status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+    },
+)
 @api_view(["PATCH"])
-@permission_classes([IsAuthenticated])
 def reset_password(request: Request) -> Response:
     serializer = PasswordResetSerializer(data=request.data, context={"request": request})
     serializer.is_valid(raise_exception=True)
@@ -48,6 +61,12 @@ def reset_password(request: Request) -> Response:
     return Response({"detail": _("Your password has been resetted successfully.")}, status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
+@api_view(["POST"])
 def send_reset_email(request: Request) -> Response:
-    send_password_reset_email(request.user, request.data)
+    email = request.data["email"]
+    try:
+        user = User.objects.get(email=email)
+        send_password_reset_email(user, email)
+        return Response({"detail": _("Email has benn sent successfully.")}, status=status.HTTP_200_OK)
+    except ObjectDoesNotExist:
+        return Response({"detail": _("Associated user not found.")}, status=status.HTTP_404_NOT_FOUND)
