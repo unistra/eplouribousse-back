@@ -352,9 +352,8 @@ SAML_ATTRIBUTE_MAPPING = {
     "givenName": ("first_name",),
     "sn": ("last_name",),
 }
-# SAML_CONFIG_LOADER = "epl.libs.saml.saml_config_loader"
 
-BASEDIR = path.dirname(path.abspath(__file__))
+SAML_CONFIG_LOADER = "epl.libs.saml.saml_config_loader"
 
 SAML_CONFIG = {
     # full path to the xmlsec1 binary program
