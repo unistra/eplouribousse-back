@@ -1,7 +1,7 @@
 import logging
 
 from django.core import signing
-from django.http import HttpRequest, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.utils.encoding import iri_to_uri
 from django.utils.translation import gettext_lazy as _
 from django.views.defaults import permission_denied
@@ -12,14 +12,16 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
 
 from epl.apps.user.models import User
-from epl.apps.user.serializers import PasswordChangeSerializer, PasswordResetSerializer
+from epl.apps.user.serializers import PasswordChangeSerializer, PasswordResetSerializer, TokenObtainSerializer
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
 from epl.services.user.email import send_password_change_email, send_password_reset_email
 
 logger = logging.getLogger(__name__)
+
+HANDSHAKE_TOKEN_MAX_AGE = 60
+HANDSHAKE_TOKEN_SALT = f"{__file__}:handshake"
 
 
 @extend_schema(
@@ -105,7 +107,7 @@ def send_reset_email(request: Request) -> Response:
         return Response({"detail": _("Email has been sent successfully.")}, status=status.HTTP_200_OK)
 
 
-def login_success(request: HttpRequest) -> HttpResponseRedirect:
+def login_success(request) -> HttpResponseRedirect:
     """
     We successfully logged in. Redirect to the front with an authentication token
     The front can use that token to get a JWT token
@@ -115,7 +117,7 @@ def login_success(request: HttpRequest) -> HttpResponseRedirect:
     signer = _get_handshake_signer()
     authentication_token: str = signer.sign_object({"u": str(request.user.id)})
     front_url = f"{request.scheme}://{request.tenant.domains.get(is_primary=True).front_domain}/handshake?t={authentication_token}"
-    logger.debug(f"Successful login: redirect to front at {front_url}")
+    logger.info(f"Successful login: redirect to front at {front_url}")
 
     return HttpResponseRedirect(iri_to_uri(front_url))
 
@@ -123,33 +125,31 @@ def login_success(request: HttpRequest) -> HttpResponseRedirect:
 @api_view(["POST"])
 def login_handshake(request: Request) -> Response:
     """
-    We received a handshake token from the front, let's validate it and get a JWT
+    We received a handshake token from the front, let's:
+     - validate the token
+     - load the corresponding user
+     - return a JWT for that user
+    To be valid, the token must not be older than HANDSHAKE_TOKEN_MAX_AGE (60) seconds
     """
-    signer = _get_handshake_signer()
-    t: str = request.data.get("t")
+    signer: signing.TimestampSigner = _get_handshake_signer()
+    handshake_token: str = request.data.get("t")
+
     try:
-        user_data = signer.unsign_object(t)
+        user_data = signer.unsign_object(handshake_token, max_age=HANDSHAKE_TOKEN_MAX_AGE)
+        user_id = user_data.get("u", None)
+        user = User.objects.get(pk=user_id, is_active=True)
     except signing.SignatureExpired:
         raise PermissionDenied(_("Handshake token expired"))
-    except signing.BadSignature:
-        raise PermissionDenied(_("Invalid handshake token"))
-    try:
-        user = User.objects.get(id=user_data["u"], is_active=True)
-        serializer = TokenObtainSerializer(data={}, context={"user": user, "request": request})
-        if serializer.is_valid(raise_exception=True):
-            logger.debug(f"Successful handshake for user {user.id}")
-            return Response(serializer.validated_data)
-    except User.DoesNotExist:
+    except (signing.BadSignature, User.DoesNotExist):
         raise PermissionDenied(_("Invalid handshake token"))
 
-    return Response({"token": t})
+    serializer = TokenObtainSerializer(data={}, context={"user": user, "request": request})
+    if serializer.is_valid(raise_exception=True):
+        logger.info(f"Successful handshake for user {user.id}")
+        return Response(serializer.validated_data)
 
-
-def _get_handshake_salt() -> str:
-    salt: str = f"{__file__}:handshake"
-    return salt
+    return Response({"token": handshake_token})
 
 
 def _get_handshake_signer() -> signing.TimestampSigner:
-    salt = _get_handshake_salt()
-    return signing.TimestampSigner(salt=salt)
+    return signing.TimestampSigner(salt=HANDSHAKE_TOKEN_SALT)
