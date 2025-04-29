@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-29 14:45+0200\n"
+"POT-Creation-Date: 2025-04-29 15:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -84,21 +84,18 @@ msgstr ""
 #: epl/apps/user/tests/services/test_email.py:37
 #: epl/apps/user/tests/services/test_email.py:63
 #: epl/templates/emails/password_changed.txt:8
-#: epl/templates/emails/password_reset.txt:8
 msgid "If you initiated this change"
 msgstr "Si vous avez initié ce changement"
 
 #: epl/apps/user/tests/services/test_email.py:38
 #: epl/apps/user/tests/services/test_email.py:65
 #: epl/templates/emails/password_changed.txt:9
-#: epl/templates/emails/password_reset.txt:10
 #, fuzzy
 #| msgid "If you did not make this change"
 msgid "If you did NOT make this change"
 msgstr "Si vous n'avez PAS effectué ce changement"
 
 #: epl/apps/user/tests/services/test_email.py:61
-#: epl/templates/emails/password_reset.txt:5
 #, fuzzy
 #| msgid ""
 #| "We inform you that the password for your Eplouribousse account has been "
@@ -111,7 +108,6 @@ msgstr ""
 "été récemment effectuée"
 
 #: epl/apps/user/tests/services/test_email.py:64
-#: epl/templates/emails/password_reset.txt:9
 msgid ""
 "This token has an expiration time, you have one day to reset your password"
 msgstr ""
@@ -174,7 +170,6 @@ msgid "you can ignore this email"
 msgstr "vous pouvez ignorer cet email"
 
 #: epl/templates/emails/password_changed.txt:9
-#: epl/templates/emails/password_reset.txt:10
 msgid ""
 "please contact the site administrator immediately at the following address"
 msgstr ""
@@ -182,7 +177,6 @@ msgstr ""
 "suivante"
 
 #: epl/templates/emails/password_changed.txt:13
-#: epl/templates/emails/password_reset.txt:14
 msgid ""
 "For security reasons, we recommend that you change your password as soon as "
 "possible"
@@ -191,7 +185,7 @@ msgstr ""
 "passe dès que possible"
 
 #: epl/templates/emails/password_changed.txt:17
-#: epl/templates/emails/password_reset.txt:18
+#: epl/templates/emails/password_reset.txt:14
 msgid "This is an automated message, please do not reply"
 msgstr "Ceci est un message automatique, merci de ne pas répondre"
 
@@ -201,9 +195,36 @@ msgstr "Ceci est un message automatique, merci de ne pas répondre"
 msgid "Password Reset"
 msgstr "Réinitialisation du mot de passe"
 
+#: epl/templates/emails/password_reset.txt:5
+msgid "Did you forgot your password ?"
+msgstr "Vous avez oublié votre mot de passe ?"
+
 #: epl/templates/emails/password_reset.txt:8
-msgid "click on the link below to validate your operation"
-msgstr "utilisez le jeton ci joint pour valider votre opération"
+#, fuzzy
+#| msgid "Click on the link below to validate your operation"
+msgid "Click on the link below to reset your password"
+msgstr "Cliquez sur le lien suivant pour le réinitialiser"
+
+#: epl/templates/emails/password_reset.txt:9
+msgid "This link has an expiration time"
+msgstr "Ce lien a une durée de validité limitée"
+
+#: epl/templates/emails/password_reset.txt:9
+#, fuzzy
+#| msgid ""
+#| "This token has an expiration time, you have one day to reset your password"
+msgid "you have one day until now to reset your password"
+msgstr ""
+"vous avez un jour à partir de la réception de ce message "
+"pour réinitialiser votre mot de passe"
+
+#: epl/templates/emails/password_reset.txt:10
+msgid "If you do not want to reset your password"
+msgstr "Si vous ne voulez pas réinitialiser votre mot de passe"
+
+#: epl/templates/emails/password_reset.txt:10
+msgid "you can ignore this message and your password will not change"
+msgstr "vous pouvez ignorer ce message et votre mot de passe restera inchangé"
 
 #, fuzzy
 #~| msgid "Hello,"
