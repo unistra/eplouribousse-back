@@ -1,4 +1,5 @@
 from django_tenants.urlresolvers import reverse
+from django_tenants.utils import tenant_context
 
 from epl.apps.user.models import User
 from epl.tests import TestCase
@@ -10,7 +11,8 @@ class TestChangePassword(TestCase):
         self.assertEqual(response.status_code, 401)
 
     def create_user(self, username="test@test.com", password="&siE9S3rVVEn1UvTM4b@"):  # noqa: S107
-        user = User.objects.create_user(username, email=username, password=password)
+        with tenant_context(self.tenant):
+            user = User.objects.create_user(username, email=username, password=password)
         return user
 
     def test_successful_password_change(self):
@@ -18,7 +20,6 @@ class TestChangePassword(TestCase):
         new_password = "_Here is my 2nd and new password"  # noqa: S105
 
         user = self.create_user(password=old_password)
-
         response = self.client.patch(
             reverse("change_password"),
             {
