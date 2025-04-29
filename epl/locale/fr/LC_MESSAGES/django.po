@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-30 10:54+0200\n"
+"POT-Creation-Date: 2025-04-30 11:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-
 #: epl/apps/tenant/models.py:10
 msgid "Tenant name"
 msgstr "Nom du tenant"
@@ -50,23 +49,27 @@ msgstr "Utilisateur"
 msgid "Users"
 msgstr "Utilisateurs"
 
-#: epl/apps/user/serializers.py:18
+#: epl/apps/user/serializers.py:20
 msgid "Old password is incorrect"
-msgstr "L'ancien mot de passe est incorrect"
+msgstr "L'ancien mot de passe est erroné"
 
-#: epl/apps/user/serializers.py:23 epl/apps/user/serializers.py:55
+#: epl/apps/user/serializers.py:25 epl/apps/user/serializers.py:84
 msgid "New password and confirm password do not match"
-msgstr "Les mots de passe ne correspondent pas"
+msgstr "Le nouveau mot de passe et sa confirmation ne correspondent pas"
 
-#: epl/apps/user/serializers.py:48
+#: epl/apps/user/serializers.py:56
+msgid "User is not active"
+msgstr "L'utilisateur n'est pas actif"
+
+#: epl/apps/user/serializers.py:77
 msgid "Signature has expired"
 msgstr "La signature a expiré"
 
-#: epl/apps/user/serializers.py:50
+#: epl/apps/user/serializers.py:79
 msgid "Signature does not match"
 msgstr "La signature n'est pas valide"
 
-#: epl/apps/user/serializers.py:67
+#: epl/apps/user/serializers.py:96
 msgid "User not found"
 msgstr "Utilisateur non trouvé"
 
@@ -77,43 +80,40 @@ msgid ""
 "recently changed"
 msgstr ""
 "Nous vous informons que le mot de passe de votre compte Eplouribousse a été "
-"récemment changé"
+"changé récemment"
 
 #: epl/apps/user/tests/services/test_email.py:37
 #: epl/templates/emails/password_changed.txt:8
 msgid "If you initiated this change"
-msgstr "Si vous avez initié ce changement"
+msgstr "Si vous êtes à l'origine de ce changement"
 
 #: epl/apps/user/tests/services/test_email.py:38
 #: epl/templates/emails/password_changed.txt:9
 msgid "If you did NOT make this change"
-msgstr "Si vous n'avez PAS effectué ce changement"
+msgstr "Si vous n'avez PAS fait ce changement"
 
 #: epl/apps/user/tests/services/test_email.py:60
 #: epl/templates/emails/password_reset.txt:5
 msgid "Did you forget your password ?"
-msgstr "Vous avez oublié votre mot de passe ?"
+msgstr "Avez-vous oublié votre mot de passe ?"
 
 #: epl/apps/user/tests/services/test_email.py:61
-msgid "Click on the link below to reset your password"
-msgstr "Cliquez sur le lien suivant pour le réinitialiser"
+#: epl/templates/emails/password_reset.txt:8
+msgid "Click on the link to reset your password"
+msgstr "Cliquez sur le lien pour réinitialiser votre mot de passe"
 
-#: epl/apps/user/tests/services/test_email.py:63
-msgid ""
-"This link has an expiration time, you have one day until now to reset your "
-"password"
-msgstr ""
-"Ce jeton a une date d'expiration, vous avez un jour pour réinitialiser votre "
-"mot de passe"
+#: epl/apps/user/tests/services/test_email.py:62
+#: epl/templates/emails/password_reset.txt:9
+msgid "This link is only valid for 24 hours"
+msgstr "Ce lien n'est valable que pendant 24 heures"
 
-#: epl/apps/user/tests/services/test_email.py:67
+#: epl/apps/user/tests/services/test_email.py:65
 msgid ""
 "If you do not want to reset your password, you can ignore this message and "
 "your password will not change"
 msgstr ""
-"Si vous ne voulez pas réinitialiser votre mot de passe, vous pouvez ignorer "
-"ce message et votre mot de passe restera inchangé"
-
+"Si vous ne souhaitez pas réinitialiser votre mot de passe, vous pouvez ignorer "
+"ce message et votre mot de passe ne changera pas"
 #: epl/apps/user/validators.py:13
 msgid ""
 "The min_score parameter of the ZxcvbnPasswordValidator must be an integer."
@@ -124,26 +124,42 @@ msgstr ""
 msgid "The password is too weak"
 msgstr "Le mot de passe est trop faible"
 
-#: epl/apps/user/views.py:17
+#: epl/apps/user/views.py:29
 msgid "Change the user's password"
 msgstr "Changer le mot de passe de l'utilisateur"
 
-#: epl/apps/user/views.py:22 epl/apps/user/views.py:49
-#: epl/apps/user/views.py:76
+#: epl/apps/user/views.py:34 epl/apps/user/views.py:61
+#: epl/apps/user/views.py:88
 msgid "Confirmation message"
 msgstr "Message de confirmation"
 
-#: epl/apps/user/views.py:39
+#: epl/apps/user/views.py:51
 msgid "Your password has been changed successfully."
 msgstr "Votre mot de passe a été changé avec succès."
 
-#: epl/apps/user/views.py:63
+#: epl/apps/user/views.py:75
 msgid "Your password has been successfully reset."
-msgstr "Votre mot de passe a été réinitialisé avec succès."
+msgstr "Votre mot de passe a été changé avec succès."
 
-#: epl/apps/user/views.py:95
+#: epl/apps/user/views.py:107
 msgid "Email has been sent successfully."
-msgstr "L'email a été envoyé avec succès."
+msgstr "L'email a été envoyé."
+
+#: epl/apps/user/views.py:116
+msgid "You must be logged in to access this page"
+msgstr "Vous devez être connecté pour accéder à cette page"
+
+#: epl/apps/user/views.py:142
+msgid "Handshake token expired"
+msgstr "Le jeton d'authentification a expiré"
+
+#: epl/apps/user/views.py:144
+msgid "Invalid handshake token"
+msgstr "Le jeton d'authentification n'est pas valide"
+
+#: epl/templates/403.html:6
+msgid "You are not allowed to see this page"
+msgstr "Vous n'êtes pas autorisé à accéder à cette page"
 
 #: epl/templates/404.html:6
 msgid "Page not found"
@@ -155,18 +171,17 @@ msgstr "Erreur"
 
 #: epl/templates/emails/password_changed.txt:3
 msgid "Password Change"
-msgstr "Changement de mot de passe"
+msgstr "Modification du mot de passe"
 
 #: epl/templates/emails/password_changed.txt:8
 msgid "you can ignore this email"
-msgstr "vous pouvez ignorer cet email"
+msgstr "Vous pouvez ignorer ce message"
 
 #: epl/templates/emails/password_changed.txt:9
 msgid ""
 "please contact the site administrator immediately at the following address"
 msgstr ""
-"merci de contacter immédiatement l'administrateur du site à l'adresse "
-"suivante"
+"veuillez contacter l'administrateur du site immédiatement à l'adresse suivante"
 
 #: epl/templates/emails/password_changed.txt:13
 msgid ""
@@ -174,24 +189,17 @@ msgid ""
 "possible"
 msgstr ""
 "Pour des raisons de sécurité, nous vous recommandons de changer votre mot de "
-"passe dès que possible"
+"passe au plus vite"
 
 #: epl/templates/emails/password_changed.txt:17
 #: epl/templates/emails/password_reset.txt:14
 msgid "This is an automated message, please do not reply"
-msgstr "Ceci est un message automatique, merci de ne pas répondre"
+msgstr ""
+"Ceci est un message automatique, vous ne pouvez pas y répondre"
 
 #: epl/templates/emails/password_reset.txt:3
 msgid "Password Reset"
 msgstr "Réinitialisation du mot de passe"
-
-#: epl/templates/emails/password_reset.txt:8
-msgid "Click on the link to reset your password"
-msgstr "Cliquez sur le lien suivant pour le réinitialiser"
-
-#: epl/templates/emails/password_reset.txt:9
-msgid "This link is only valid for 24 hours"
-msgstr "Ce lien n'est valable que pendant 24 heures"
 
 #: epl/templates/emails/password_reset.txt:10
 msgid "If you do not want to reset your password"
@@ -199,4 +207,4 @@ msgstr "Si vous ne voulez pas réinitialiser votre mot de passe"
 
 #: epl/templates/emails/password_reset.txt:10
 msgid "you can ignore this message and your password will not change"
-msgstr "vous pouvez ignorer ce message et votre mot de passe restera inchangé"
+msgstr "vous pouvez ignorer ce message et votre mot de passe ne changera pas"
