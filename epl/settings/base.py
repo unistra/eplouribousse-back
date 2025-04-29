@@ -332,6 +332,8 @@ def username_format(username):
 CAS_SERVER_URL = "https://cas.unistra.fr/cas/"
 CAS_LOGOUT_COMPLETELY = True
 CAS_USERNAME_FORMAT = username_format
+CAS_USER_CREATION_CALLBACK = ["epl.libs.cas.create_user"]
+CAS_REDIRECT_URL = "/api/user/login-success/"
 
 
 ############################

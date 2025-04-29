@@ -54,3 +54,10 @@ sentry_sdk.init(
     environment="preprod",
     integrations=[DjangoIntegration()],
 )
+
+
+######################
+# CAS authentication #
+######################
+
+CAS_SERVER_URL = "https://cas-pprd.unistra.fr/cas/"

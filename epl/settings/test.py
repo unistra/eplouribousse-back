@@ -1,6 +1,7 @@
-from .base import *
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
+
+from .base import *
 
 #######################
 # Debug configuration #
@@ -62,3 +63,9 @@ sentry_sdk.init(
 ##############
 
 SECRET_KEY = "{{ secret_key }}"
+
+######################
+# CAS authentication #
+######################
+
+CAS_SERVER_URL = "https://cas-dev.unistra.fr/cas/"
