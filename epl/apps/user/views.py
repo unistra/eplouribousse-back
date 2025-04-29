@@ -66,7 +66,7 @@ def send_reset_email(request: Request) -> Response:
     try:
         protocol = request.scheme
         domain = request.tenant.domains.get(is_primary=True)
-        user = User.objects.get(email=email)
+        user = User.objects.get(email=email, is_active=True)
         if protocol == "http":
             port = ":5173"
         send_password_reset_email(user, email, domain.front_domain, protocol, port)

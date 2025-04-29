@@ -43,12 +43,11 @@ class PasswordResetSerializer(serializers.Serializer):
     def validate_token(self, attrs):
         signer = TimestampSigner(salt="reset-password")
         try:
-            signer.unsign(attrs, max_age=60 * 60 * 24)
             self.email = signer.unsign(attrs, max_age=60 * 60 * 24)
         except SignatureExpired:
-            raise serializers.ValidationError("signatureHasExpired")
+            raise serializers.ValidationError(_("Signature has expired"))
         except BadSignature:
-            raise serializers.ValidationError("signatureDoesNotMatch")
+            raise serializers.ValidationError(_("Signature does not match"))
         return attrs
 
     def validate(self, attrs):
@@ -62,7 +61,10 @@ class PasswordResetSerializer(serializers.Serializer):
         return attrs
 
     def save(self, **kwargs):
-        user = User.objects.get(email=self.email)
+        try:
+            user = User.objects.get(email=self.email, is_active=True)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(_("User not found"))
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
