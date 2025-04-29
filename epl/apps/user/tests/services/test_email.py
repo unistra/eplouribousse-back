@@ -57,10 +57,14 @@ class TestUserEmailServices(TestCase):
 
         # Verify email content contains important elements
         email_content = mail.outbox[0].body
+        self.assertIn(_("Did you forgot your password ?"), email_content)
+        self.assertIn(_("Click on the link below to reset your password"), email_content)
         self.assertIn(
-            _("We inform you that an attempt to reset yout Eplouribousse password has been made"), email_content
+            _("This link has an expiration time, you have one day until now to reset your password"), email_content
         )
-        self.assertIn(_("If you initiated this change"), email_content)
-        self.assertIn(_("This token has an expiration time, you have one day to reset your password"), email_content)
-        self.assertIn(_("If you did NOT make this change"), email_content)
-        self.assertIn(settings.EMAIL_SUPPORT, email_content)
+        self.assertIn(
+            _(
+                "If you do not want to reset your password, you can ignore this message and your password will not change"
+            ),
+            email_content,
+        )
