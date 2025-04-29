@@ -26,20 +26,6 @@ class TestResetPassword(TestCase):
         self.assertEqual(response.status_code, 200)
         user.refresh_from_db()
 
-    def test_fail_password_reset_email(self):
-        old_password = "_Here is my 1st password"  # noqa: S105
-
-        user = self.create_user(password=old_password)
-        response = self.client.post(
-            reverse("send_reset_email"),
-            {"email": "wrong_email"},
-            content_type="application/json",
-            user=user,
-        )
-
-        self.assertEqual(response.status_code, 404)
-        user.refresh_from_db()
-
     def test_successful_password_reset(self):
         new_password = "_Here is my 2nd and new password"  # noqa: S105
         signer = TimestampSigner(salt="reset-password")

@@ -1,5 +1,5 @@
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -62,10 +62,7 @@ class PasswordResetSerializer(serializers.Serializer):
         return attrs
 
     def save(self, **kwargs):
-        try:
-            user = User.objects.get(email=self.email)
-            user.set_password(self.validated_data["new_password"])
-            user.save()
-            return user
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError("Associated user does not exists")
+        user = User.objects.get(email=self.email)
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        return user
