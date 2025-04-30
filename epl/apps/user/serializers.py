@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.serializers import ModelSerializer
 
 from epl.apps.user.models import User
 
@@ -97,3 +98,13 @@ class PasswordResetSerializer(serializers.Serializer):
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
+
+
+class UserSerializer(ModelSerializer):
+    """
+    This Serializer is used to perform GET operations on user objects.
+    """
+
+    class Meta:
+        model = User
+        fields = ["id", "username"]

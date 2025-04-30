@@ -14,7 +14,12 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from epl.apps.user.models import User
-from epl.apps.user.serializers import PasswordChangeSerializer, PasswordResetSerializer, TokenObtainSerializer
+from epl.apps.user.serializers import (
+    PasswordChangeSerializer,
+    PasswordResetSerializer,
+    TokenObtainSerializer,
+    UserSerializer,
+)
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
 from epl.services.user.email import send_password_change_email, send_password_reset_email
 
@@ -92,7 +97,7 @@ def reset_password(request: Request) -> Response:
 @api_view(["POST"])
 def send_reset_email(request: Request) -> Response:
     """
-    Send an email to the user with a token to reset the password
+    Email the user with a token to reset the password
     If the user's email is not found nothing happens
     """
     email = request.data["email"]
@@ -166,3 +171,14 @@ def login_handshake(request: Request) -> Response:
 
 def _get_handshake_signer() -> signing.TimestampSigner:
     return signing.TimestampSigner(salt=HANDSHAKE_TOKEN_SALT)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_info(request):
+    """
+    Display user information.
+    """
+    current_user = request.user
+    serializer = UserSerializer(current_user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
