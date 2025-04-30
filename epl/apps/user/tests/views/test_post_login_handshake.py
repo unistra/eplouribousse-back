@@ -29,18 +29,18 @@ class LoginSuccessViewTest(TestCase):
 
 class HandshakeViewTest(TestCase):
     def test_missing_token_is_denied(self):
-        response = self.client.post(reverse("login_handshake"))
+        response = self.post(reverse("login_handshake"))
         self.response_forbidden(response)
 
     def test_invalid_token_is_denied(self):
-        response = self.client.post(reverse("login_handshake"), {"t": "invalid_token"})
+        response = self.post(reverse("login_handshake"), {"t": "invalid_token"})
         self.response_forbidden(response)
 
     def test_expired_token_is_denied(self):
         signer = _get_handshake_signer()
         token = signer.sign_object({"u": str(uuid.uuid4())})
         with patch("epl.apps.user.views.HANDSHAKE_TOKEN_MAX_AGE", 0):
-            response = self.client.post(reverse("login_handshake"), {"t": token})
+            response = self.post(reverse("login_handshake"), {"t": token})
         self.response_forbidden(response)
         self.assertIn("Handshake token expired", str(response.content))
 
@@ -49,7 +49,7 @@ class HandshakeViewTest(TestCase):
             user = User.objects.create_user(email="first.last@example.com", is_active=True)
         signer = _get_handshake_signer()
         token = signer.sign_object({"u": str(user.id)})
-        response = self.client.post(reverse("login_handshake"), {"t": token})
+        response = self.post(reverse("login_handshake"), {"t": token})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
         self.assertIn("refresh", response.data)
@@ -59,5 +59,5 @@ class HandshakeViewTest(TestCase):
             user = User.objects.create_user(email="first.last@example.com", is_active=False)
         signer = _get_handshake_signer()
         token = signer.sign_object({"u": str(user.id)})
-        response = self.client.post(reverse("login_handshake"), {"t": token})
+        response = self.post(reverse("login_handshake"), {"t": token})
         self.response_forbidden(response)

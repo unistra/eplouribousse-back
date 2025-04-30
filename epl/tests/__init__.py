@@ -13,64 +13,6 @@ class TenantClient(OriginalTenantClient):
             token = AccessToken.for_user(user)
             self._token = token
 
-    # def get(
-    #     self,
-    #     path,
-    #     data=None,
-    #     follow=False,
-    #     secure=False,
-    #     *,
-    #     headers=None,
-    #     **extra,
-    # ):
-    #     if user := extra.pop("user", None):
-    #         self.force_authenticate(user)
-    #     if self._token:
-    #         super().get(
-    #             path,
-    #             data=data,
-    #             follow=follow,
-    #             secure=secure,
-    #             headers=headers,
-    #             HTTP_AUTHORIZATION=f"Bearer {self._token}",
-    #             **extra,
-    #         )
-    #     return super().get(path, data=data, follow=follow, secure=secure, headers=headers, **extra)
-    #
-    # def patch(
-    #     self,
-    #     path,
-    #     data="",
-    #     content_type="application/octet-stream",
-    #     follow=False,
-    #     secure=False,
-    #     *,
-    #     headers=None,
-    #     **extra,
-    # ):
-    #     if user := extra.pop("user", None):
-    #         self.force_authenticate(user)
-    #     if self._token:
-    #         return super().patch(
-    #             path,
-    #             data=data,
-    #             content_type=content_type,
-    #             follow=follow,
-    #             secure=secure,
-    #             headers=headers,
-    #             HTTP_AUTHORIZATION=f"Bearer {self._token}",
-    #             **extra,
-    #         )
-    #     return super().patch(
-    #         path,
-    #         data=data,
-    #         content_type=content_type,
-    #         follow=follow,
-    #         secure=secure,
-    #         headers=headers,
-    #         **extra,
-    #     )
-
 
 class TestCase(TenantTestCase):
     def setUp(self):
