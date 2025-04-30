@@ -13,7 +13,7 @@ from epl.services.user.email import send_password_change_email, send_password_re
 
 
 @extend_schema(
-    tags=["User"],
+    tags=["user"],
     summary=_("Change the user's password"),
     request=PasswordChangeSerializer,
     responses={
@@ -40,8 +40,8 @@ def change_password(request: Request) -> Response:
 
 
 @extend_schema(
-    tags=["User"],
-    summary=_("Reset the user's password"),
+    tags=["user"],
+    summary="Reset the user's password",
     request=PasswordResetSerializer,
     responses={
         status.HTTP_200_OK: inline_serializer(
@@ -53,15 +53,36 @@ def change_password(request: Request) -> Response:
 )
 @api_view(["PATCH"])
 def reset_password(request: Request) -> Response:
+    """
+    Reset the user's password
+    """
     serializer = PasswordResetSerializer(data=request.data, context={"request": request})
     serializer.is_valid(raise_exception=True)
     serializer.save()
 
-    return Response({"detail": _("Your password has been resetted successfully.")}, status=status.HTTP_200_OK)
+    return Response({"detail": _("Your password has been successfully reset.")}, status=status.HTTP_200_OK)
 
 
+@extend_schema(
+    tags=["user"],
+    summary="Send a token to the user to reset the password",
+    request=inline_serializer(
+        name="SendResetEmailSerializer",
+        fields={"email": serializers.EmailField(help_text="Email address", write_only=True)},
+    ),
+    responses={
+        status.HTTP_200_OK: inline_serializer(
+            name="SendResetEmailResponseSerializer",
+            fields={"detail": serializers.CharField(help_text=_("Confirmation message"), read_only=True)},
+        ),
+    },
+)
 @api_view(["POST"])
 def send_reset_email(request: Request) -> Response:
+    """
+    Send an email to the user with a token to reset the password
+    If the user's email is not found nothing happens
+    """
     email = request.data["email"]
     try:
         protocol = request.scheme
