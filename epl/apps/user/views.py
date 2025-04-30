@@ -103,9 +103,10 @@ def send_reset_email(request: Request) -> Response:
     email = request.data["email"]
     try:
         protocol = request.scheme
-        domain = request.tenant.domains.get(is_primary=True)
+        domain = request.tenant.get_primary_domain()
         user = User.objects.get(email=email, is_active=True)
         if protocol == "http":
+            # Dev environment frontend is served on port 5173
             port = ":5173"
         send_password_reset_email(user, email, domain.front_domain, protocol, port)
     finally:
@@ -121,7 +122,7 @@ def login_success(request) -> HttpResponseRedirect:
         return permission_denied(request, _("You must be logged in to access this page"))
     signer = _get_handshake_signer()
     authentication_token: str = signer.sign_object({"u": str(request.user.id)})
-    front_url = f"{request.scheme}://{request.tenant.domains.get(is_primary=True).front_domain}/handshake?t={authentication_token}"
+    front_url = f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}/handshake?t={authentication_token}"
     logger.info(f"Successful login: redirect to front at {front_url}")
 
     return HttpResponseRedirect(iri_to_uri(front_url))

@@ -22,7 +22,7 @@ def saml_config_loader(request: HttpRequest) -> SPConfig:
     conf = SPConfig()
     tenant_domain = ""
     if tenant := getattr(request, "tenant"):
-        tenant_domain: str = tenant.domains.get(is_primary=True).domain
+        tenant_domain: str = tenant.get_primary_domain().domain
 
     settings_file = settings.SITE_ROOT / f"epl/settings/saml2/{tenant_domain}.py"
     if settings_file.exists():

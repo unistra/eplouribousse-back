@@ -13,6 +13,9 @@ class Consortium(TenantMixin):
 
     auto_create_schema = True
 
+    def __str__(self):
+        return self.name
+
 
 class Domain(DomainMixin):
     id = UUIDPrimaryKeyField()
