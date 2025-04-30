@@ -122,6 +122,19 @@ def login_success(request) -> HttpResponseRedirect:
     return HttpResponseRedirect(iri_to_uri(front_url))
 
 
+@extend_schema(
+    tags=["user"],
+    summary=_("Validate a handshake token"),
+    request=inline_serializer(
+        name="HandshakeSerializer",
+        fields={"t": serializers.CharField(help_text=_("Handshake token"))},
+    ),
+    responses={
+        status.HTTP_200_OK: TokenObtainSerializer,
+        status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+        status.HTTP_403_FORBIDDEN: None,
+    },
+)
 @api_view(["POST"])
 def login_handshake(request: Request) -> Response:
     """
@@ -132,7 +145,7 @@ def login_handshake(request: Request) -> Response:
     To be valid, the token must not be older than HANDSHAKE_TOKEN_MAX_AGE (60) seconds
     """
     signer: signing.TimestampSigner = _get_handshake_signer()
-    handshake_token: str = request.data.get("t")
+    handshake_token: str = request.data.get("t", "")
 
     try:
         user_data = signer.unsign_object(handshake_token, max_age=HANDSHAKE_TOKEN_MAX_AGE)
