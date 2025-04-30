@@ -14,7 +14,7 @@ admin.autodiscover()
 urlpatterns = [
     path("", home, name="home"),
     path("admin/", admin.site.urls),
-    path("api/", include("epl.apps.tenant.urls")),
+    path("api/consortium/", include("epl.apps.tenant.urls")),
     path("api/user/", include("epl.apps.user.urls")),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

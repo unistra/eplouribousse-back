@@ -8,5 +8,5 @@ urlpatterns = [
     path("send-reset-email/", views.send_reset_email, name="send_reset_email"),
     path("login-success/", views.login_success, name="login_success"),
     path("login-handshake/", views.login_handshake, name="login_handshake"),
-    path("user/", views.user_info, name="user"),
+    path("profile/", views.user_info, name="user"),
 ]

@@ -173,6 +173,14 @@ def _get_handshake_signer() -> signing.TimestampSigner:
     return signing.TimestampSigner(salt=HANDSHAKE_TOKEN_SALT)
 
 
+@extend_schema(
+    tags=["user"],
+    summary=_("User profile"),
+    responses={
+        status.HTTP_200_OK: UserSerializer,
+        status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+    },
+)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_info(request):

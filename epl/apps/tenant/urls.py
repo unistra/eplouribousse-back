@@ -6,5 +6,5 @@ from epl.apps.tenant.views import consortium_info
 admin.autodiscover()
 
 urlpatterns = [
-    path("consortium/", consortium_info, name="consortium"),
+    path("", consortium_info, name="consortium"),
 ]
