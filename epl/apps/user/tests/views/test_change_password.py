@@ -20,7 +20,7 @@ class TestChangePassword(TestCase):
         new_password = "_Here is my 2nd and new password"  # noqa: S105
 
         user = self.create_user(password=old_password)
-        response = self.client.patch(
+        response = self.patch(
             reverse("change_password"),
             {
                 "old_password": old_password,

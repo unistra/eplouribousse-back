@@ -16,7 +16,7 @@ class TestResetPassword(TestCase):
         old_password = "_Here is my 1st password"  # noqa: S105
 
         user = self.create_user(password=old_password)
-        response = self.client.post(
+        response = self.post(
             reverse("send_reset_email"),
             {"email": user.username},
             content_type="application/json",
@@ -32,7 +32,7 @@ class TestResetPassword(TestCase):
         user = self.create_user()
         token = signer.sign(user.username)
 
-        response = self.client.patch(
+        response = self.patch(
             reverse("reset_password"),
             {
                 "token": token,
@@ -51,7 +51,7 @@ class TestResetPassword(TestCase):
         new_password = "_Here is my 2nd and new password"  # noqa: S105
         user = self.create_user()
 
-        response = self.client.patch(
+        response = self.patch(
             reverse("reset_password"),
             {
                 "token": "wrong_token",

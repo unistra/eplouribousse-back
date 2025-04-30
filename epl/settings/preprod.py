@@ -1,7 +1,7 @@
-from .base import *
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from .base import *
 
 ##########################
 # Database configuration #
@@ -54,3 +54,10 @@ sentry_sdk.init(
     environment="preprod",
     integrations=[DjangoIntegration()],
 )
+
+
+######################
+# CAS authentication #
+######################
+
+CAS_SERVER_URL = "https://cas-pprd.unistra.fr/cas/"

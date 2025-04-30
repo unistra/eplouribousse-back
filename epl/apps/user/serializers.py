@@ -1,8 +1,10 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from epl.apps.user.models import User
 
@@ -33,6 +35,33 @@ class PasswordChangeSerializer(serializers.Serializer):
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
+
+
+class TokenObtainSerializer(serializers.Serializer):
+    refresh = serializers.CharField(read_only=True)
+    access = serializers.CharField(read_only=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_token(self, user: User):
+        token = RefreshToken.for_user(user)
+        token["iss"] = self.context["request"].get_host()
+        token["sub"] = str(user.pk)
+        token["nbf"] = timezone.now().timestamp()
+        return token
+
+    def validate_user(self, attrs, user: User):
+        if not user.is_active:
+            raise ValidationError(_("User is not active"))
+        data = super().validate(attrs)
+        refresh = self.get_token(user)
+        data["refresh"] = str(refresh)
+        data["access"] = str(refresh.access_token)
+        return data
+
+    def validate(self, attrs):
+        return self.validate_user(attrs, self.context["user"])
 
 
 class PasswordResetSerializer(serializers.Serializer):

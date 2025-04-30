@@ -91,9 +91,48 @@ MIDDLEWARE += [
 ]
 INTERNAL_IPS = ["127.0.0.1", "0.0.0.0"]
 
-SIMPLE_JWT.update({
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
-})
+SIMPLE_JWT.update(
+    {
+        "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
+    }
+)
+
+SAML_TENANT_CONFIG = {
+    "sxb": {
+        "entityid": "http://sxb.epl-api.localhost:8000/saml2/metadata/",
+        "service": {
+            "sp": {
+                "default_idp": "",
+                "endpoints": {
+                    "assertion_consumer_service": [
+                        ("http://sxb.epl-api.localhost/saml2/acs/", saml2.BINDING_HTTP_POST),
+                    ],
+                    "single_logout_service": [
+                        ("http://sxb.epl-api.localhost/saml2/ls/", saml2.BINDING_HTTP_REDIRECT),
+                        ("http://sxb.epl-api.localhost/saml2/ls/post", saml2.BINDING_HTTP_POST),
+                    ],
+                },
+            },
+        },
+    },
+    "tenant2": {
+        "entityid": "http://tenant2.epl-api.localhost:8000/saml2/metadata/",
+        "service": {
+            "sp": {
+                "default_idp": "",
+                "endpoints": {
+                    "assertion_consumer_service": [
+                        ("http://tenant2.epl-api.localhost:8000/saml2/acs/", saml2.BINDING_HTTP_POST),
+                    ],
+                    "single_logout_service": [
+                        ("http://tenant2.epl-api.localhost:8000/saml2/ls/", saml2.BINDING_HTTP_REDIRECT),
+                        ("http://tenant2.epl-api.localhost:8000/saml2/ls/post", saml2.BINDING_HTTP_POST),
+                    ],
+                },
+            },
+        },
+    },
+}
 
 
 ##########
