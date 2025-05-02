@@ -187,3 +187,12 @@ class UserListSerializer(ModelSerializer):
             "last_name",
             "email",
         ]
+
+
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    def validate(self, attrs):
+        if User.objects.filter(email=attrs["email"]).exists():
+            raise serializers.ValidationError(_("Email is already linked to an account"))
+        return attrs

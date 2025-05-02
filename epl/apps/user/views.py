@@ -16,6 +16,7 @@ from rest_framework.response import Response
 
 from epl.apps.user.models import User
 from epl.apps.user.serializers import (
+    EmailSerializer,
     PasswordChangeSerializer,
     PasswordResetSerializer,
     TokenObtainSerializer,
@@ -24,7 +25,7 @@ from epl.apps.user.serializers import (
 )
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
-from epl.services.user.email import send_password_change_email, send_password_reset_email
+from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
 
 logger = logging.getLogger(__name__)
 
@@ -229,3 +230,11 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["first_name", "last_name", "email", "username"]
     ordering_fields = ["first_name", "last_name", "email"]
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def invite(request: Request) -> Response:
+    serializer = EmailSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    return send_invite_email(request.data["email"])
