@@ -1,6 +1,5 @@
 from django.urls import reverse
 from django_tenants.utils import tenant_context
-from rest_framework import status
 
 from epl.apps.user.models import User
 from epl.tests import TestCase
@@ -24,7 +23,7 @@ class TestUserInfosView(TestCase):
         url = reverse("user")
         response = self.get(url, user=self.user)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.response_ok(response)
         self.assertEqual(response.data["username"], self.user.username)
 
     def test_get_user_infos_unauthenticated(self):
@@ -34,7 +33,7 @@ class TestUserInfosView(TestCase):
         url = reverse("user")
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.response_unauthorized(response)
 
     def test_get_user_infos_inactive_user(self):
         """
@@ -47,4 +46,4 @@ class TestUserInfosView(TestCase):
 
         url = reverse("user")
         response = self.client.get(url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.response_unauthorized(response)

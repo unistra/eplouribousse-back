@@ -1,5 +1,4 @@
 from django.urls import reverse
-from rest_framework import status
 
 from epl.tests import TestCase
 
@@ -12,7 +11,7 @@ class ConsortiumViewTests(TestCase):
         url = reverse("consortium")
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.response_ok(response)
         self.assertEqual(response.data["name"], self.tenant.name)
         self.assertEqual(response.data["settings"], self.tenant.tenant_settings)
         self.assertIn("id", response.data)
