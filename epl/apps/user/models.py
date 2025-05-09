@@ -54,7 +54,7 @@ class User(AbstractUser):
         return name or self.username
 
 
-class TenantUserRole(models.Model):
+class UserRole(models.Model):
     # Role constants
     TENANT_SUPER_USER = "tenant_super_user"
     PROJECT_CREATOR = "project_creator"

@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='TenantUserRole',
+            name='UserRole',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('role', models.CharField(choices=[('tenant_super_user', 'Tenant Super User'), ('project_creator', 'Project Creator'), ('project_manager', 'Project Manager'), ('instructor', 'Instructor'), ('controller', 'Controller'), ('guest', 'Guest')], max_length=30)),
