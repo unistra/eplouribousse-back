@@ -32,6 +32,12 @@ logger = logging.getLogger(__name__)
 HANDSHAKE_TOKEN_MAX_AGE = 60
 HANDSHAKE_TOKEN_SALT = f"{__file__}:handshake"
 
+RESET_TOKEN_MAX_AGE = 3600
+RESET_TOKEN_SALT = f"{__file__}:reset"
+
+INVITE_TOKEN_MAX_AGE = 60
+INVITE_TOKEN_SALT = f"{__file__}:invite"
+
 
 @extend_schema(
     tags=["user"],
@@ -77,7 +83,9 @@ def reset_password(request: Request) -> Response:
     """
     Reset the user's password
     """
-    serializer = PasswordResetSerializer(data=request.data, context={"request": request})
+    serializer = PasswordResetSerializer(
+        data=request.data, context={"request": request}, salt=RESET_TOKEN_SALT, max_age=RESET_TOKEN_MAX_AGE
+    )
     serializer.is_valid(raise_exception=True)
     serializer.save()
 
@@ -111,10 +119,13 @@ def send_reset_email(request: Request) -> Response:
     protocol = request.scheme
     port = ":5173" if protocol == "http" else ""
 
+    signer = signing.TimestampSigner(salt=RESET_TOKEN_SALT)
+    token = signer.sign_object({"email": email})
+    front_url = f"{protocol}://{request.tenant.get_primary_domain().front_domain}{port}/reset-password?token={token}"
+
     try:
-        domain = request.tenant.get_primary_domain()
         user = User.objects.get(email=email, is_active=True)
-        send_password_reset_email(user, email, domain.front_domain, protocol, port)
+        send_password_reset_email(user, front_url)
     except User.DoesNotExist:
         # Intentionally do nothing if the user does not exist
         pass

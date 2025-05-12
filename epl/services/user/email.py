@@ -1,8 +1,5 @@
-from datetime import datetime
-
 from django.conf import settings
 from django.core.mail import send_mail
-from django.core.signing import TimestampSigner
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
@@ -26,19 +23,11 @@ def send_password_change_email(user: Request.user):
     )
 
 
-def send_password_reset_email(user, email: str, domain, protocol, port=""):
-    signer = TimestampSigner(salt="reset-password")
-    token = signer.sign_object({email: email})
+def send_password_reset_email(user, reset_link: str):
     email_content = render_to_string(
         "emails/password_reset.txt",
         {
-            "user": user,
-            "domain": domain,
-            "protocol": protocol,
-            "port": port,
-            "year": datetime.now().year,
-            "token": token,
-            "email_support": settings.EMAIL_SUPPORT,
+            "reset_link": reset_link,
         },
     )
 

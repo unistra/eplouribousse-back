@@ -74,10 +74,18 @@ class PasswordResetSerializer(serializers.Serializer):
     new_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
     confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
 
+    def __init__(self, *args, **kwargs):
+        self.email = None
+        self.salt = kwargs.pop("salt", None)
+        self.max_age = kwargs.pop("max_age", None)
+        super().__init__(*args, **kwargs)
+
     def validate_token(self, attrs):
-        signer = TimestampSigner(salt="reset-password")
+        signer = TimestampSigner(salt=self.salt)
         try:
-            self.email = signer.unsign(attrs, max_age=60 * 60 * 24)
+            token_data = signer.unsign_object(attrs, max_age=self.max_age)
+            self.email = token_data.get("email")
+
         except SignatureExpired:
             raise serializers.ValidationError(_("Signature has expired"))
         except BadSignature:
