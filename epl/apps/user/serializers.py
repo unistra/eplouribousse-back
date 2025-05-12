@@ -112,6 +112,7 @@ class UserSerializer(ModelSerializer):
     This Serializer is used to perform GET operations on user objects.
     """
 
+    projects = serializers.SerializerMethodField()
     can_authenticate_locally = serializers.SerializerMethodField(
         help_text=_("Whether the user can log in locally with username and password?"),
         read_only=True,
@@ -132,7 +133,25 @@ class UserSerializer(ModelSerializer):
             "email",
             "can_authenticate_locally",
             "settings",
+            "projects",
         ]
+    def get_projects(self, obj):
+        """
+        Get all projects where the user has a role.
+        """
+        user_roles = obj.project_roles.all().select_related("project")
+        projects_data = []
+
+        for user_role in user_roles:
+            projects_data.append(
+                {
+                    "id": user_role.project.id,
+                    "name": user_role.project.name,
+                    "role": user_role.role,
+                }
+            )
+
+        return projects_data
 
     def get_can_authenticate_locally(self, user: User) -> bool:
         return user.has_usable_password()

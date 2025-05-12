@@ -47,7 +47,7 @@ def user_projects(request: Request) -> Response:
 
     # Get projects where the user has a role
     user_roles = UserRole.objects.filter(user=user)
-    project_ids = user_roles.values_list("project_id", flat=True)
+    project_ids = user_roles.values_list("project_id", flat=True)  # flat to get a list of IDs and not tuples
     projects = Project.objects.filter(id__in=project_ids).distinct()
 
     serializer = ProjectSerializer(projects, many=True)
