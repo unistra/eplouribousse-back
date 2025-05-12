@@ -25,7 +25,7 @@ from epl.apps.user.serializers import (
 )
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
-from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
+from epl.services.user.email import send_password_change_email, send_password_reset_email
 
 logger = logging.getLogger(__name__)
 
@@ -102,19 +102,24 @@ def reset_password(request: Request) -> Response:
 def send_reset_email(request: Request) -> Response:
     """
     Email the user with a token to reset the password
-    If the user's email is not found nothing happens
+    If the user's email is not found, nothing happens
     """
-    email = request.data["email"]
+    email = request.data.get("email")
+    if not email:
+        return Response({"detail": _("Email is required.")}, status=status.HTTP_400_BAD_REQUEST)
+
+    protocol = request.scheme
+    port = ":5173" if protocol == "http" else ""
+
     try:
-        protocol = request.scheme
         domain = request.tenant.get_primary_domain()
         user = User.objects.get(email=email, is_active=True)
-        if protocol == "http":
-            # Dev environment frontend is served on port 5173
-            port = ":5173"
         send_password_reset_email(user, email, domain.front_domain, protocol, port)
-    finally:
-        return Response({"detail": _("Email has been sent successfully.")}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        # Intentionally do nothing if the user does not exist
+        pass
+
+    return Response({"detail": _("Email has been sent successfully.")}, status=status.HTTP_200_OK)
 
 
 def login_success(request) -> HttpResponseRedirect:
@@ -237,4 +242,33 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 def invite(request: Request) -> Response:
     serializer = EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    return send_invite_email(request.data["email"])
+
+
+#
+#     signer = _get_invite_signer()
+#     invite_token: str = signer.sign_object({"e": str(request.data["email"])})
+#
+#     front_url = (
+#         f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}/create-account?t={invite_token}"
+#     )
+#     # return send_invite_email(request.data["email"], front_url)
+#     return Response({"link": front_url}, status=status.HTTP_200_OK)
+#
+# @api_view(["POST"])
+# def invite_handshake(request: Request) -> Response:
+#     signer: signing.TimestampSigner = _get_invite_signer()
+#     invite_token: str = request.data.get("token")
+#
+#     try:
+#         email_data = signer.unsign_object(invite_token, max_age=INVITE_TOKEN_MAX_AGE)
+#         email = email_data.get("e")
+#         print(email)
+#     except signing.SignatureExpired:
+#         raise PermissionDenied(_("Invite token expired"))
+#     except signing.BadSignature:
+#         raise PermissionDenied(_("Invalid invite token"))
+#
+#     return Response({"email": email}, status=status.HTTP_200_OK)
+#
+# def _get_invite_signer() -> signing.TimestampSigner:
+#     return signing.TimestampSigner(salt=INVITE_TOKEN_SALT)
