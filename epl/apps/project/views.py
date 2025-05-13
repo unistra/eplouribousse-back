@@ -1,10 +1,9 @@
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
 from rest_framework.response import Response
 
 from epl.apps.project.models import Project
@@ -13,106 +12,119 @@ from epl.apps.user.models import User, UserRole
 from epl.schema_serializers import UnauthorizedSerializer
 
 
-@extend_schema(
-    tags=["project"],
-    summary=_("Manage project operations: list, create, update, and delete projects"),
-    responses={
-        status.HTTP_200_OK: ProjectSerializer(many=True),  # for GET and PUT
-        status.HTTP_201_CREATED: ProjectSerializer,  # for POST
-        status.HTTP_204_NO_CONTENT: None,  # for DELETE
-        status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
-        status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
-        status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
-        status.HTTP_405_METHOD_NOT_ALLOWED: {"type": "object", "properties": {"detail": {"type": "string"}}},
-    },
-)
-@api_view(["GET", "POST", "PUT", "DELETE"])
-@permission_classes([IsAuthenticated])
-def manage_project(request: Request, project_id=None) -> Response:
+class ProjectViewSet(viewsets.ModelViewSet):
     """
-    Manage project operations:
-    - GET: list all projects
-    - POST: create a new project
-    - PUT: update an existing project
-    - DELETE: delete an existing project
+    ViewSet to handle all project operations.
     """
-    # List all projects if GET method
-    if request.method == "GET":
-        projects = Project.objects.all()
-        serializer = ProjectSerializer(projects, many=True)
-        return Response(serializer.data)
 
-    # For PUT and DELETE: check project id
-    if request.method in ["PUT", "DELETE"]:
-        if not project_id:
-            return Response(
-                {"detail": _("Project ID is required for update and delete operations")},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        project = get_object_or_404(Project, id=project_id)
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated]
 
-    # Create a new project
-    if request.method == "POST":
-        serializer = ProjectSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        project = serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    # Update an existing project
-    elif request.method == "PUT":
-        serializer = ProjectSerializer(project, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        project = serializer.save()
-        return Response(serializer.data)
-
-    # Delete a project
-    elif request.method == "DELETE":
-        project.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # Fallback pour les autres méthodes
-    return Response(
-        {"detail": _("Method not allowed")},
-        status=status.HTTP_405_METHOD_NOT_ALLOWED,
+    @extend_schema(
+        tags=["project"],
+        summary=_("List all projects"),
+        responses={
+            status.HTTP_200_OK: ProjectSerializer(many=True),
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
     )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
+    @extend_schema(
+        tags=["project"],
+        summary=_("Create a new project"),
+        responses={
+            status.HTTP_201_CREATED: ProjectSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-@extend_schema(
-    tags=["project"],
-    summary=_("List projects for a user"),
-    parameters=[
-        OpenApiParameter(
-            name="user_id",
-            description=_("User ID to get projects for. If not provided, returns projects for the authenticated user."),
-            required=False,
-            type=str,
-        ),
-    ],
-    responses={
-        status.HTTP_200_OK: ProjectSerializer(many=True),
-        status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
-        status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
-    },
-)
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def user_projects(request: Request) -> Response:
-    """
-    Get projects for a user.
-    If user_id is provided, returns projects for that user.
-    Otherwise, returns projects for the authenticated user.
-    """
-    user_id = request.query_params.get("user_id")
+    @extend_schema(
+        tags=["project"],
+        summary=_("Retrieve project details"),
+        responses={
+            status.HTTP_200_OK: ProjectSerializer,
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
-    if user_id:
-        user = get_object_or_404(User, id=user_id)
-    else:
-        user = request.user
+    @extend_schema(
+        tags=["project"],
+        summary=_("Update a project"),
+        responses={
+            status.HTTP_200_OK: ProjectSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
-    # Get projects where the user has a role
-    user_roles = UserRole.objects.filter(user=user)
-    project_ids = user_roles.values_list("project_id", flat=True)  # flat to get a list of IDs and not tuples
-    projects = Project.objects.filter(id__in=project_ids).distinct()
+    @extend_schema(
+        tags=["project"],
+        summary=_("Partially update a project"),
+        responses={
+            status.HTTP_200_OK: ProjectSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
-    serializer = ProjectSerializer(projects, many=True)
-    return Response(serializer.data)
+    @extend_schema(
+        tags=["project"],
+        summary=_("Delete a project"),
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["project"],
+        summary=_("List projects for a user"),
+        parameters=[
+            OpenApiParameter(
+                name="user_id",
+                description=_(
+                    "User ID to get projects for. If not provided, returns projects for the authenticated user."
+                ),
+                required=False,
+                type=str,
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: ProjectSerializer(many=True),
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(detail=False, methods=["get"], url_path="user-projects")
+    def user_projects(self, request):
+        user_id = request.query_params.get("user_id")
+
+        if user_id:
+            user = get_object_or_404(User, id=user_id)
+        else:
+            user = request.user
+
+        user_roles = UserRole.objects.filter(user=user)
+        project_ids = user_roles.values_list("project_id", flat=True)
+        projects = Project.objects.filter(id__in=project_ids).distinct()
+
+        serializer = self.get_serializer(projects, many=True)
+        return Response(serializer.data)

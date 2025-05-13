@@ -1,9 +1,7 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-from epl.apps.project import views
+from epl.apps.project.views import ProjectViewSet
 
-urlpatterns = [
-    path("user-projects/", views.user_projects, name="user_projects"),
-    path("manage-project/", views.manage_project, name="manage_project"),
-    path("manage-project/<int:project_id>/", views.manage_project, name="manage_project"),
-]
+router = DefaultRouter()
+router.register(r"", ProjectViewSet, basename="project")
+urlpatterns = router.urls
