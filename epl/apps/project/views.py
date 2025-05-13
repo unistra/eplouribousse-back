@@ -15,6 +15,70 @@ from epl.schema_serializers import UnauthorizedSerializer
 
 @extend_schema(
     tags=["project"],
+    summary=_("Manage project operations: list, create, update, and delete projects"),
+    responses={
+        status.HTTP_200_OK: ProjectSerializer(many=True),  # for GET and PUT
+        status.HTTP_201_CREATED: ProjectSerializer,  # for POST
+        status.HTTP_204_NO_CONTENT: None,  # for DELETE
+        status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        status.HTTP_405_METHOD_NOT_ALLOWED: {"type": "object", "properties": {"detail": {"type": "string"}}},
+    },
+)
+@api_view(["GET", "POST", "PUT", "DELETE"])
+@permission_classes([IsAuthenticated])
+def manage_project(request: Request, project_id=None) -> Response:
+    """
+    Manage project operations:
+    - GET: list all projects
+    - POST: create a new project
+    - PUT: update an existing project
+    - DELETE: delete an existing project
+    """
+    # List all projects if GET method
+    if request.method == "GET":
+        projects = Project.objects.all()
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
+
+    # For PUT and DELETE: check project id
+    if request.method in ["PUT", "DELETE"]:
+        if not project_id:
+            return Response(
+                {"detail": _("Project ID is required for update and delete operations")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        project = get_object_or_404(Project, id=project_id)
+
+    # Create a new project
+    if request.method == "POST":
+        serializer = ProjectSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        project = serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # Update an existing project
+    elif request.method == "PUT":
+        serializer = ProjectSerializer(project, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        project = serializer.save()
+        return Response(serializer.data)
+
+    # Delete a project
+    elif request.method == "DELETE":
+        project.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # Fallback pour les autres méthodes
+    return Response(
+        {"detail": _("Method not allowed")},
+        status=status.HTTP_405_METHOD_NOT_ALLOWED,
+    )
+
+
+@extend_schema(
+    tags=["project"],
     summary=_("List projects for a user"),
     parameters=[
         OpenApiParameter(
