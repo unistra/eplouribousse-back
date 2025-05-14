@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from epl.apps.project.models import Project
-from epl.apps.project.serializers import ProjectSerializer
+from epl.apps.project.serializers import ProjectSerializer, ProjectUserSerializer
 from epl.apps.user.models import User, UserRole
 from epl.schema_serializers import UnauthorizedSerializer
 
@@ -128,3 +128,21 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(projects, many=True)
         return Response(serializer.data)
+
+    @extend_schema(
+        tags=["project"],
+        summary=_("List users associated with a project"),
+        responses={
+            status.HTTP_200_OK: ProjectUserSerializer(many=True),
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(detail=True, methods=["get"], url_path="users")
+    def project_users(self, request, pk=None):
+        """
+        Get all users who have roles in this project.
+        """
+        project = self.get_object()
+        users_data = ProjectUserSerializer.get_users_with_roles_for_project(project)
+        return Response(users_data)

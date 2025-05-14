@@ -156,6 +156,15 @@ class UserSerializer(ModelSerializer):
     def get_can_authenticate_locally(self, user: User) -> bool:
         return user.has_usable_password()
 
+class ProjectUserSerializer(serializers.ModelSerializer):
+    roles = serializers.ListField(
+        child=serializers.CharField(help_text=_("Role in project")), help_text=_("User's roles in this project")
+    )
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "first_name", "last_name", "roles"]
+
 
 class UserListSerializer(ModelSerializer):
     class Meta:
