@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from epl.apps.user.models import User
 from epl.apps.user.serializers import (
     EmailSerializer,
+    InviteTokenSerializer,
     PasswordChangeSerializer,
     PasswordResetSerializer,
     TokenObtainSerializer,
@@ -265,31 +266,10 @@ def invite(request: Request) -> Response:
         return Response({"details": _("Email sending failed")}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-#
-#     signer = _get_invite_signer()
-#     invite_token: str = signer.sign_object({"e": str(request.data["email"])})
-#
-#     front_url = (
-#         f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}/create-account?t={invite_token}"
-#     )
-#     # return send_invite_email(request.data["email"], front_url)
-#     return Response({"link": front_url}, status=status.HTTP_200_OK)
-#
-# @api_view(["POST"])
-# def invite_handshake(request: Request) -> Response:
-#     signer: signing.TimestampSigner = _get_invite_signer()
-#     invite_token: str = request.data.get("token")
-#
-#     try:
-#         email_data = signer.unsign_object(invite_token, max_age=INVITE_TOKEN_MAX_AGE)
-#         email = email_data.get("e")
-#         print(email)
-#     except signing.SignatureExpired:
-#         raise PermissionDenied(_("Invite token expired"))
-#     except signing.BadSignature:
-#         raise PermissionDenied(_("Invalid invite token"))
-#
-#     return Response({"email": email}, status=status.HTTP_200_OK)
-#
-# def _get_invite_signer() -> signing.TimestampSigner:
-#     return signing.TimestampSigner(salt=INVITE_TOKEN_SALT)
+@api_view(["POST"])
+def invite_handshake(request: Request) -> Response:
+    serializer = InviteTokenSerializer(data=request.data, salt=INVITE_TOKEN_SALT, max_age=INVITE_TOKEN_MAX_AGE)
+    serializer.is_valid(raise_exception=True)
+
+    email = serializer.validated_data.get("email")
+    return Response({"email": email}, status=status.HTTP_200_OK)

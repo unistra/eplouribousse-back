@@ -204,3 +204,32 @@ class EmailSerializer(serializers.Serializer):
         if User.objects.filter(email=attrs["email"]).exists():
             raise serializers.ValidationError(_("Email is already linked to an account"))
         return attrs
+
+
+class InviteTokenSerializer(serializers.Serializer):
+    token = serializers.CharField(write_only=True, required=True)
+    email = serializers.EmailField(read_only=True)
+
+    def __init__(self, *args, **kwargs):
+        self.salt = kwargs.pop("salt", None)
+        self.max_age = kwargs.pop("max_age", None)
+        super().__init__(*args, **kwargs)
+
+    def validate(self, attrs):
+        invite_token = attrs.get("token")
+        if not invite_token:
+            raise serializers.ValidationError(_("Token is required."))
+
+        signer = TimestampSigner(salt=self.salt)
+        try:
+            token_data = signer.unsign_object(invite_token, max_age=self.max_age)
+            email = token_data.get("email")
+            if not email:
+                raise serializers.ValidationError(_("Invalid token format."))
+            attrs["email"] = email
+        except SignatureExpired:
+            raise serializers.ValidationError(_("Invite token expired"))
+        except BadSignature:
+            raise serializers.ValidationError(_("Invalid invite token"))
+
+        return attrs
