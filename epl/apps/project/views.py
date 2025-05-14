@@ -6,9 +6,9 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from epl.apps.project.models import Project
+from epl.apps.project.models import Project, UserRole
 from epl.apps.project.serializers import ProjectSerializer, ProjectUserSerializer
-from epl.apps.user.models import User, UserRole
+from epl.apps.user.models import User
 from epl.schema_serializers import UnauthorizedSerializer
 
 

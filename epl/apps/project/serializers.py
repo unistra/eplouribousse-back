@@ -1,8 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from epl.apps.project.models import Project
-from epl.apps.user.models import User, UserRole
+from epl.apps.project.models import Project, UserRole
+from epl.apps.user.models import User
 
 
 class ProjectSerializer(serializers.ModelSerializer):

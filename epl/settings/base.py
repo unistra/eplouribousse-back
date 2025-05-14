@@ -231,7 +231,6 @@ SHARED_APPS = [
     "epl",
     "epl.apps.tenant",
     "epl.apps.user",
-    "epl.apps.project",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",

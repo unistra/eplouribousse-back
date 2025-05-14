@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from epl.apps.user.models import User, UserRole
+from epl.apps.project.models import UserRole
+from epl.apps.user.models import User
 
 
 @admin.register(User)
