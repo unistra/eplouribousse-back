@@ -5,8 +5,9 @@ from django.http import HttpResponseRedirect
 from django.utils.encoding import iri_to_uri
 from django.utils.translation import gettext_lazy as _
 from django.views.defaults import permission_denied
-from drf_spectacular.utils import extend_schema, inline_serializer
-from rest_framework import serializers, status
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view, inline_serializer
+from rest_framework import filters, mixins, serializers, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -18,8 +19,10 @@ from epl.apps.user.serializers import (
     PasswordChangeSerializer,
     PasswordResetSerializer,
     TokenObtainSerializer,
+    UserListSerializer,
     UserSerializer,
 )
+from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
 from epl.services.user.email import send_password_change_email, send_password_reset_email
 
@@ -122,7 +125,9 @@ def login_success(request) -> HttpResponseRedirect:
         return permission_denied(request, _("You must be logged in to access this page"))
     signer = _get_handshake_signer()
     authentication_token: str = signer.sign_object({"u": str(request.user.id)})
-    front_url = f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}/handshake?t={authentication_token}"
+    front_url = (
+        f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}/handshake?t={authentication_token}"
+    )
     logger.info(f"Successful login: redirect to front at {front_url}")
 
     return HttpResponseRedirect(iri_to_uri(front_url))
@@ -184,10 +189,43 @@ def _get_handshake_signer() -> signing.TimestampSigner:
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def user_info(request):
+def user_profile(request):
     """
-    Display user information.
+    Retrieve user profile
     """
     current_user = request.user
     serializer = UserSerializer(current_user)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=["user"],
+        summary=_("List of users"),
+        parameters=[
+            OpenApiParameter(
+                "search",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                description=_("Search string"),
+                required=False,
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: UserListSerializer(many=True),
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
+    )
+)
+class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    List and search active users
+    """
+
+    queryset = User.objects.active()
+    serializer_class = UserListSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["first_name", "last_name", "email", "username"]
+    ordering_fields = ["first_name", "last_name", "email"]

@@ -3,11 +3,14 @@ from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from epl.apps.user.models import User
+from epl.libs.schema import load_json_schema
+from epl.validators import JSONSchemaValidator
 
 
 class PasswordChangeSerializer(serializers.Serializer):
@@ -100,11 +103,48 @@ class PasswordResetSerializer(serializers.Serializer):
         return user
 
 
+@extend_schema_field(load_json_schema("user_settings.schema.json"))
+class UserSettingsField(serializers.JSONField): ...
+
+
 class UserSerializer(ModelSerializer):
     """
     This Serializer is used to perform GET operations on user objects.
     """
 
+    can_authenticate_locally = serializers.SerializerMethodField(
+        help_text=_("Whether the user can log in locally with username and password?"),
+        read_only=True,
+    )
+    settings = UserSettingsField(
+        required=False,
+        help_text=_("User settings"),
+        validators=[JSONSchemaValidator("user_settings.schema.json")],
+    )
+
     class Meta:
         model = User
-        fields = ["username"]
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "can_authenticate_locally",
+            "settings",
+        ]
+
+    def get_can_authenticate_locally(self, user: User) -> bool:
+        return user.has_usable_password()
+
+
+class UserListSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        ]

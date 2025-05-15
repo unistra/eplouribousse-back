@@ -1,0 +1,23 @@
+{
+  "$id": "https://eplouribousse.fr/schemas/user_settings.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "User settings",
+  "type": "object",
+  "properties": {
+    "theme": {
+      "type": "string",
+      "enum": [
+        "light",
+        "dark"
+      ]
+    },
+    "locale": {
+      "type": "string",
+      "enum": [
+        "en",
+        "fr"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
