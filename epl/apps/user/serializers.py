@@ -108,3 +108,15 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ["username"]
+
+
+class UserListSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        ]

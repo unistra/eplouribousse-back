@@ -9,7 +9,12 @@ from epl.models import UUIDPrimaryKeyField
 T = TypeVar("T")
 
 
-class CustomUserManager(UserManager):
+class UserQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(is_active=True)
+
+
+class CustomUserManager(UserManager.from_queryset(UserQuerySet)):
     use_in_migrations = True
 
     @staticmethod
@@ -38,6 +43,10 @@ class User(AbstractUser):
     class Meta:
         verbose_name = _("User")
         verbose_name_plural = _("Users")
+        ordering = [
+            "last_name",
+            "first_name",
+        ]
 
     def __str__(self) -> str:
         name: str = f"{self.first_name} {self.last_name}".strip()
