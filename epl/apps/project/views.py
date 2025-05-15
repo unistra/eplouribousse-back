@@ -88,7 +88,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        if self.request.action == "list" and self.request.user.is_authenticated and self.request.GET.get("user_id"):
+        if self.action == "list" and self.request.user.is_authenticated and self.request.GET.get("user_id"):
             project_ids = UserRole.objects.filter(user=self.request.user).values_list("project_id", flat=True)
             return queryset.filter(id__in=project_ids)
         return queryset
@@ -104,12 +104,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["get"], url_path="users")
     def project_users(self, request, pk=None):
-        """
-        Get all users who have roles in this project.
-        """
         project = self.get_object()
-        users_data = ProjectUserSerializer.get_users_with_roles_for_project(project)
-        return Response(users_data)
+        data = ProjectUserSerializer.get_serialized_users_for_project(project)
+        return Response(data)
 
     @extend_schema(
         tags=["project", "user"],

@@ -25,30 +25,9 @@ class ProjectUserSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     @classmethod
-    def get_users_with_roles_for_project(cls, project):
-        """
-        Helper method to get all users with their roles for a given project.
-        Returns a list of serialized user data.
-        """
-        # Get all user roles for this project
-        user_roles = UserRole.objects.filter(project=project)
-
-        # Group roles by user
-        users_with_roles = {}
-        for user_role in user_roles:
-            if user_role.user_id not in users_with_roles:
-                users_with_roles[user_role.user_id] = {"user": user_role.user, "roles": []}
-            users_with_roles[user_role.user_id]["roles"].append(user_role.role)
-
-        # Create a list of user objects with their roles
-        users_data = []
-        for user_id, data in users_with_roles.items():
-            user_obj = data["user"]
-            user_obj.roles = data["roles"]
-            users_data.append(user_obj)
-
-        # Return serialized data
-        return cls(users_data, many=True).data
+    def get_serialized_users_for_project(cls, project):
+        users = UserRole.get_users_with_roles_for_project(project)
+        return cls(users, many=True).data
 
 
 class UserRoleSerializer(serializers.Serializer):
