@@ -3,11 +3,11 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from epl.apps.project.models import Project, UserRole
-from epl.apps.project.serializers import ProjectSerializer, ProjectUserSerializer
+from epl.apps.project.serializers import ProjectSerializer, ProjectUserSerializer, UserRoleSerializer
 from epl.schema_serializers import UnauthorizedSerializer
 
 
@@ -110,3 +110,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = self.get_object()
         users_data = ProjectUserSerializer.get_users_with_roles_for_project(project)
         return Response(users_data)
+
+    @extend_schema(
+        tags=["project", "user"],
+        summary=_("List all roles"),
+        responses={
+            status.HTTP_200_OK: UserRoleSerializer(many=True),
+        },
+    )
+    @action(detail=False, methods=["get"], url_path="roles", permission_classes=[AllowAny])
+    def roles(self, request):
+        """List all available roles"""
+        roles = [{"role": role[0], "label": role[1]} for role in UserRole.Role.choices]
+        serializer = UserRoleSerializer(roles, many=True)
+        return Response(serializer.data)

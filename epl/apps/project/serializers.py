@@ -49,3 +49,8 @@ class ProjectUserSerializer(serializers.ModelSerializer):
 
         # Return serialized data
         return cls(users_data, many=True).data
+
+
+class UserRoleSerializer(serializers.Serializer):
+    role = serializers.CharField(help_text=_("Role"))
+    label = serializers.CharField(help_text=_("Role label"))
