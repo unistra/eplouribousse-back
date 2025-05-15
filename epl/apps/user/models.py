@@ -37,6 +37,7 @@ class CustomUserManager(UserManager.from_queryset(UserQuerySet)):
 class User(AbstractUser):
     id = UUIDPrimaryKeyField()
     email = models.EmailField(_("Email address"), unique=True)
+    settings = models.JSONField(default=dict)
 
     objects = CustomUserManager()
 

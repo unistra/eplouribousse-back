@@ -189,9 +189,9 @@ def _get_handshake_signer() -> signing.TimestampSigner:
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def user_info(request):
+def user_profile(request):
     """
-    Display user information.
+    Retrieve user profile
     """
     current_user = request.user
     serializer = UserSerializer(current_user)
