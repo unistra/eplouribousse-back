@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from epl.apps.project.models import Project, UserRole
+from epl.apps.project.models import Project
 from epl.apps.user.models import User
 
 
@@ -23,11 +23,6 @@ class ProjectUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username", "email", "first_name", "last_name", "roles"]
         read_only_fields = fields
-
-    @classmethod
-    def get_serialized_users_for_project(cls, project):
-        users = UserRole.get_users_with_roles_for_project(project)
-        return cls(users, many=True).data
 
 
 class UserRoleSerializer(serializers.Serializer):

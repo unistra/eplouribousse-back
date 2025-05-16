@@ -83,14 +83,3 @@ class UserRoleModelTest(TenantTestCase):
         self.project1.delete()
         with self.assertRaises(UserRole.DoesNotExist):
             UserRole.objects.get(id=self.role1.id)
-
-    def test_get_users_with_roles_for_project(self):
-        """Tests that get_users_with_roles_for_project method returns the correct users and roles"""
-        users_with_roles = UserRole.get_users_with_roles_for_project(self.project1)
-
-        # Check that the method returns the correct users and roles
-        self.assertEqual(len(users_with_roles), 2)
-        self.assertEqual(users_with_roles[0].username, "user1")
-        self.assertEqual(users_with_roles[0].roles[0], "instructor")
-        self.assertEqual(users_with_roles[1].username, "user2")
-        self.assertEqual(users_with_roles[1].roles[0], "project_creator")

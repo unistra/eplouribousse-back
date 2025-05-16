@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from epl.apps.project.models import Project, UserRole
 from epl.apps.project.serializers import ProjectSerializer, ProjectUserSerializer, UserRoleSerializer
+from epl.apps.user.models import User
 from epl.schema_serializers import UnauthorizedSerializer
 
 
@@ -105,8 +106,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"], url_path="users")
     def project_users(self, request, pk=None):
         project = self.get_object()
-        data = ProjectUserSerializer.get_serialized_users_for_project(project)
-        return Response(data)
+        users = User.objects.filter(project_roles__project=project).prefetch_related("project_roles").distinct()
+        serializer = ProjectUserSerializer(users, many=True)
+        return Response(serializer.data)
 
     @extend_schema(
         tags=["project", "user"],

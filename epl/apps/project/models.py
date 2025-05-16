@@ -1,8 +1,6 @@
 from django.db import models
-from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 
-from epl.apps.user.models import User
 from epl.models import UUIDPrimaryKeyField
 
 
@@ -53,30 +51,3 @@ class UserRole(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.get_role_display()} ({self.project})"
-
-    @classmethod
-    def get_users_with_roles_for_project(cls, project):
-        """
-        Returns a list of users with their roles for a given project.
-        """
-        # get all roles for the project, used in Prefetch
-        # Thanks to Prefetch(queryset=project_user_roles), django loads only the roles for the current project
-        project_user_roles = cls.objects.filter(project=project)  # get all roles for the project, used in Prefetch
-
-        users_with_project_roles = (
-            User.objects.filter(project_roles__project=project)  # Filters the users who have roles in the given project
-            .distinct()
-            .prefetch_related(
-                Prefetch(
-                    "project_roles",
-                    queryset=project_user_roles,
-                    to_attr="roles_for_this_project",
-                )
-            )
-        )
-        result_users = []
-        for user in users_with_project_roles:
-            user.roles = [user_role.role for user_role in user.roles_for_this_project]
-            result_users.append(user)
-
-        return result_users
