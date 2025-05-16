@@ -40,7 +40,8 @@ class TestUserEmailServices(TestCase):
 
     def test_send_password_reset_email(self):
         user = self.create_user()
-        send_password_reset_email(user, user.email, "sxb.epl.localhost", "http", ":5173")
+        link = "http://sxb.epl.localhost:5173/reset-password?t=token"
+        send_password_reset_email(user=user, reset_link=link)
 
         # Check that an email was sent
         self.assertEqual(len(mail.outbox), 1)
@@ -59,7 +60,7 @@ class TestUserEmailServices(TestCase):
         email_content = mail.outbox[0].body
         self.assertIn(_("Did you forget your password ?"), email_content)
         self.assertIn(_("Click on the link to reset your password"), email_content)
-        self.assertIn(_("This link is only valid for 24 hours"), email_content)
+        self.assertIn(_("This link is only valid for 1 hour"), email_content)
         self.assertIn(
             _(
                 "If you do not want to reset your password, you can ignore this message and your password will not change"
