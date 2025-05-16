@@ -8,6 +8,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from epl.apps.project.models import Project
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.validators import JSONSchemaValidator
@@ -107,6 +108,16 @@ class PasswordResetSerializer(serializers.Serializer):
 class UserSettingsField(serializers.JSONField): ...
 
 
+class UserNestedProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model: Project
+        fields = [
+            "id",
+            "role",
+            "name",
+        ]
+
+
 class UserSerializer(ModelSerializer):
     """
     This Serializer is used to perform GET operations on user objects.
@@ -135,26 +146,18 @@ class UserSerializer(ModelSerializer):
             "settings",
             "projects",
         ]
-    def get_projects(self, obj):
+
+    def get_projects(self, user: User):
         """
         Get all projects where the user has a role.
         """
-        user_roles = obj.project_roles.all().select_related("project")
-        projects_data = []
-
-        for user_role in user_roles:
-            projects_data.append(
-                {
-                    "id": user_role.project.id,
-                    "name": user_role.project.name,
-                    "role": user_role.role,
-                }
-            )
-
-        return projects_data
+        projects = Project.objects.filter(user_roles__user=user).distinct()
+        serializer = UserNestedProjectSerializer(projects, many=True)
+        return serializer.data
 
     def get_can_authenticate_locally(self, user: User) -> bool:
         return user.has_usable_password()
+
 
 class ProjectUserSerializer(serializers.ModelSerializer):
     roles = serializers.ListField(
