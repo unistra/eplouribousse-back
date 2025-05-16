@@ -68,6 +68,10 @@ def change_password(request: Request) -> Response:
     return Response({"detail": _("Your password has been changed successfully.")}, status=status.HTTP_200_OK)
 
 
+def _get_reset_password_signer() -> signing.TimestampSigner:
+    return signing.TimestampSigner(salt=RESET_TOKEN_SALT)
+
+
 @extend_schema(
     tags=["user"],
     summary="Reset the user's password",
@@ -121,7 +125,7 @@ def send_reset_email(request: Request) -> Response:
     protocol = request.scheme
     port = ":5173" if protocol == "http" else ""
 
-    signer = signing.TimestampSigner(salt=RESET_TOKEN_SALT)
+    signer = _get_reset_password_signer()
     token = signer.sign_object({"email": email})
     front_url = f"{protocol}://{request.tenant.get_primary_domain().front_domain}{port}/reset-password?token={token}"
 
