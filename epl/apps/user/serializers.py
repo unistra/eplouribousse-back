@@ -233,3 +233,37 @@ class InviteTokenSerializer(serializers.Serializer):
             raise serializers.ValidationError(_("Invalid invite token"))
 
         return attrs
+
+
+class CreateAccountSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True)
+    password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
+    confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
+
+    def __init__(self, *args, **kwargs):
+        self.email = None
+        self.salt = kwargs.pop("salt", None)
+        self.max_age = kwargs.pop("max_age", None)
+        super().__init__(*args, **kwargs)
+
+    def validate_token(self, token_value):
+        token_serializer = InviteTokenSerializer(data={"token": token_value}, salt=self.salt, max_age=self.max_age)
+        token_serializer.is_valid(raise_exception=True)
+
+        self.email = token_serializer.validated_data.get("email")
+        return token_value
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError(_("Password and confirm password do not match"))
+
+        try:
+            validate_password(attrs["password"])
+        except ValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
+        return attrs
+
+    def save(self, **kwargs):
+        user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
+        return user
