@@ -257,6 +257,7 @@ TENANT_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "epl.apps.user",
+    "epl.apps.project",
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
