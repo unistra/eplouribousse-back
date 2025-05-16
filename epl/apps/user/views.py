@@ -25,17 +25,17 @@ from epl.apps.user.serializers import (
 )
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
-from epl.services.user.email import send_password_change_email, send_password_reset_email
+from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
 
 logger = logging.getLogger(__name__)
 
 HANDSHAKE_TOKEN_MAX_AGE = 60
 HANDSHAKE_TOKEN_SALT = f"{__file__}:handshake"
 
-RESET_TOKEN_MAX_AGE = 3600
+RESET_TOKEN_MAX_AGE = 3600  # 1 hour
 RESET_TOKEN_SALT = f"{__file__}:reset"
 
-INVITE_TOKEN_MAX_AGE = 60
+INVITE_TOKEN_MAX_AGE = 60 * 60 * 24 * 7  # 7 days
 INVITE_TOKEN_SALT = f"{__file__}:invite"
 
 
@@ -248,11 +248,21 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     ordering_fields = ["first_name", "last_name", "email"]
 
 
+def _get_invite_signer() -> signing.TimestampSigner:
+    return signing.TimestampSigner(salt=INVITE_TOKEN_SALT)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def invite(request: Request) -> Response:
     serializer = EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+
+    try:
+        send_invite_email(email=request.data["email"], request=request, signer=_get_invite_signer())
+        return Response(status=status.HTTP_200_OK)
+    except Exception:
+        return Response({"details": _("Email sending failed")}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 #
