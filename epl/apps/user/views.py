@@ -16,6 +16,7 @@ from rest_framework.response import Response
 
 from epl.apps.user.models import User
 from epl.apps.user.serializers import (
+    CreateAccountSerializer,
     EmailSerializer,
     InviteTokenSerializer,
     PasswordChangeSerializer,
@@ -273,3 +274,14 @@ def invite_handshake(request: Request) -> Response:
 
     email = serializer.validated_data.get("email")
     return Response({"email": email}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def create_account(request: Request) -> Response:
+    serializer = CreateAccountSerializer(
+        data=request.data, context={"request": request}, salt=INVITE_TOKEN_SALT, max_age=INVITE_TOKEN_MAX_AGE
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response({"detail": _("Account created successfully.")}, status=status.HTTP_201_CREATED)

@@ -42,7 +42,6 @@ def send_invite_email(email: str, request: Request, signer: signing.TimestampSig
     invite_token: str = signer.sign_object({"email": str(request.data["email"])})
 
     invitation_link = f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}{':5173' if request.scheme == 'http' else ''}/create-account?t={invite_token}"
-    print(invitation_link)
 
     email_content = render_to_string(
         "emails/invite.txt",

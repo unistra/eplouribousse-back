@@ -12,5 +12,6 @@ urlpatterns = [
     path("profile/", views.user_info, name="user"),
     path("invite/", views.invite, name="invite"),
     path("invite-handshake/", views.invite_handshake, name="invite_handshake"),
+    path("create-account/", views.create_account, name="create_account"),
     path("profile/", views.user_profile, name="user"),
 ]
