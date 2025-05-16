@@ -59,7 +59,7 @@ class UserRole(models.Model):
         """
         Returns a list of users with their roles for a given project.
         """
-        # get all roles for the project, used in Prefetch and avoid N+1 queries
+        # get all roles for the project, used in Prefetch
         # Thanks to Prefetch(queryset=project_user_roles), django loads only the roles for the current project
         project_user_roles = cls.objects.filter(project=project)  # get all roles for the project, used in Prefetch
 
@@ -74,7 +74,6 @@ class UserRole(models.Model):
                 )
             )
         )
-
         result_users = []
         for user in users_with_project_roles:
             user.roles = [user_role.role for user_role in user.roles_for_this_project]
