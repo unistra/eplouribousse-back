@@ -15,14 +15,17 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectUserSerializer(serializers.ModelSerializer):
-    roles = serializers.ListField(
-        child=serializers.CharField(), help_text=_("User's roles in this project"), read_only=True
-    )  # Tells DRF that roles has to be serialized as a list of strings
+    roles = serializers.SerializerMethodField(
+        help_text=_("User's roles in this project"),
+    )
 
     class Meta:
         model = User
         fields = ["id", "username", "email", "first_name", "last_name", "roles"]
         read_only_fields = fields
+
+    def get_roles(self, instance) -> list[str]:
+        return [role.role for role in instance.project_roles.all()]
 
 
 class UserRoleSerializer(serializers.Serializer):

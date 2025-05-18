@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
@@ -9,6 +10,7 @@ from rest_framework.response import Response
 from epl.apps.project.models import Project, UserRole
 from epl.apps.project.serializers import ProjectSerializer, ProjectUserSerializer, UserRoleSerializer
 from epl.apps.user.models import User
+from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer
 
 
@@ -86,6 +88,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -106,7 +109,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"], url_path="users")
     def project_users(self, request, pk=None):
         project = self.get_object()
-        users = User.objects.filter(project_roles__project=project).prefetch_related("project_roles").distinct()
+        users = (
+            User.objects.active()
+            .filter(project_roles__project=project)
+            .prefetch_related(Prefetch("project_roles", queryset=UserRole.objects.filter(project=project)))
+            .distinct()
+        )
         serializer = ProjectUserSerializer(users, many=True)
         return Response(serializer.data)
 
