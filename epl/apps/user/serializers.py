@@ -109,13 +109,21 @@ class UserSettingsField(serializers.JSONField): ...
 
 
 class UserNestedProjectSerializer(serializers.ModelSerializer):
+    roles = serializers.SerializerMethodField(help_text=_("User's roles in the project"))
+
     class Meta:
-        model: Project
+        model = Project
         fields = [
             "id",
-            "role",
+            "roles",
             "name",
         ]
+
+    def get_roles(self, projet: Project) -> list[str]:
+        """
+        Get all roles of the user in the project.
+        """
+        return [role.role for role in projet.user_roles.filter(user=self.context["user"])]
 
 
 class UserSerializer(ModelSerializer):
@@ -152,7 +160,7 @@ class UserSerializer(ModelSerializer):
         Get all projects where the user has a role.
         """
         projects = Project.objects.filter(user_roles__user=user).distinct()
-        serializer = UserNestedProjectSerializer(projects, many=True)
+        serializer = UserNestedProjectSerializer(projects, many=True, context={"user": user})
         return serializer.data
 
     def get_can_authenticate_locally(self, user: User) -> bool:
