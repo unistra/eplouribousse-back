@@ -210,19 +210,14 @@ class InviteTokenSerializer(serializers.Serializer):
     token = serializers.CharField(write_only=True, required=True)
     email = serializers.EmailField(read_only=True)
 
-    def __init__(self, *args, **kwargs):
-        self.salt = kwargs.pop("salt", None)
-        self.max_age = kwargs.pop("max_age", None)
-        super().__init__(*args, **kwargs)
-
     def validate(self, attrs):
         invite_token = attrs.get("token")
         if not invite_token:
             raise serializers.ValidationError(_("Token is required."))
 
-        signer = TimestampSigner(salt=self.salt)
+        signer = TimestampSigner(salt=self.context["salt"])
         try:
-            token_data = signer.unsign_object(invite_token, max_age=self.max_age)
+            token_data = signer.unsign_object(invite_token, max_age=self.context["max_age"])
             email = token_data.get("email")
             if not email:
                 raise serializers.ValidationError(_("Invalid token format."))
@@ -242,12 +237,14 @@ class CreateAccountSerializer(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         self.email = None
-        self.salt = kwargs.pop("salt", None)
-        self.max_age = kwargs.pop("max_age", None)
         super().__init__(*args, **kwargs)
 
     def validate_token(self, token_value):
-        token_serializer = InviteTokenSerializer(data={"token": token_value}, salt=self.salt, max_age=self.max_age)
+        token_serializer = InviteTokenSerializer(
+            data={"token": token_value},
+            salt=self.context["salt"],
+            max_age=self.context["max_age"],
+        )
         token_serializer.is_valid(raise_exception=True)
 
         self.email = token_serializer.validated_data.get("email")

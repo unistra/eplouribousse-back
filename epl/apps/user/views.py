@@ -266,11 +266,7 @@ def _get_invite_signer() -> signing.TimestampSigner:
         status.HTTP_200_OK: inline_serializer(
             name="InviteSuccessResponse",
             fields={"detail": serializers.CharField(help_text=_("Invitation email sent successfully."))},
-        ),
-        status.HTTP_500_INTERNAL_SERVER_ERROR: inline_serializer(
-            name="InviteErrorResponse",
-            fields={"details": serializers.CharField(help_text=_("Email sending failed."))},
-        ),
+        )
     },
 )
 @api_view(["POST"])
@@ -279,11 +275,12 @@ def invite(request: Request) -> Response:
     serializer = EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    try:
-        send_invite_email(email=request.data["email"], request=request, signer=_get_invite_signer())
-        return Response(status=status.HTTP_200_OK)
-    except Exception:
-        return Response({"details": _("Email sending failed")}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    send_invite_email(email=request.data["email"], request=request, signer=_get_invite_signer())
+    return Response(status=status.HTTP_200_OK)
+
+
+def _get_context_for_invite_and_create_account(request: Request) -> dict:
+    return {"request": request, "salt": INVITE_TOKEN_SALT, "max_age": INVITE_TOKEN_MAX_AGE}
 
 
 @extend_schema(
@@ -301,11 +298,13 @@ def invite(request: Request) -> Response:
 )
 @api_view(["POST"])
 def invite_handshake(request: Request) -> Response:
-    serializer = InviteTokenSerializer(data=request.data, salt=INVITE_TOKEN_SALT, max_age=INVITE_TOKEN_MAX_AGE)
+    serializer = InviteTokenSerializer(
+        data=request.data,
+        context=_get_context_for_invite_and_create_account(request),
+    )
     serializer.is_valid(raise_exception=True)
 
-    email = serializer.validated_data.get("email")
-    return Response({"email": email}, status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @extend_schema(
@@ -323,9 +322,7 @@ def invite_handshake(request: Request) -> Response:
 )
 @api_view(["POST"])
 def create_account(request: Request) -> Response:
-    serializer = CreateAccountSerializer(
-        data=request.data, context={"request": request}, salt=INVITE_TOKEN_SALT, max_age=INVITE_TOKEN_MAX_AGE
-    )
+    serializer = CreateAccountSerializer(data=request.data, context=_get_context_for_invite_and_create_account(request))
     serializer.is_valid(raise_exception=True)
     serializer.save()
 
