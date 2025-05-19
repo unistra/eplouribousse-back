@@ -30,7 +30,7 @@ class TestResetPassword(TestCase):
         new_password = "_Here is my 2nd and new password"  # noqa: S105
         signer = _get_reset_password_signer()
         user = self.create_user()
-        token = signer.sign(user.username)
+        token = signer.sign_object({"email": user.username})
 
         response = self.patch(
             reverse("reset_password"),
