@@ -29,3 +29,6 @@ class ZxcvbnPasswordValidator:
                 {msg, results.get("feedback", {}).get("warning", [])},
                 code=self.code,
             )
+
+    def get_help_text(self):
+        return _("The password is too weak")
