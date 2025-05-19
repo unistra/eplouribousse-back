@@ -1,8 +1,8 @@
-from django.core.signing import TimestampSigner
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 
 from epl.apps.user.models import User
+from epl.apps.user.views import _get_reset_password_signer
 from epl.tests import TestCase
 
 
@@ -28,9 +28,9 @@ class TestResetPassword(TestCase):
 
     def test_successful_password_reset(self):
         new_password = "_Here is my 2nd and new password"  # noqa: S105
-        signer = TimestampSigner(salt="reset-password")
+        signer = _get_reset_password_signer()
         user = self.create_user()
-        token = signer.sign(user.username)
+        token = signer.sign_object({"email": user.username})
 
         response = self.patch(
             reverse("reset_password"),

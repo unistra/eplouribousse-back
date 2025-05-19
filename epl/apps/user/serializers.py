@@ -74,10 +74,18 @@ class PasswordResetSerializer(serializers.Serializer):
     new_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
     confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
 
+    def __init__(self, *args, **kwargs):
+        self.email = None
+        self.salt = kwargs.pop("salt", None)
+        self.max_age = kwargs.pop("max_age", None)
+        super().__init__(*args, **kwargs)
+
     def validate_token(self, attrs):
-        signer = TimestampSigner(salt="reset-password")
+        signer = TimestampSigner(salt=self.salt)
         try:
-            self.email = signer.unsign(attrs, max_age=60 * 60 * 24)
+            token_data = signer.unsign_object(attrs, max_age=self.max_age)
+            self.email = token_data.get("email")
+
         except SignatureExpired:
             raise serializers.ValidationError(_("Signature has expired"))
         except BadSignature:
@@ -187,3 +195,71 @@ class UserListSerializer(ModelSerializer):
             "last_name",
             "email",
         ]
+
+
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    def validate(self, attrs):
+        if User.objects.filter(email=attrs["email"]).exists():
+            raise serializers.ValidationError(_("Email is already linked to an account"))
+        return attrs
+
+
+class InviteTokenSerializer(serializers.Serializer):
+    token = serializers.CharField(write_only=True, required=True)
+    email = serializers.EmailField(read_only=True)
+
+    def validate(self, attrs):
+        invite_token = attrs.get("token")
+        if not invite_token:
+            raise serializers.ValidationError(_("Token is required."))
+
+        signer = TimestampSigner(salt=self.context["salt"])
+        try:
+            token_data = signer.unsign_object(invite_token, max_age=self.context["max_age"])
+            email = token_data.get("email")
+            if not email:
+                raise serializers.ValidationError(_("Invalid token format."))
+            attrs["email"] = email
+        except SignatureExpired:
+            raise serializers.ValidationError(_("Invite token expired"))
+        except BadSignature:
+            raise serializers.ValidationError(_("Invalid invite token"))
+
+        return attrs
+
+
+class CreateAccountSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True)
+    password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
+    confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
+
+    def __init__(self, *args, **kwargs):
+        self.email = None
+        super().__init__(*args, **kwargs)
+
+    def validate_token(self, token_value):
+        token_serializer = InviteTokenSerializer(
+            data={"token": token_value},
+            context=self.context,
+        )
+        token_serializer.is_valid(raise_exception=True)
+
+        self.email = token_serializer.validated_data.get("email")
+        return token_value
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError(_("Password and confirm password do not match"))
+
+        try:
+            validate_password(attrs["password"])
+        except ValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
+        return attrs
+
+    def save(self, **kwargs):
+        user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
+        return user

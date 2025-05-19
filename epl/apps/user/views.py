@@ -16,6 +16,9 @@ from rest_framework.response import Response
 
 from epl.apps.user.models import User
 from epl.apps.user.serializers import (
+    CreateAccountSerializer,
+    EmailSerializer,
+    InviteTokenSerializer,
     PasswordChangeSerializer,
     PasswordResetSerializer,
     TokenObtainSerializer,
@@ -24,12 +27,18 @@ from epl.apps.user.serializers import (
 )
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
-from epl.services.user.email import send_password_change_email, send_password_reset_email
+from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
 
 logger = logging.getLogger(__name__)
 
 HANDSHAKE_TOKEN_MAX_AGE = 60
 HANDSHAKE_TOKEN_SALT = f"{__file__}:handshake"
+
+RESET_TOKEN_MAX_AGE = 3600  # 1 hour
+RESET_TOKEN_SALT = f"{__file__}:reset"
+
+INVITE_TOKEN_MAX_AGE = 60 * 60 * 24 * 7  # 7 days
+INVITE_TOKEN_SALT = f"{__file__}:invite"
 
 
 @extend_schema(
@@ -59,6 +68,10 @@ def change_password(request: Request) -> Response:
     return Response({"detail": _("Your password has been changed successfully.")}, status=status.HTTP_200_OK)
 
 
+def _get_reset_password_signer() -> signing.TimestampSigner:
+    return signing.TimestampSigner(salt=RESET_TOKEN_SALT)
+
+
 @extend_schema(
     tags=["user"],
     summary="Reset the user's password",
@@ -76,7 +89,9 @@ def reset_password(request: Request) -> Response:
     """
     Reset the user's password
     """
-    serializer = PasswordResetSerializer(data=request.data, context={"request": request})
+    serializer = PasswordResetSerializer(
+        data=request.data, context={"request": request}, salt=RESET_TOKEN_SALT, max_age=RESET_TOKEN_MAX_AGE
+    )
     serializer.is_valid(raise_exception=True)
     serializer.save()
 
@@ -101,19 +116,27 @@ def reset_password(request: Request) -> Response:
 def send_reset_email(request: Request) -> Response:
     """
     Email the user with a token to reset the password
-    If the user's email is not found nothing happens
+    If the user's email is not found, nothing happens
     """
-    email = request.data["email"]
+    email = request.data.get("email")
+    if not email:
+        return Response({"detail": _("Email is required.")}, status=status.HTTP_400_BAD_REQUEST)
+
+    protocol = request.scheme
+    port = ":5173" if protocol == "http" else ""
+
+    signer = _get_reset_password_signer()
+    token = signer.sign_object({"email": email})
+    front_url = f"{protocol}://{request.tenant.get_primary_domain().front_domain}{port}/reset-password?token={token}"
+
     try:
-        protocol = request.scheme
-        domain = request.tenant.get_primary_domain()
         user = User.objects.get(email=email, is_active=True)
-        if protocol == "http":
-            # Dev environment frontend is served on port 5173
-            port = ":5173"
-        send_password_reset_email(user, email, domain.front_domain, protocol, port)
-    finally:
-        return Response({"detail": _("Email has been sent successfully.")}, status=status.HTTP_200_OK)
+        send_password_reset_email(user, front_url)
+    except User.DoesNotExist:
+        # Intentionally do nothing if the user does not exist
+        pass
+
+    return Response({"detail": _("Email has been sent successfully.")}, status=status.HTTP_200_OK)
 
 
 def login_success(request) -> HttpResponseRedirect:
@@ -229,3 +252,78 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["first_name", "last_name", "email", "username"]
     ordering_fields = ["first_name", "last_name", "email"]
+
+
+def _get_invite_signer() -> signing.TimestampSigner:
+    return signing.TimestampSigner(salt=INVITE_TOKEN_SALT)
+
+
+@extend_schema(
+    tags=["user"],
+    summary=_("Send an invitation email"),
+    request=EmailSerializer,
+    responses={
+        status.HTTP_200_OK: inline_serializer(
+            name="InviteSuccessResponse",
+            fields={"detail": serializers.CharField(help_text=_("Invitation email sent successfully."))},
+        )
+    },
+)
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def invite(request: Request) -> Response:
+    serializer = EmailSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    send_invite_email(email=request.data["email"], request=request, signer=_get_invite_signer())
+    return Response(status=status.HTTP_200_OK)
+
+
+def _get_context_for_invite_and_create_account(request: Request) -> dict:
+    return {"request": request, "salt": INVITE_TOKEN_SALT, "max_age": INVITE_TOKEN_MAX_AGE}
+
+
+@extend_schema(
+    tags=["user"],
+    summary=_("Validate invitation token"),
+    description=_("Validates an invitation token and returns the associated email address if valid."),
+    request=InviteTokenSerializer,
+    responses={
+        status.HTTP_200_OK: inline_serializer(
+            name="InviteTokenResponseSerializer",
+            fields={"email": serializers.EmailField(help_text=_("Email address associated with the invitation"))},
+        ),
+        status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+    },
+)
+@api_view(["POST"])
+def invite_handshake(request: Request) -> Response:
+    serializer = InviteTokenSerializer(
+        data=request.data,
+        context=_get_context_for_invite_and_create_account(request),
+    )
+    serializer.is_valid(raise_exception=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=["user"],
+    summary=_("Create a new user account"),
+    description=_("Creates a new user account based on an invitation token"),
+    request=CreateAccountSerializer,
+    responses={
+        status.HTTP_201_CREATED: inline_serializer(
+            name="AccountCreatedResponse",
+            fields={"detail": serializers.CharField(help_text=_("Account created successfully."))},
+        ),
+        status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+    },
+)
+@api_view(["POST"])
+def create_account(request: Request) -> Response:
+    serializer = CreateAccountSerializer(data=request.data, context=_get_context_for_invite_and_create_account(request))
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response({"detail": _("Account created successfully.")}, status=status.HTTP_201_CREATED)
