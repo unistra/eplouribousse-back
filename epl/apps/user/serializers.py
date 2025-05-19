@@ -242,8 +242,7 @@ class CreateAccountSerializer(serializers.Serializer):
     def validate_token(self, token_value):
         token_serializer = InviteTokenSerializer(
             data={"token": token_value},
-            salt=self.context["salt"],
-            max_age=self.context["max_age"],
+            context=self.context,
         )
         token_serializer.is_valid(raise_exception=True)
 
