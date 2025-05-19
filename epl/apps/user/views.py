@@ -258,6 +258,21 @@ def _get_invite_signer() -> signing.TimestampSigner:
     return signing.TimestampSigner(salt=INVITE_TOKEN_SALT)
 
 
+@extend_schema(
+    tags=["user"],
+    summary=_("Send an invitation email"),
+    request=EmailSerializer,
+    responses={
+        status.HTTP_200_OK: inline_serializer(
+            name="InviteSuccessResponse",
+            fields={"detail": serializers.CharField(help_text=_("Invitation email sent successfully."))},
+        ),
+        status.HTTP_500_INTERNAL_SERVER_ERROR: inline_serializer(
+            name="InviteErrorResponse",
+            fields={"details": serializers.CharField(help_text=_("Email sending failed."))},
+        ),
+    },
+)
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def invite(request: Request) -> Response:
@@ -271,6 +286,19 @@ def invite(request: Request) -> Response:
         return Response({"details": _("Email sending failed")}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@extend_schema(
+    tags=["user"],
+    summary=_("Validate invitation token"),
+    description=_("Validates an invitation token and returns the associated email address if valid."),
+    request=InviteTokenSerializer,
+    responses={
+        status.HTTP_200_OK: inline_serializer(
+            name="InviteTokenResponseSerializer",
+            fields={"email": serializers.EmailField(help_text=_("Email address associated with the invitation"))},
+        ),
+        status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+    },
+)
 @api_view(["POST"])
 def invite_handshake(request: Request) -> Response:
     serializer = InviteTokenSerializer(data=request.data, salt=INVITE_TOKEN_SALT, max_age=INVITE_TOKEN_MAX_AGE)
@@ -280,6 +308,19 @@ def invite_handshake(request: Request) -> Response:
     return Response({"email": email}, status=status.HTTP_200_OK)
 
 
+@extend_schema(
+    tags=["user"],
+    summary=_("Create a new user account"),
+    description=_("Creates a new user account based on an invitation token"),
+    request=CreateAccountSerializer,
+    responses={
+        status.HTTP_201_CREATED: inline_serializer(
+            name="AccountCreatedResponse",
+            fields={"detail": serializers.CharField(help_text=_("Account created successfully."))},
+        ),
+        status.HTTP_400_BAD_REQUEST: ValidationErrorSerializer,
+    },
+)
 @api_view(["POST"])
 def create_account(request: Request) -> Response:
     serializer = CreateAccountSerializer(
