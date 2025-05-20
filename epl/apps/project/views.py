@@ -107,7 +107,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         },
     )
     @action(detail=True, methods=["get"], url_path="users")
-    def project_users(self, request, pk=None):
+    def users(self, request, pk=None):
         project = self.get_object()
         users = (
             User.objects.active()
