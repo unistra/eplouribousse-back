@@ -39,11 +39,11 @@ class ProjectRolesTest(TestCase):
             assigned_by=admin,
         )
 
-        response = self.get(reverse("project-project-users", kwargs={"pk": project_one.id}), user=admin)
+        response = self.get(reverse("project-users", kwargs={"pk": project_one.id}), user=admin)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 2)
 
-        response = self.get(reverse("project-project-users", kwargs={"pk": project_two.id}), user=admin)
+        response = self.get(reverse("project-users", kwargs={"pk": project_two.id}), user=admin)
         self.response_ok(response)
         self.assertListEqual(
             sorted(response.data[0]["roles"]),
