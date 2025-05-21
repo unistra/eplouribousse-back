@@ -34,9 +34,7 @@ class ProjectUsersTest(TestCase):
 
         url = reverse("project-users", kwargs={"pk": self.project_one.id})
 
-        print(url)
         response = self.get(url, user=self.admin)
-        print(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["username"], self.user.username)
