@@ -68,10 +68,6 @@ def change_password(request: Request) -> Response:
     return Response({"detail": _("Your password has been changed successfully.")}, status=status.HTTP_200_OK)
 
 
-def _get_reset_password_signer() -> signing.TimestampSigner:
-    return signing.TimestampSigner(salt=RESET_TOKEN_SALT)
-
-
 @extend_schema(
     tags=["user"],
     summary="Reset the user's password",
@@ -90,7 +86,8 @@ def reset_password(request: Request) -> Response:
     Reset the user's password
     """
     serializer = PasswordResetSerializer(
-        data=request.data, context={"request": request}, salt=RESET_TOKEN_SALT, max_age=RESET_TOKEN_MAX_AGE
+        data=request.data,
+        context={"request": request},
     )
     serializer.is_valid(raise_exception=True)
     serializer.save()
@@ -113,27 +110,18 @@ def reset_password(request: Request) -> Response:
     },
 )
 @api_view(["POST"])
-def send_reset_email(request: Request) -> Response:
+def send_reset_email(request):
     """
     Email the user with a token to reset the password
     If the user's email is not found, nothing happens
     """
-    email = request.data.get("email")
-    if not email:
-        return Response({"detail": _("Email is required.")}, status=status.HTTP_400_BAD_REQUEST)
-
-    protocol = request.scheme
-    port = ":5173" if protocol == "http" else ""
-
-    signer = _get_reset_password_signer()
-    token = signer.sign_object({"email": email})
-    front_url = f"{protocol}://{request.tenant.get_primary_domain().front_domain}{port}/reset-password?token={token}"
+    email = request.data.get("email", "")
+    front_domain = f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}{':5173' if request.scheme == 'http' else ''}"
 
     try:
-        user = User.objects.get(email=email, is_active=True)
-        send_password_reset_email(user, front_url)
+        user = User.objects.active().get(email=email)
+        send_password_reset_email(user, front_domain)
     except User.DoesNotExist:
-        # Intentionally do nothing if the user does not exist
         pass
 
     return Response({"detail": _("Email has been sent successfully.")}, status=status.HTTP_200_OK)

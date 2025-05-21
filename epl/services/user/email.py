@@ -1,9 +1,14 @@
 from django.conf import settings
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import signing
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from rest_framework.request import Request
+
+from epl.apps.user.models import User
 
 
 def send_password_change_email(user: Request.user):
@@ -22,11 +27,15 @@ def send_password_change_email(user: Request.user):
     )
 
 
-def send_password_reset_email(user, reset_link: str):
+def send_password_reset_email(user: User, front_domain: str):
+    token = PasswordResetTokenGenerator().make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
     email_content = render_to_string(
         "emails/password_reset.txt",
         {
-            "reset_link": reset_link,
+            "front_domain": front_domain,
+            "token": token,
+            "uid": uid,
         },
     )
 

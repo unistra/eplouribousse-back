@@ -1,7 +1,9 @@
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.utils import timezone
+from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -11,6 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from epl.apps.project.models import Project
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
+from epl.services.user.email import send_password_change_email
 from epl.validators import JSONSchemaValidator
 
 
@@ -70,45 +73,38 @@ class TokenObtainSerializer(serializers.Serializer):
 
 
 class PasswordResetSerializer(serializers.Serializer):
+    uidb64 = serializers.CharField(style={"input_type": "text"}, write_only=True, required=True)
     token = serializers.CharField(style={"input_type": "text"}, write_only=True, required=True)
     new_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
     confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
 
-    def __init__(self, *args, **kwargs):
-        self.email = None
-        self.salt = kwargs.pop("salt", None)
-        self.max_age = kwargs.pop("max_age", None)
-        super().__init__(*args, **kwargs)
-
-    def validate_token(self, attrs):
-        signer = TimestampSigner(salt=self.salt)
+    def validate_uidb64(self, uidb64: str) -> User:
         try:
-            token_data = signer.unsign_object(attrs, max_age=self.max_age)
-            self.email = token_data.get("email")
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            raise serializers.ValidationError(_("Invalid uidb64"))
+        return user
 
-        except SignatureExpired:
-            raise serializers.ValidationError(_("Signature has expired"))
-        except BadSignature:
-            raise serializers.ValidationError(_("Signature does not match"))
-        return attrs
-
-    def validate(self, attrs):
-        if attrs["new_password"] != attrs["confirm_password"]:
-            raise serializers.ValidationError(_("New password and confirm password do not match"))
-
+    def validate_new_password(self, new_password: str):
         try:
-            validate_password(attrs["new_password"])
+            validate_password(new_password)
         except ValidationError as e:
             raise serializers.ValidationError({"new_password": list(e.messages)})
-        return attrs
+        return new_password
+
+    def validate(self, validated_data):
+        if validated_data["new_password"] != validated_data["confirm_password"]:
+            raise serializers.ValidationError(_("New password and confirm password do not match"))
+        if PasswordResetTokenGenerator().check_token(validated_data["uidb64"], validated_data["token"]) is False:
+            raise serializers.ValidationError(_("Token is invalid or has already been used"))
+        return validated_data
 
     def save(self, **kwargs):
-        try:
-            user = User.objects.get(email=self.email, is_active=True)
-        except User.DoesNotExist:
-            raise serializers.ValidationError(_("User not found"))
+        user = self.validated_data["uidb64"]
         user.set_password(self.validated_data["new_password"])
         user.save()
+        send_password_change_email(user)
         return user
 
 
