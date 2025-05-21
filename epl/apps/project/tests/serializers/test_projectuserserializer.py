@@ -1,7 +1,7 @@
 from django_tenants.test.cases import TenantTestCase
 
 from epl.apps.project.models import Project, UserRole
-from epl.apps.project.serializers import ProjectUserSerializer
+from epl.apps.project.serializers.project import ProjectUserSerializer
 from epl.apps.user.models import User
 
 
