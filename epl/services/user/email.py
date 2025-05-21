@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.request import Request
 
 from epl.apps.user.models import User
+from epl.services.tenant import get_front_domain
 
 
 def send_password_change_email(user: Request.user):
@@ -50,7 +51,8 @@ def send_password_reset_email(user: User, front_domain: str):
 def send_invite_email(email: str, request: Request, signer: signing.TimestampSigner) -> None:
     invite_token: str = signer.sign_object({"email": str(request.data["email"])})
 
-    invitation_link = f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}{':5173' if request.scheme == 'http' else ''}/create-account?t={invite_token}"
+    front_domain = get_front_domain(request)
+    invitation_link = f"{front_domain}/create-account?t={invite_token}"
 
     email_content = render_to_string(
         "emails/invite.txt",

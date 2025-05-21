@@ -27,6 +27,7 @@ from epl.apps.user.serializers import (
 )
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
+from epl.services.tenant import get_front_domain
 from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
 
 logger = logging.getLogger(__name__)
@@ -116,7 +117,7 @@ def send_reset_email(request):
     If the user's email is not found, nothing happens
     """
     email = request.data.get("email", "")
-    front_domain = f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}{':5173' if request.scheme == 'http' else ''}"
+    front_domain = get_front_domain(request)
 
     try:
         user = User.objects.active().get(email=email)
