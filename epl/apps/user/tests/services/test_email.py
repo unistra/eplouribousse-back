@@ -40,8 +40,8 @@ class TestUserEmailServices(TestCase):
 
     def test_send_password_reset_email(self):
         user = self.create_user()
-        link = "http://sxb.epl.localhost:5173/reset-password?t=token"
-        send_password_reset_email(user=user, reset_link=link)
+        front_domain = "http://sxb.epl.localhost:5173"
+        send_password_reset_email(user=user, front_domain=front_domain)
 
         # Check that an email was sent
         self.assertEqual(len(mail.outbox), 1)
