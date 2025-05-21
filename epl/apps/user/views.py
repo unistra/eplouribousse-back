@@ -68,10 +68,6 @@ def change_password(request: Request) -> Response:
     return Response({"detail": _("Your password has been changed successfully.")}, status=status.HTTP_200_OK)
 
 
-def _get_reset_password_signer() -> signing.TimestampSigner:
-    return signing.TimestampSigner(salt=RESET_TOKEN_SALT)
-
-
 @extend_schema(
     tags=["user"],
     summary="Reset the user's password",
@@ -90,7 +86,8 @@ def reset_password(request: Request) -> Response:
     Reset the user's password
     """
     serializer = PasswordResetSerializer(
-        data=request.data, context={"request": request}, salt=RESET_TOKEN_SALT, max_age=RESET_TOKEN_MAX_AGE
+        data=request.data,
+        context={"request": request},
     )
     serializer.is_valid(raise_exception=True)
     serializer.save()
