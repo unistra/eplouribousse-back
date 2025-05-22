@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from epl.apps.project.models.library import Library
@@ -75,3 +75,6 @@ class LibraryViewset(viewsets.ModelViewSet):
     serializer_class = LibrairySerializer
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["name", "alias", "code"]
+    ordering_fields = ["name", "alias"]
