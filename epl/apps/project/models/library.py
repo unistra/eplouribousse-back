@@ -11,7 +11,7 @@ class Library(models.Model):
 
     id = UUIDPrimaryKeyField()
     name = models.CharField(_("Name"), max_length=255, unique=True)
-    alias = models.CharField(_("Alias"), max_length=255, unique=True)
+    alias = models.CharField(_("Alias"), max_length=255)
     code = models.CharField(_("Code or identification"), max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
