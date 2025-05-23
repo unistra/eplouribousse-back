@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from rest_framework.generics import GenericApiView
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import BasePermission
 
 
@@ -45,8 +45,8 @@ class AclSerializerMixin(serializers.Serializer):
         can be defined on the model's Meta class
         """
         extended_permissions = getattr(
-            instance.__class__.Meta,
-            "extended_permissions",
+            instance.__class__,
+            "_extended_permissions",
             [],
         )
         return list(set(self.base_permissions + extended_permissions))
@@ -57,7 +57,7 @@ class AclSerializerMixin(serializers.Serializer):
         """
 
         view = self.context.get("view", None)
-        if view is None or not isinstance(view, GenericApiView):
+        if view is None or not isinstance(view, GenericAPIView):
             raise ValueError(_("View is not in serializer context or is not a GenericApiView"))
 
         return getattr(view, "permission_classes", [])
