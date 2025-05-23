@@ -33,7 +33,7 @@ class LibraryTest(TenantTestCase):
     def test_library_unique_code_constraint(self):
         with self.assertRaises(IntegrityError):
             Library.objects.create(
-                name="Bibliothèque Nationale de Test 3",
-                alias="BNT3",
+                name="Bibliothèque Nationale de Test 2",
+                alias="BNT2",
                 code=self.library.code,
             )
