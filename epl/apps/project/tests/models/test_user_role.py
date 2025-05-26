@@ -83,3 +83,14 @@ class UserRoleModelTest(TenantTestCase):
         self.project1.delete()
         with self.assertRaises(UserRole.DoesNotExist):
             UserRole.objects.get(id=self.role1.id)
+
+    def test_unvalid_role_cant_be_created(self):
+        """Tests that an invalid role cannot be created"""
+        with self.assertRaises(IntegrityError):
+            UserRole.objects.create(user=self.user1, project=self.project1, role="invalid_role")
+
+    def test_valid_role_can_be_created(self):
+        """Tests that a valid role can be created"""
+        user_role = UserRole.objects.create(user=self.user1, project=self.project1, role=ProjectRole.PROJECT_MANAGER)
+        self.assertEqual(user_role.role, ProjectRole.PROJECT_MANAGER)
+        self.assertEqual(user_role.get_role_display(), "Project Manager")
