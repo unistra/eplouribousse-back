@@ -19,24 +19,25 @@ class Project(models.Model):
         return self.name
 
 
+class ProjectRole(models.TextChoices):
+    """
+    User roles
+    """
+
+    TENANT_SUPER_USER = "tenant_super_user", _("Tenant Super User")
+    PROJECT_CREATOR = "project_creator", _("Project Creator")
+    PROJECT_ADMIN = "project_admin", _("Project Administrator")
+    PROJECT_MANAGER = "project_manager", _("Project Manager")
+    INSTRUCTOR = "instructor", _("Instructor")
+    CONTROLLER = "controller", _("Controller")
+    GUEST = "guest", _("Guest")
+
+
 class UserRole(models.Model):
-    class Role(models.TextChoices):
-        """
-        User roles
-        """
-
-        TENANT_SUPER_USER = "tenant_super_user", _("Tenant Super User")
-        PROJECT_CREATOR = "project_creator", _("Project Creator")
-        PROJECT_ADMIN = "project_admin", _("Project Administrator")
-        PROJECT_MANAGER = "project_manager", _("Project Manager")
-        INSTRUCTOR = "instructor", _("Instructor")
-        CONTROLLER = "controller", _("Controller")
-        GUEST = "guest", _("Guest")
-
     id = UUIDPrimaryKeyField()
     user = models.ForeignKey("user.User", on_delete=models.CASCADE, related_name="project_roles")
     project = models.ForeignKey("project.Project", on_delete=models.CASCADE, related_name="user_roles")
-    role = models.CharField(max_length=30, choices=Role.choices)
+    role = models.CharField(max_length=30, choices=ProjectRole.choices)
     assigned_at = models.DateTimeField(auto_now_add=True)
     assigned_by = models.ForeignKey(
         "user.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_roles"
@@ -47,6 +48,10 @@ class UserRole(models.Model):
         verbose_name_plural = _("Project User Roles")
         constraints = [
             models.UniqueConstraint(fields=["user", "role", "project"], name="unique_user_role_project"),
+            models.CheckConstraint(
+                check=models.Q(role__in=[choice[0] for choice in ProjectRole.choices]),
+                name="%(app_label)s_%(class)s_role_valid",
+            ),
         ]
 
     def __str__(self):
