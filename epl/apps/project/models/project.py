@@ -19,7 +19,7 @@ class Project(models.Model):
         return self.name
 
 
-class ProjectRole(models.TextChoices):
+class Role(models.TextChoices):
     """
     User roles
     """
@@ -37,7 +37,7 @@ class UserRole(models.Model):
     id = UUIDPrimaryKeyField()
     user = models.ForeignKey("user.User", on_delete=models.CASCADE, related_name="project_roles")
     project = models.ForeignKey("project.Project", on_delete=models.CASCADE, related_name="user_roles")
-    role = models.CharField(max_length=30, choices=ProjectRole.choices)
+    role = models.CharField(max_length=30, choices=Role.choices)
     assigned_at = models.DateTimeField(auto_now_add=True)
     assigned_by = models.ForeignKey(
         "user.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_roles"
@@ -49,7 +49,7 @@ class UserRole(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["user", "role", "project"], name="unique_user_role_project"),
             models.CheckConstraint(
-                check=models.Q(role__in=[choice[0] for choice in ProjectRole.choices]),
+                check=models.Q(role__in=[choice[0] for choice in Role.choices]),
                 name="%(app_label)s_%(class)s_role_valid",
             ),
         ]

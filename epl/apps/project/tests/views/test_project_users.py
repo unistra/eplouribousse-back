@@ -3,7 +3,7 @@ import uuid
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 
-from epl.apps.project.models import Project, ProjectRole
+from epl.apps.project.models import Project, Role
 from epl.apps.user.models import User
 from epl.tests import TestCase
 
@@ -25,8 +25,8 @@ class ProjectUsersTest(TestCase):
             self.project_two = Project.objects.create(name="Project Two")
 
             # Assign the user to projects with different roles
-            self.project_one.user_roles.create(user=self.user, role=ProjectRole.PROJECT_MANAGER)
-            self.project_one.user_roles.create(user=self.user, role=ProjectRole.INSTRUCTOR)
+            self.project_one.user_roles.create(user=self.user, role=Role.PROJECT_MANAGER)
+            self.project_one.user_roles.create(user=self.user, role=Role.INSTRUCTOR)
 
     def test_get_project_users(self):
         """

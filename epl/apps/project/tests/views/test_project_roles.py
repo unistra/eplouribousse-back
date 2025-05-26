@@ -1,6 +1,6 @@
 from django_tenants.urlresolvers import reverse
 
-from epl.apps.project.models import Project, ProjectRole, UserRole
+from epl.apps.project.models import Project, Role, UserRole
 from epl.apps.user.models import User
 from epl.tests import TestCase
 
@@ -15,13 +15,13 @@ class ProjectRolesTest(TestCase):
         UserRole.objects.create(
             user=manager,
             project=project_one,
-            role=ProjectRole.PROJECT_MANAGER,
+            role=Role.PROJECT_MANAGER,
             assigned_by=admin,
         )
         UserRole.objects.create(
             user=instructor,
             project=project_one,
-            role=ProjectRole.INSTRUCTOR,
+            role=Role.INSTRUCTOR,
             assigned_by=admin,
         )
 
@@ -29,13 +29,13 @@ class ProjectRolesTest(TestCase):
         UserRole.objects.create(
             user=manager,
             project=project_two,
-            role=ProjectRole.PROJECT_ADMIN,
+            role=Role.PROJECT_ADMIN,
             assigned_by=admin,
         )
         UserRole.objects.create(
             user=manager,
             project=project_two,
-            role=ProjectRole.INSTRUCTOR,
+            role=Role.INSTRUCTOR,
             assigned_by=admin,
         )
 
@@ -47,5 +47,5 @@ class ProjectRolesTest(TestCase):
         self.response_ok(response)
         self.assertListEqual(
             sorted(response.data[0]["roles"]),
-            sorted([ProjectRole.PROJECT_ADMIN.value, ProjectRole.INSTRUCTOR.value]),
+            sorted([Role.PROJECT_ADMIN.value, Role.INSTRUCTOR.value]),
         )
