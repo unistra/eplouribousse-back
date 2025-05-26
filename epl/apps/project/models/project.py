@@ -36,7 +36,9 @@ class Role(models.TextChoices):
 class UserRole(models.Model):
     id = UUIDPrimaryKeyField()
     user = models.ForeignKey("user.User", on_delete=models.CASCADE, related_name="project_roles")
-    project = models.ForeignKey("project.Project", on_delete=models.CASCADE, related_name="user_roles")
+    project = models.ForeignKey(
+        "project.Project", on_delete=models.CASCADE, related_name="user_roles", null=True, blank=True
+    )
     role = models.CharField(max_length=30, choices=Role.choices)
     assigned_at = models.DateTimeField(auto_now_add=True)
     assigned_by = models.ForeignKey(

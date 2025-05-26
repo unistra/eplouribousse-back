@@ -94,3 +94,13 @@ class UserRoleModelTest(TenantTestCase):
         user_role = UserRole.objects.create(user=self.user1, project=self.project1, role=Role.PROJECT_MANAGER)
         self.assertEqual(user_role.role, Role.PROJECT_MANAGER)
         self.assertEqual(user_role.get_role_display(), "Project Manager")
+
+    def test_project_can_be_null_or_blank(self):
+        """
+        Tests that a UserRole can be created without a project.
+        Important for roles that are not project-specific like tenant_super_user or project_creator.
+        """
+        user_role = UserRole.objects.create(user=self.user1, role=Role.TENANT_SUPER_USER)
+        self.assertIsNone(user_role.project)
+        self.assertEqual(user_role.role, Role.TENANT_SUPER_USER)
+        self.assertIsNotNone(user_role.assigned_at)
