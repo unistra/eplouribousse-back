@@ -24,8 +24,5 @@ class LibraryViewsTest(TestCase):
 
         response = self.get(url, user=self.user)
         self.assertEqual(response.status_code, 200)
-        print(response.data)
-        print(response.data.get("results"))
-
         self.assertEqual(len(response.data.get("results")), 1)
         self.assertEqual(response.data["results"][0]["name"], self.library.name)
