@@ -1,7 +1,9 @@
 from rest_framework.routers import DefaultRouter
 
-from epl.apps.project.views import ProjectViewSet
+from epl.apps.project.views.librairy import LibraryViewset
+from epl.apps.project.views.project import ProjectViewSet
 
 router = DefaultRouter()
-router.register(r"", ProjectViewSet, basename="project")
+router.register(r"projects", ProjectViewSet, basename="project")
+router.register(r"libraries", LibraryViewset, basename="library")
 urlpatterns = router.urls

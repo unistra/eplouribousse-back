@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from epl.apps.project.models import Project, UserRole
-from epl.apps.project.serializers import ProjectSerializer, ProjectUserSerializer, UserRoleSerializer
+from epl.apps.project.serializers.project import ProjectSerializer, ProjectUserSerializer, UserRoleSerializer
 from epl.apps.user.models import User
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer

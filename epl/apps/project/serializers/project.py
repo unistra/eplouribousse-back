@@ -6,8 +6,6 @@ from epl.apps.user.models import User
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    """Serializer for the Project model"""
-
     class Meta:
         model = Project
         fields = ["id", "name", "description", "created_at", "updated_at"]

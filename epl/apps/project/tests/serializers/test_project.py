@@ -1,7 +1,7 @@
 from django_tenants.test.cases import TenantTestCase
 
 from epl.apps.project.models import Project
-from epl.apps.project.serializers import ProjectSerializer
+from epl.apps.project.serializers.project import ProjectSerializer
 
 
 class ProjectSerializerTest(TenantTestCase):

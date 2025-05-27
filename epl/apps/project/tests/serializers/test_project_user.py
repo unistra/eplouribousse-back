@@ -1,7 +1,7 @@
 from django_tenants.test.cases import TenantTestCase
 
-from epl.apps.project.models import Project, UserRole
-from epl.apps.project.serializers import ProjectUserSerializer
+from epl.apps.project.models import Project, Role, UserRole
+from epl.apps.project.serializers.project import ProjectUserSerializer
 from epl.apps.user.models import User
 
 
@@ -20,9 +20,9 @@ class ProjectUserSerializerTest(TenantTestCase):
         self.project = Project.objects.create(name="Test Project")
 
         # Add roles to users
-        self.role1 = UserRole.objects.create(user=self.user1, project=self.project, role=UserRole.Role.INSTRUCTOR)
-        self.role2 = UserRole.objects.create(user=self.user1, project=self.project, role=UserRole.Role.PROJECT_MANAGER)
-        self.role3 = UserRole.objects.create(user=self.user2, project=self.project, role=UserRole.Role.GUEST)
+        self.role1 = UserRole.objects.create(user=self.user1, project=self.project, role=Role.INSTRUCTOR)
+        self.role2 = UserRole.objects.create(user=self.user1, project=self.project, role=Role.PROJECT_MANAGER)
+        self.role3 = UserRole.objects.create(user=self.user2, project=self.project, role=Role.GUEST)
 
     def test_ProjectUserSerializer(self):
         """Test the serialization of users for a project"""
