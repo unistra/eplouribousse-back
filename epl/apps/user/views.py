@@ -256,7 +256,10 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         },
     )
     @action(
-        methods=["GET", "POST", "DELETE"], detail=True, permission_classes=[IsAuthenticated], url_path="project-creator"
+        methods=["GET", "POST", "DELETE"],
+        detail=True,
+        permission_classes=[IsAuthenticated],
+        url_path="project-creator",
     )
     def project_creator(self, request, pk=None):
         user = self.get_object()
