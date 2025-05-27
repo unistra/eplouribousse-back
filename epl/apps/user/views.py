@@ -33,13 +33,13 @@ from epl.services.user.email import send_invite_email, send_password_change_emai
 logger = logging.getLogger(__name__)
 
 HANDSHAKE_TOKEN_MAX_AGE = 60
-HANDSHAKE_TOKEN_SALT = f"{__file__}:handshake"
+HANDSHAKE_TOKEN_SALT = f"{__name__}:handshake"
 
 RESET_TOKEN_MAX_AGE = 3600  # 1 hour
-RESET_TOKEN_SALT = f"{__file__}:reset"
+RESET_TOKEN_SALT = f"{__name__}:reset"
 
 INVITE_TOKEN_MAX_AGE = 60 * 60 * 24 * 7  # 7 days
-INVITE_TOKEN_SALT = f"{__file__}:invite"
+INVITE_TOKEN_SALT = f"{__name__}:invite"
 
 
 @extend_schema(
