@@ -8,7 +8,7 @@ from django.views.defaults import permission_denied
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view, inline_serializer
 from rest_framework import filters, mixins, serializers, status, viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -241,6 +241,42 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["first_name", "last_name", "email", "username"]
     ordering_fields = ["first_name", "last_name", "email"]
+
+    @extend_schema(
+        tags=["user"],
+        summary=_("Set a user as project creator"),
+        request=None,
+        responses={
+            status.HTTP_200_OK: inline_serializer(
+                name="ProjectCreatorResponse",
+                fields={"is_project_creator": serializers.BooleanField(help_text=_("User is project creator"))},
+            ),
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_405_METHOD_NOT_ALLOWED: None,
+        },
+    )
+    @action(
+        methods=["GET", "POST", "DELETE"],
+        detail=True,
+        permission_classes=[IsAuthenticated],
+        url_path="project-creator",
+    )
+    def project_creator(self, request, pk=None):
+        user = self.get_object()
+        if not request.user.is_superuser:
+            raise PermissionDenied(_("Only superusers can set a user as project creator"))
+
+        match request.method:
+            case "GET":
+                return Response({"is_project_creator": user.is_project_creator})
+            case "POST":
+                user.set_is_project_creator(True, request.user)
+                return Response({"is_project_creator": user.is_project_creator})
+            case "DELETE":
+                user.set_is_project_creator(False, request.user)
+                return Response({"is_project_creator": user.is_project_creator})
+            case _:
+                return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 def _get_invite_signer() -> signing.TimestampSigner:

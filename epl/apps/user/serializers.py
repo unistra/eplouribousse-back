@@ -155,6 +155,7 @@ class UserSerializer(ModelSerializer):
             "last_name",
             "email",
             "can_authenticate_locally",
+            "is_project_creator",
             "settings",
             "projects",
         ]

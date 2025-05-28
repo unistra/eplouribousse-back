@@ -1,3 +1,6 @@
+from django_tenants.utils import tenant_context
+
+from epl.apps.project.models import Role, UserRole
 from epl.apps.user.models import User
 from epl.tests import TestCase
 
@@ -32,6 +35,29 @@ class TestUser(TestCase):
             str(user),
             "test_user",
         )
+
+
+class IsProjectCreatorTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.user = User.objects.create_user(email="first.last@example.com")
+
+    def test_user_is_not_project_creator_by_default(self):
+        self.assertFalse(self.user.is_project_creator)
+
+    def test_set_user_is_project_creator(self):
+        self.user.set_is_project_creator(True, assigned_by=self.user)
+        self.assertTrue(self.user.is_project_creator)
+
+    def test_set_user_is_project_creator_creates_userrole(self):
+        self.user.set_is_project_creator(True, assigned_by=self.user)
+        self.assertTrue(UserRole.objects.filter(user=self.user, role=Role.PROJECT_CREATOR).exists())
+
+    def test_remove_user_is_project_creator_role(self):
+        self.user.set_is_project_creator(False, assigned_by=self.user)
+        self.assertFalse(self.user.is_project_creator)
+        self.assertFalse(UserRole.objects.filter(user=self.user, role=Role.PROJECT_CREATOR).exists())
 
 
 class TestUserManager(TestCase):

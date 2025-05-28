@@ -1,9 +1,10 @@
-from typing import TypeVar
+from typing import Self, TypeVar
 
 from django.contrib.auth.models import AbstractUser, UserManager
-from django.db import models
+from django.db import IntegrityError, models
 from django.utils.translation import gettext_lazy as _
 
+from epl.apps.project.models import Role, UserRole
 from epl.models import UUIDPrimaryKeyField
 
 T = TypeVar("T")
@@ -52,3 +53,16 @@ class User(AbstractUser):
     def __str__(self) -> str:
         name: str = f"{self.first_name} {self.last_name}".strip()
         return name or self.username
+
+    @property
+    def is_project_creator(self) -> bool:
+        return UserRole.objects.filter(user=self, role=Role.PROJECT_CREATOR).exists()
+
+    def set_is_project_creator(self, value: bool, assigned_by: Self) -> None:
+        if value:
+            try:
+                UserRole.objects.create(user=self, role=Role.PROJECT_CREATOR, project=None, assigned_by=assigned_by)
+            except IntegrityError:
+                pass  # Role already exists
+        else:
+            UserRole.objects.filter(user=self, role=Role.PROJECT_CREATOR).delete()
