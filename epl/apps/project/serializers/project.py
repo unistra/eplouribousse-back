@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from epl.apps.project.models import Project, Role, UserRole
+from epl.apps.project.models.library import Library
 from epl.apps.user.models import User
 
 
@@ -34,6 +35,7 @@ class UserRoleSerializer(serializers.Serializer):
 class AssignRoleSerializer(serializers.Serializer):
     role = serializers.CharField(help_text=_("Role"))
     user = serializers.UUIDField(help_text=_("User id"))
+    library = serializers.UUIDField(help_text=_("Library id"), required=False)
 
     def validate_role(self, role):
         if role not in Role.values:
@@ -47,17 +49,26 @@ class AssignRoleSerializer(serializers.Serializer):
             raise serializers.ValidationError(_("User does not exist."))
         return user.id
 
+    def validate_library(self, library):
+        try:
+            library = Library.objects.get(pk=library)
+        except Library.DoesNotExist:
+            raise serializers.ValidationError(_("Library does not exist."))
+        return library.id
+
     def save(self):
         if self.context["request"].method == "POST":
             return UserRole.objects.get_or_create(
                 user=self.validated_data["user"],
                 role=self.validated_data["role"],
+                library=self.validated_data["library"],
                 project=self.context["project"],
             )
         elif self.context["request"].method == "DELETE":
             result = UserRole.objects.filter(
                 user=self.validated_data["user"],
                 role=self.validated_data["role"],
+                library=self.validated_data["library"],
                 project=self.context["project"],
             ).delete()
             if not result[0]:
