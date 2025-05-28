@@ -26,6 +26,7 @@ from epl.apps.user.serializers import (
     UserSerializer,
 )
 from epl.libs.pagination import PageNumberPagination
+from epl.permissions import IsSuperUser
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
 from epl.services.tenant import get_front_domain
 from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
@@ -258,7 +259,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     @action(
         methods=["GET", "POST", "DELETE"],
         detail=True,
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsSuperUser],
         url_path="project-creator",
     )
     def project_creator(self, request, pk=None):
