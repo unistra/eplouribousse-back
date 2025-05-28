@@ -263,6 +263,9 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     )
     def project_creator(self, request, pk=None):
         user = self.get_object()
+        if not request.user.is_superuser:
+            raise PermissionDenied(_("Only superusers can set a user as project creator"))
+
         match request.method:
             case "GET":
                 return Response({"is_project_creator": user.is_project_creator})
