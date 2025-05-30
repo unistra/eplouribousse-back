@@ -1,5 +1,5 @@
 from epl.apps.project.models.library import Library
-from epl.apps.project.serializers.library import LibrairySerializer
+from epl.apps.project.serializers.library import LibrarySerializer
 from epl.tests import TenantTestCase
 
 
@@ -8,7 +8,7 @@ class TestLibrarySerializer(TenantTestCase):
         self.library = Library.objects.create(name="Bibliothèque Nationale de Test", alias="BNT", code="67000")
 
     def test_create_library_with_valid_data(self):
-        serializer = LibrairySerializer(self.library)
+        serializer = LibrarySerializer(self.library)
         library_data = serializer.data
 
         self.assertEqual(self.library.name, library_data["name"])
@@ -25,7 +25,7 @@ class TestLibrarySerializer(TenantTestCase):
             "code": "67001",
         }
 
-        serializer = LibrairySerializer(self.library, data=updated_data)
+        serializer = LibrarySerializer(self.library, data=updated_data)
         self.assertTrue(serializer.is_valid())
         updated_library = serializer.save()
 
