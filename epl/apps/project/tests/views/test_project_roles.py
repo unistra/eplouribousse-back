@@ -1,6 +1,6 @@
 from django_tenants.urlresolvers import reverse
 
-from epl.apps.project.models import Project, Role, UserRole
+from epl.apps.project.models import Library, Project, Role, UserRole
 from epl.apps.user.models import User
 from epl.tests import TestCase
 
@@ -49,3 +49,204 @@ class ProjectRolesTest(TestCase):
             sorted(response.data[0]["roles"]),
             sorted([Role.PROJECT_ADMIN.value, Role.INSTRUCTOR.value]),
         )
+
+
+class ProjectAssignRoleTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.user_one = User.objects.create_user(email="user_1@eplouribousse.fr")
+        self.user_two = User.objects.create_user(email="user_2@eplouribousse.fr")
+        self.admin = User.objects.create_user(email="admin@eplouribousse.fr")
+
+        self.library_one = Library.objects.create(name="Library One", alias="Lib1", code="001")
+        self.library_two = Library.objects.create(name="Library Two", alias="Lib2", code="002")
+
+        self.project_one = Project.objects.create(name="Project One")
+        self.project_two = Project.objects.create(name="Project Two")
+
+    def test_assign_role_and_library_to_user_in_project(self):
+        data = {
+            "role": Role.INSTRUCTOR.value,
+            "user_id": self.user_one.id,
+            "library_id": self.library_one.id,
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+
+        print(f"Response status: {response.status_code}")
+        print(f"Response data: {response.data}")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["role"], data["role"])
+        self.assertEqual(response.data["user_id"], str(self.user_one.id))
+        self.assertEqual(response.data["library_id"], str(self.library_one.id))
+
+    def test_assign_role_without_library(self):
+        data = {
+            "role": Role.PROJECT_MANAGER.value,
+            "user_id": self.user_one.id,
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["role"], data["role"])
+
+    def test_assign_role_to_nonexistent_user(self):
+        data = {
+            "role": Role.INSTRUCTOR.value,
+            "user_id": 99999,
+            "library_id": self.library_one.id,
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("user_id", response.data)
+
+    def test_assign_role_with_nonexistent_library(self):
+        data = {
+            "role": Role.INSTRUCTOR.value,
+            "user_id": self.user_one.id,
+            "library_id": 99999,  # ID qui n'existe pas
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("library_id", response.data)
+
+    def test_assign_invalid_role(self):
+        data = {
+            "role": "INVALID_ROLE",
+            "user_id": self.user_one.id,
+            "library_id": self.library_one.id,
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("role", response.data)
+
+    def test_assign_duplicate_role(self):
+        # First assignment
+        data = {
+            "role": Role.INSTRUCTOR.value,
+            "user_id": self.user_one.id,
+            "library_id": self.library_one.id,
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # Attempt to assign the same role again
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+    def test_assign_role_missing_required_role_field(self):
+        data = {
+            "user_id": self.user_one.id,
+            "library_id": self.library_one.id,
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("role", response.data)
+
+    def test_assign_role_missing_required_user_id_field(self):
+        data = {
+            "role": Role.INSTRUCTOR.value,
+            "library_id": self.library_one.id,
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("user_id", response.data)
+
+    def test_assign_role_to_nonexistent_project(self):
+        data = {
+            "role": Role.INSTRUCTOR.value,
+            "user_id": self.user_one.id,
+            "library_id": self.library_one.id,
+        }
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": 99999}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_assign_different_roles_same_user_same_library(self):
+        # First role assignment
+        data1 = {
+            "role": Role.INSTRUCTOR.value,
+            "user_id": self.user_one.id,
+            "library_id": self.library_one.id,
+        }
+        response1 = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data1,
+            user=self.user_one,
+        )
+        self.assertEqual(response1.status_code, 201)
+
+        # Second role, same user, same library
+        data2 = {
+            "role": Role.CONTROLLER.value,
+            "user_id": self.user_one.id,
+            "library_id": self.library_one.id,
+        }
+        response2 = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data2,
+            user=self.user_one,
+        )
+        self.assertEqual(response2.status_code, 201)
+        self.assertEqual(UserRole.objects.count(), 2)
+
+    def test_remove_role_from_user_in_project(self):
+        # Assign a role to the user
+        data = {"role": Role.INSTRUCTOR.value, "user_id": self.user_one.id}
+        response = self.post(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+        )
+        self.assertEqual(response.status_code, 201)
+        print(f"Assigned role: {response.data}")
+
+        # Now remove the role
+        response = self.delete(
+            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
+            data=data,
+            user=self.user_one,
+            format="json",
+        )
+        print(data)
+        print(f"Removed role: {response.data}")
+        self.assertEqual(response.status_code, 204)
