@@ -34,24 +34,24 @@ class UserRoleSerializer(serializers.Serializer):
 
 class AssignRoleSerializer(serializers.Serializer):
     role = serializers.CharField(help_text=_("Role"))
-    user = serializers.UUIDField(help_text=_("User id"))
-    library = serializers.UUIDField(help_text=_("Library id"), required=False)
+    user_id = serializers.UUIDField(help_text=_("User id"))
+    library_id = serializers.UUIDField(help_text=_("Library id"), required=False)
 
     def validate_role(self, role):
         if role not in Role.values:
             raise serializers.ValidationError(_("Invalid role."))
         return role
 
-    def validate_user(self, user):
+    def validate_user(self, user_id):
         try:
-            user = User.objects.active().get(pk=user)
+            user = User.objects.active().get(pk=user_id)
         except User.DoesNotExist:
             raise serializers.ValidationError(_("User does not exist."))
         return user.id
 
-    def validate_library(self, library):
+    def validate_library(self, library_id):
         try:
-            library = Library.objects.get(pk=library)
+            library = Library.objects.get(pk=library_id)
         except Library.DoesNotExist:
             raise serializers.ValidationError(_("Library does not exist."))
         return library.id
@@ -59,16 +59,18 @@ class AssignRoleSerializer(serializers.Serializer):
     def save(self):
         if self.context["request"].method == "POST":
             return UserRole.objects.get_or_create(
-                user=self.validated_data["user"],
+                user_id=self.validated_data["user_id"],
                 role=self.validated_data["role"],
-                library=self.validated_data["library"],
+                library_id=self.validated_data.get(
+                    "library_id"
+                ),  # get method is used to avoid KeyError if library_id is not provided
                 project=self.context["project"],
             )
         elif self.context["request"].method == "DELETE":
             result = UserRole.objects.filter(
-                user=self.validated_data["user"],
+                user_id=self.validated_data["user_id"],
                 role=self.validated_data["role"],
-                library=self.validated_data["library"],
+                library_id=self.validated_data.get("library_id"),
                 project=self.context["project"],
             ).delete()
             if not result[0]:

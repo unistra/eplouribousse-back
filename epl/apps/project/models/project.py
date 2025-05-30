@@ -5,11 +5,11 @@ from django.utils.translation import gettext_lazy as _
 from epl.models import UUIDPrimaryKeyField
 
 
-class Status(models.TextChoices):
-    CREATED = "created", _("Created")
-    DRAFT = "draft", _("Draft")
-    REVIEW = "review", _("Review")
-    ACTIVE = "active", _("Active")
+class Status(models.IntegerChoices):
+    CREATED = 10, _("Created")
+    DRAFT = 20, _("Draft")
+    REVIEW = 30, _("Review")
+    ACTIVE = 40, _("Active")
 
 
 class Project(models.Model):
