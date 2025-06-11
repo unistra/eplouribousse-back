@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django_tenants.urlresolvers import reverse
 
 from epl.apps.project.models import Library, Project, Role, UserRole
@@ -203,50 +205,59 @@ class ProjectAssignRoleTest(TestCase):
 
     def test_assign_different_roles_same_user_same_library(self):
         # First role assignment
-        data1 = {
-            "role": Role.INSTRUCTOR.value,
-            "user_id": self.user_one.id,
-            "library_id": self.library_one.id,
-        }
-        response1 = self.post(
-            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
-            data=data1,
+        UserRole.objects.create(
             user=self.user_one,
+            project=self.project_one,
+            role=Role.INSTRUCTOR,
+            library=self.library_one,
         )
-        self.assertEqual(response1.status_code, 201)
 
         # Second role, same user, same library
-        data2 = {
+        data = {
             "role": Role.CONTROLLER.value,
             "user_id": self.user_one.id,
             "library_id": self.library_one.id,
+            "project_id": self.project_one.id,
         }
-        response2 = self.post(
-            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
-            data=data2,
-            user=self.user_one,
-        )
-        self.assertEqual(response2.status_code, 201)
-        self.assertEqual(UserRole.objects.count(), 2)
-
-    def test_remove_role_from_user_in_project(self):
-        # Assign a role to the user
-        data = {"role": Role.INSTRUCTOR.value, "user_id": self.user_one.id}
         response = self.post(
             reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
             data=data,
             user=self.user_one,
         )
         self.assertEqual(response.status_code, 201)
-        print(f"Assigned role: {response.data}")
+        self.assertEqual(UserRole.objects.count(), 2)
 
-        # Now remove the role
-        response = self.delete(
-            reverse("project-assign-roles", kwargs={"pk": self.project_one.id}),
-            data=data,
+    def test_remove_role_from_user_in_project(self):
+        # Create a role for the user in the project
+        UserRole.objects.create(
             user=self.user_one,
-            format="json",
+            project=self.project_one,
+            role=Role.INSTRUCTOR,
+            library=self.library_one,
         )
-        print(data)
-        print(f"Removed role: {response.data}")
+        print(f"User roles: {UserRole.objects.all()}")
+
+        # Remove the role
+        data = {
+            "role": Role.INSTRUCTOR.value,
+            "user_id": self.user_one.id,
+            "library_id": self.library_one.id,
+        }
+        url = f"{reverse('project-assign-roles', kwargs={'pk': self.project_one.id})}?{urlencode(data)}"
+        response = self.delete(
+            url,
+            user=self.user_one,
+        )
+
+        print(f"Delete response status: {response.status_code}")
+        print(f"Delete response data: {response.data}")
         self.assertEqual(response.status_code, 204)
+
+        self.assertFalse(
+            UserRole.objects.filter(
+                user=self.user_one,
+                project=self.project_one,
+                role=Role.INSTRUCTOR,
+                library=self.library_one,
+            ).exists()
+        )

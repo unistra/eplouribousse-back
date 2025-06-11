@@ -18,7 +18,7 @@ class Project(models.Model):
     description = models.TextField(_("Description"), blank=True)
     is_private = models.BooleanField(_("Is private"), default=False)
     active_after = models.DateTimeField(_("Active after"), default=now)
-    status = models.CharField(_("Status"), max_length=15, default=Status.CREATED, choices=Status.choices)
+    status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.CREATED)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
 

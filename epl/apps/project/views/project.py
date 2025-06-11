@@ -159,7 +159,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def remove_roles(self, request, pk=None):
         project = self.get_object()
 
-        serializer = AssignRoleSerializer(data=request.data, context={"project": project, "request": request})
+        serializer = AssignRoleSerializer(data=request.query_params, context={"project": project, "request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
