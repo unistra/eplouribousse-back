@@ -7,8 +7,13 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from epl.apps.project.models import Project, UserRole
-from epl.apps.project.serializers.project import ProjectSerializer, ProjectUserSerializer, UserRoleSerializer
+from epl.apps.project.models import Project, Role, UserRole
+from epl.apps.project.serializers.project import (
+    AssignRoleSerializer,
+    ProjectSerializer,
+    ProjectUserSerializer,
+    UserRoleSerializer,
+)
 from epl.apps.user.models import User
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer
@@ -120,14 +125,56 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
         tags=["project", "user"],
+        summary=_("Assign roles for a user in a project"),
+        responses={
+            status.HTTP_201_CREATED: AssignRoleSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+        request=AssignRoleSerializer,
+    )
+    @action(detail=True, methods=["post"], url_path="roles")
+    def assign_roles(self, request, pk=None):
+        project = self.get_object()
+
+        serializer = AssignRoleSerializer(data=request.data, context={"project": project, "request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        tags=["project", "user"],
+        summary=_("Remove roles for a user in a project"),
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+        request=AssignRoleSerializer,
+    )
+    @assign_roles.mapping.delete
+    def remove_roles(self, request, pk=None):
+        project = self.get_object()
+
+        serializer = AssignRoleSerializer(data=request.query_params, context={"project": project, "request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(
+        tags=["project", "user"],
         summary=_("List all roles"),
         responses={
             status.HTTP_200_OK: UserRoleSerializer(many=True),
         },
     )
     @action(detail=False, methods=["get"], url_path="roles", permission_classes=[AllowAny])
-    def roles(self, request):
+    def list_roles(self, request):
         """List all available roles"""
-        roles = [{"role": role[0], "label": role[1]} for role in UserRole.Role.choices]
+        roles = [{"role": role[0], "label": role[1]} for role in Role.choices]
         serializer = UserRoleSerializer(roles, many=True)
         return Response(serializer.data)
