@@ -1,5 +1,6 @@
 import csv
 import io
+from collections import Counter
 
 from django.core.exceptions import ValidationError as ModelValidationError
 from django.db import transaction
@@ -22,6 +23,15 @@ REQUIRED_FIELDS = (
     "title",
     "code",
 )
+
+FIELD_CLEANERS = {
+    "Titre": lambda x: x.strip(),
+    "PPN": lambda x: x.strip(),
+    "Issn": lambda x: x.replace(" ", "").upper(),
+    "Cote": lambda x: x.strip(),
+    "Etat de collection": lambda x: x.strip(),
+    "Lacunes": lambda x: x.strip(),
+}
 
 
 class CollectionSerializer:
@@ -81,23 +91,27 @@ class ImportSerializer(serializers.Serializer):
         csv_reader = self.get_file_reader(csv_file)
 
         missing_required_fields = []
+        loaded_collections = {}
         current_row = 0
         for row in csv_reader:
             current_row += 1
             # map the fields to the model fields
             data = {FIELD_MAPPING.get(key): value for key, value in row.items() if key in FIELD_MAPPING}
+            for name, cleaner in FIELD_CLEANERS.items():
+                data[name] = cleaner(data[name])
             data["library"] = self.validated_data["library_id"]
             data["project"] = self.validated_data["project_id"]
 
             try:
                 Collection.objects.create(**data)
+                loaded_collections[data["code"]] = loaded_collections.get(data["code"], 0) + 1
             except ModelValidationError:
                 missing_required_fields.append((current_row, [field for field in REQUIRED_FIELDS if not data[field]]))
 
         if missing_required_fields:
             raise serializers.ValidationError({"csv_file": _("Missing required fields in the CSV file.")})
 
-        return current_row
+        return Counter(loaded_collections.values())
 
     def validate_csv_file(self, value):
         csv_reader = self.get_file_reader(value)
