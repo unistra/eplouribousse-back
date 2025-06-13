@@ -2,7 +2,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from rest_framework import serializers
 
-from epl.validators import JSONSchemaValidator
+from epl.validators import IssnValidator, JSONSchemaValidator
 
 
 class JSONSchemaValidatorTest(TestCase):
@@ -41,3 +41,25 @@ class JSONSchemaValidatorTest(TestCase):
         }
         with self.assertRaises(serializers.ValidationError):
             JSONSchemaValidator("user_settings.schema.json")(value)
+
+
+class IssnValidatorTest(TestCase):
+    def test_validate_valid_issn(self):
+        validated_value = IssnValidator()("1050-124X")
+        self.assertEqual(validated_value, "1050-124X")
+
+    def test_invalid_issn_raises_validation_error(self):
+        with self.assertRaises(serializers.ValidationError):
+            IssnValidator()("1234-5678")
+
+    def test_issn_must_be_8_chars(self):
+        with self.assertRaises(serializers.ValidationError):
+            IssnValidator()("123")
+
+    def test_return_value_is_formated_with_hyphen(self):
+        validated_value = IssnValidator()("1050124X")
+        self.assertEqual(validated_value, "1050-124X")
+
+    def test_returned_value_is_uppercased(self):
+        validated_value = IssnValidator()("1050-124x")
+        self.assertEqual(validated_value, "1050-124X")
