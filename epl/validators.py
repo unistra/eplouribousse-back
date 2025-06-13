@@ -3,6 +3,7 @@ from pathlib import Path, PosixPath
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.deconstruct import deconstructible
 from django.utils.translation import gettext_lazy as _
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError as SchemaValidationError
@@ -32,6 +33,7 @@ class JSONSchemaValidator:
         return value
 
 
+@deconstructible
 class IssnValidator:
     """
     Validate that the given ISSN is valid and format uppercase with - separator
