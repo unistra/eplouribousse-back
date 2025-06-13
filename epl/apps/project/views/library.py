@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from epl.apps.project.models.library import Library
 from epl.apps.project.permissions.library import LibraryPermission
 from epl.apps.project.serializers.library import LibrarySerializer
+from epl.libs.filters import ExcludeFilter
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer
 
@@ -76,6 +77,6 @@ class LibraryViewset(viewsets.ModelViewSet):
     serializer_class = LibrarySerializer
     permission_classes = [IsAuthenticated, LibraryPermission]
     pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ExcludeFilter]
     search_fields = ["name", "alias", "code"]
     ordering_fields = ["name", "alias"]
