@@ -29,6 +29,8 @@ class ExcludeFilter(filters.BaseFilterBackend):
                     "type": "array",
                     "items": {
                         "type": "string",
+                        "format": "uuid",
+                        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                     },
                 },
             },
