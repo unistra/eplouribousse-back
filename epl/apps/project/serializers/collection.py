@@ -25,12 +25,12 @@ REQUIRED_FIELDS = (
 )
 
 FIELD_CLEANERS = {
-    "Titre": lambda x: x.strip(),
-    "PPN": lambda x: x.strip(),
-    "Issn": lambda x: x.replace(" ", "").upper(),
-    "Cote": lambda x: x.strip(),
-    "Etat de collection": lambda x: x.strip(),
-    "Lacunes": lambda x: x.strip(),
+    "title": lambda x: x.strip(),
+    "code": lambda x: x.strip(),
+    "issn": lambda x: x.replace(" ", "").upper(),
+    "call_number": lambda x: x.strip(),
+    "hold_statement": lambda x: x.strip(),
+    "missing": lambda x: x.strip(),
 }
 
 
