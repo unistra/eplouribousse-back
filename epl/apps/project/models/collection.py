@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from epl.models import UUIDPrimaryKeyField
+from epl.validators import IssnValidator
 
 
 class Collection(models.Model):
@@ -10,7 +11,7 @@ class Collection(models.Model):
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
     library = models.ForeignKey("Library", on_delete=models.CASCADE)  # RCR
     project = models.ForeignKey("Project", on_delete=models.CASCADE)
-    issn = models.CharField(_("ISSN"), max_length=9, blank=True)
+    issn = models.CharField(_("ISSN"), max_length=9, blank=True, validators=[IssnValidator()])
     call_number = models.CharField(_("Call number"), blank=True)  # Cote
     hold_statement = models.CharField(_("Hold statement"), blank=True)  # État de la collection
     missing = models.CharField(_("Missing"), blank=True)  # Lacunes
@@ -29,3 +30,7 @@ class Collection(models.Model):
 
     def __str__(self):
         return f"{self.code} - {self.title}"
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)

@@ -19,6 +19,7 @@ class Project(models.Model):
     is_private = models.BooleanField(_("Is private"), default=False)
     active_after = models.DateTimeField(_("Active after"), default=now)
     status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.CREATED)
+    settings = models.JSONField(_("Settings"), default=dict)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
 
