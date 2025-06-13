@@ -26,7 +26,10 @@ class ExcludeFilter(filters.BaseFilterBackend):
                 "in": "query",
                 "description": str(self.exclude_description),
                 "schema": {
-                    "type": "string",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                    },
                 },
             },
         ]
