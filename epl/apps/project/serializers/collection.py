@@ -77,8 +77,8 @@ class CollectionSerializer(serializers.ModelSerializer):
 
 class ImportSerializer(serializers.Serializer):
     csv_file = serializers.FileField(required=True, help_text=_("CSV file to be imported."), write_only=True)
-    library_id = serializers.UUIDField(required=True, help_text=_("Library ID to which the collection belongs."))
-    project_id = serializers.UUIDField(required=True, help_text=_("Project ID to which the collection belongs."))
+    library = serializers.UUIDField(required=True, help_text=_("Library ID to which the collection belongs."))
+    project = serializers.UUIDField(required=True, help_text=_("Project ID to which the collection belongs."))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -95,11 +95,9 @@ class ImportSerializer(serializers.Serializer):
         csv_file = self.validated_data["csv_file"]
         csv_reader = self.get_file_reader(csv_file)
 
-        library = Library.objects.get(pk=self.validated_data["library_id"])
-        project = Project.objects.get(pk=self.validated_data["project_id"])
         user = self.context.get("request").user
 
-        print(f"Importing collections for library: {library.name}, project: {project.name} by user: {user.username}")
+        # print(f"Importing collections for library: {library.name}, project: {project.name} by user: {user.username}")
 
         missing_required_fields = []
         loaded_collections = {}
@@ -110,8 +108,8 @@ class ImportSerializer(serializers.Serializer):
             data = {FIELD_MAPPING.get(key): value for key, value in row.items() if key in FIELD_MAPPING}
             for name, cleaner in FIELD_CLEANERS.items():
                 data[name] = cleaner(data[name])
-            data["library"] = library
-            data["project"] = project
+            data["library"] = self.validated_data["library"]
+            data["project"] = self.validated_data["project"]
             data["created_by"] = user
 
             try:
@@ -134,16 +132,16 @@ class ImportSerializer(serializers.Serializer):
 
         return value
 
-    def validate_library_id(self, value):
+    def validate_library(self, value):
         try:
             library = Library.objects.get(pk=value)
         except Library.DoesNotExist:
             raise serializers.ValidationError(_("Library with ID %(id)s does not exist.") % {"id": value})
-        return library.id
+        return library
 
-    def validate_project_id(self, value):
+    def validate_project(self, value):
         try:
             project = Project.objects.get(pk=value)
         except Project.DoesNotExist:
             raise serializers.ValidationError(_("Project with ID %(id)s does not exist.") % {"id": value})
-        return project.id
+        return project

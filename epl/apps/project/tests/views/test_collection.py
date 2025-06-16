@@ -37,8 +37,8 @@ class CollectionViewSetTest(TestCase):
 
             data = {
                 "csv_file": uploaded_file,
-                "library_id": self.library.id,
-                "project_id": self.project.id,
+                "library": self.library.id,
+                "project": self.project.id,
             }
 
             response = self.post(reverse("collection-import_csv"), data=data, user=self.user, format="multipart")
