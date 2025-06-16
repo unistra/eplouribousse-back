@@ -20,21 +20,26 @@ FIELD_MAPPING = {
 }
 
 REQUIRED_FIELDS = (
-    "title",
-    "code",
+    "Titre",
+    "PPN",
 )
 
+
+def stripper(val):
+    return val.strip() if val and isinstance(val, str) else ""
+
+
 FIELD_CLEANERS = {
-    "title": lambda x: x.strip(),
-    "code": lambda x: x.strip(),
-    "issn": lambda x: x.replace(" ", "").upper(),
-    "call_number": lambda x: x.strip(),
-    "hold_statement": lambda x: x.strip(),
-    "missing": lambda x: x.strip(),
+    "title": stripper,
+    "code": stripper,
+    "issn": lambda x: stripper(x).upper(),
+    "call_number": stripper,
+    "hold_statement": stripper,
+    "missing": stripper,
 }
 
 
-class CollectionSerializer:
+class CollectionSerializer(serializers.ModelSerializer):
     """
     Serializer for the Collection model.
     Used to import .csv files into the database.
@@ -71,7 +76,7 @@ class CollectionSerializer:
 
 
 class ImportSerializer(serializers.Serializer):
-    csv_file = serializers.FileField(required=True, help_text=_("CSV file to be imported."))
+    csv_file = serializers.FileField(required=True, help_text=_("CSV file to be imported."), write_only=True)
     library_id = serializers.UUIDField(required=True, help_text=_("Library ID to which the collection belongs."))
     project_id = serializers.UUIDField(required=True, help_text=_("Project ID to which the collection belongs."))
 
@@ -90,6 +95,12 @@ class ImportSerializer(serializers.Serializer):
         csv_file = self.validated_data["csv_file"]
         csv_reader = self.get_file_reader(csv_file)
 
+        library = Library.objects.get(pk=self.validated_data["library_id"])
+        project = Project.objects.get(pk=self.validated_data["project_id"])
+        user = self.context.get("request").user
+
+        print(f"Importing collections for library: {library.name}, project: {project.name} by user: {user.username}")
+
         missing_required_fields = []
         loaded_collections = {}
         current_row = 0
@@ -99,8 +110,9 @@ class ImportSerializer(serializers.Serializer):
             data = {FIELD_MAPPING.get(key): value for key, value in row.items() if key in FIELD_MAPPING}
             for name, cleaner in FIELD_CLEANERS.items():
                 data[name] = cleaner(data[name])
-            data["library"] = self.validated_data["library_id"]
-            data["project"] = self.validated_data["project_id"]
+            data["library"] = library
+            data["project"] = project
+            data["created_by"] = user
 
             try:
                 Collection.objects.create(**data)
