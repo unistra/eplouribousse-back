@@ -9,7 +9,7 @@ from epl.apps.user.models import User
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "created_at", "updated_at"]
+        fields = ["id", "name", "description", "invitations", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
@@ -76,3 +76,20 @@ class AssignRoleSerializer(serializers.Serializer):
             if not result[0]:
                 raise serializers.ValidationError(_("Role not found for this user in the project."))
         return None
+
+
+class InvitationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    role = serializers.ChoiceField(choices=Role.choices)
+    library = serializers.CharField(
+        required=False, allow_null=True
+    )  # UUID as string, to avoid useless complexity of UUIDField in JSON
+
+
+class ProjectInvitationsSerializer(serializers.Serializer):
+    invitations = InvitationSerializer(many=True)
+
+    def save(self):
+        project = self.context["project"]
+        project.invitations = self.validated_data["invitations"]
+        project.save()

@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from epl.apps.project.models import Project, Role, UserRole
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
+    ProjectInvitationsSerializer,
     ProjectSerializer,
     ProjectUserSerializer,
     UserRoleSerializer,
@@ -178,3 +179,27 @@ class ProjectViewSet(viewsets.ModelViewSet):
         roles = [{"role": role[0], "label": role[1]} for role in Role.choices]
         serializer = UserRoleSerializer(roles, many=True)
         return Response(serializer.data)
+
+    @extend_schema(
+        tags=["project", "invitation"],
+        summary=_("Update invitations for a project"),
+        description=_(
+            "Update the list of invitations for a project. "
+            "The request body should be an object with an 'invitations' key containing a list of invitations."
+        ),
+        request=ProjectInvitationsSerializer,
+        responses={
+            status.HTTP_200_OK: ProjectSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(detail=True, methods=["patch"], url_path="invitations")
+    def update_invitations(self, request, pk=None):
+        project = self.get_object()
+        print("Request data for invitations:", request.data)
+        serializer = ProjectInvitationsSerializer(data=request.data, context={"project": project})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(ProjectSerializer(project).data, status=status.HTTP_200_OK)
