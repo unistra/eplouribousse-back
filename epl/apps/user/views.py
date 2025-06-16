@@ -301,7 +301,15 @@ def invite(request: Request) -> Response:
     serializer = EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    send_invite_email(email=request.data["email"], request=request, signer=_get_invite_signer())
+    send_invite_email(
+        email=request.data.get("email"),
+        project_id=request.data.get("project_id"),
+        library_id=request.data.get("library_id"),
+        role=request.data.get("role"),
+        assigned_by=request.user.id,
+        request=request,
+        signer=_get_invite_signer(),
+    )
     return Response(status=status.HTTP_200_OK)
 
 

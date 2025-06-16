@@ -206,6 +206,9 @@ class EmailSerializer(serializers.Serializer):
 class InviteTokenSerializer(serializers.Serializer):
     token = serializers.CharField(write_only=True, required=True)
     email = serializers.EmailField(read_only=True)
+    project_id = serializers.CharField(read_only=True, required=False)
+    library_id = serializers.CharField(read_only=True, required=False)
+    role = serializers.CharField(read_only=True, required=False)
 
     def validate(self, attrs):
         invite_token = attrs.get("token")
@@ -219,6 +222,9 @@ class InviteTokenSerializer(serializers.Serializer):
             if not email:
                 raise serializers.ValidationError(_("Invalid token format."))
             attrs["email"] = email
+            attrs["project_id"] = token_data.get("project_id")
+            attrs["library_id"] = token_data.get("library_id")
+            attrs["role"] = token_data.get("role")
         except SignatureExpired:
             raise serializers.ValidationError(_("Invite token expired"))
         except BadSignature:
@@ -234,6 +240,9 @@ class CreateAccountSerializer(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         self.email = None
+        self.project_id = None
+        self.library_id = None
+        self.role = None
         super().__init__(*args, **kwargs)
 
     def validate_token(self, token_value):
@@ -244,6 +253,9 @@ class CreateAccountSerializer(serializers.Serializer):
         token_serializer.is_valid(raise_exception=True)
 
         self.email = token_serializer.validated_data.get("email")
+        self.project_id = token_serializer.validated_data.get("project_id")
+        self.library_id = token_serializer.validated_data.get("library_id")
+        self.role = token_serializer.validated_data.get("role")
         return token_value
 
     def validate(self, attrs):
@@ -259,4 +271,13 @@ class CreateAccountSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
         user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
+
+        if self.project_id and self.role:
+            project = Project.objects.get(id=self.project_id)
+            user_role = project.user_roles.create(user=user, role=self.role, assigned_by=self.context["request"].user)
+            if self.library_id:
+                library = project.libraries.get(pk=self.library_id)
+                user_role.library = library
+                user_role.save()
+
         return user
