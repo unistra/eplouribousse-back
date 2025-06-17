@@ -10,7 +10,7 @@ class ProjectSerializerTest(TenantTestCase):
         serializer = ProjectSerializer(project)
         data = serializer.data
 
-        expected_fields = ["id", "name", "description", "created_at", "updated_at"]
+        expected_fields = ["id", "name", "description", "invitations", "created_at", "updated_at"]
         self.assertEqual(set(data.keys()), set(expected_fields))
 
         self.assertEqual(data["name"], "Test")

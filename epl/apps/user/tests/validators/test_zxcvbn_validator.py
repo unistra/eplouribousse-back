@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from epl.apps.user.models import User
 from epl.apps.user.validators import ZxcvbnPasswordValidator
@@ -32,5 +33,5 @@ class ZxcvbnValidatorTest(TestCase):
             with self.assertRaises(ValidationError) as cm:
                 validator("weak password")
 
-            self.assertIn("The password is too weak", str(cm.exception))
+            self.assertIn(str(_("The password is too weak")), str(cm.exception))
             self.assertIn("Weak password warning", str(cm.exception))

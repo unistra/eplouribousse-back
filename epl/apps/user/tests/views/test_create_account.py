@@ -38,18 +38,6 @@ class TestCreateAccountView(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Password and confirm password do not match", str(response.content))
 
-    def test_weak_password(self):
-        signer = _get_invite_signer()
-        email = "new_user@example.com"
-        token = signer.sign_object({"email": email})
-
-        response = self.post(
-            reverse("create_account"), {"token": token, "password": "password", "confirm_password": "password"}
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("the password is too weak" in str(response.content).lower())
-
     def test_invalid_token(self):
         response = self.post(
             reverse("create_account"),

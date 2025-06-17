@@ -198,7 +198,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["patch"], url_path="invitations")
     def update_invitations(self, request, pk=None):
         project = self.get_object()
-        print("Request data for invitations:", request.data)
         serializer = ProjectInvitationsSerializer(data=request.data, context={"project": project})
         serializer.is_valid(raise_exception=True)
         serializer.save()

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-30 08:21+0200\n"
+"POT-Creation-Date: 2025-06-17 15:38+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,62 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: epl/apps/project/models/library.py:13 epl/apps/project/models/project.py:17
+#: epl/apps/project/models/collection.py:10
+msgid "Title"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:11
+msgid "Code (PPN or other)"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:14
+msgid "ISSN"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:15
+msgid "Call number"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:16
+msgid "Hold statement"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:17
+msgid "Missing"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:19
+msgid "Publication history"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:21
+msgid "Numbering"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:22
+msgid "Notes"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:23
+#: epl/apps/project/models/project.py:37 epl/apps/tenant/models.py:12
+msgid "Created at"
+msgstr "Créé le"
+
+#: epl/apps/project/models/collection.py:24
+#, fuzzy
+#| msgid "Created at"
+msgid "Created by"
+msgstr "Créé le"
+
+#: epl/apps/project/models/collection.py:27
+msgid "Collection"
+msgstr ""
+
+#: epl/apps/project/models/collection.py:28
+msgid "Collections"
+msgstr ""
+
+#: epl/apps/project/models/library.py:13 epl/apps/project/models/project.py:18
 msgid "Name"
 msgstr "Nom"
 
@@ -42,95 +97,143 @@ msgstr "Bibliothèque"
 msgid "Libraries"
 msgstr "Bibliothèques"
 
-#: epl/apps/project/models/project.py:9
+#: epl/apps/project/models/project.py:10
 #, fuzzy
 #| msgid "Created at"
 msgid "Created"
 msgstr "Créé le"
 
-#: epl/apps/project/models/project.py:10
+#: epl/apps/project/models/project.py:11
 msgid "Draft"
 msgstr ""
 
-#: epl/apps/project/models/project.py:11
+#: epl/apps/project/models/project.py:12
 msgid "Review"
 msgstr ""
 
-#: epl/apps/project/models/project.py:12
+#: epl/apps/project/models/project.py:13
 msgid "Active"
 msgstr ""
 
-#: epl/apps/project/models/project.py:18
+#: epl/apps/project/models/project.py:19
 msgid "Description"
 msgstr "Description"
 
-#: epl/apps/project/models/project.py:19
+#: epl/apps/project/models/project.py:21
 msgid "Is private"
 msgstr ""
 
-#: epl/apps/project/models/project.py:20
+#: epl/apps/project/models/project.py:22
 msgid "Active after"
 msgstr ""
 
-#: epl/apps/project/models/project.py:21
+#: epl/apps/project/models/project.py:23
 msgid "Status"
 msgstr ""
 
-#: epl/apps/project/models/project.py:22 epl/apps/tenant/models.py:12
-msgid "Created at"
-msgstr "Créé le"
+#: epl/apps/project/models/project.py:24
+#, fuzzy
+#| msgid "Tenant settings"
+msgid "Settings"
+msgstr "Configuration du tenant"
 
-#: epl/apps/project/models/project.py:23
+#: epl/apps/project/models/project.py:36
+#, fuzzy
+#| msgid "Invitation"
+msgid "Invitations"
+msgstr "Invitation"
+
+#: epl/apps/project/models/project.py:38
 #, fuzzy
 #| msgid "Created at"
 msgid "Updated at"
 msgstr "Créé le"
 
-#: epl/apps/project/models/project.py:26
+#: epl/apps/project/models/project.py:41
 msgid "Project"
 msgstr "Projet"
 
-#: epl/apps/project/models/project.py:27
+#: epl/apps/project/models/project.py:42
 msgid "Projects"
 msgstr "Projets"
 
-#: epl/apps/project/models/project.py:45
+#: epl/apps/project/models/project.py:60
 msgid "Tenant Super User"
 msgstr "Super utilisateur du tenant"
 
-#: epl/apps/project/models/project.py:46
+#: epl/apps/project/models/project.py:61
 msgid "Project Creator"
 msgstr "Créateur du projet"
 
-#: epl/apps/project/models/project.py:47
+#: epl/apps/project/models/project.py:62
 msgid "Project Administrator"
 msgstr "Administrateur du projet"
 
-#: epl/apps/project/models/project.py:48
+#: epl/apps/project/models/project.py:63
+#: epl/apps/project/tests/models/test_user_role.py:97
 msgid "Project Manager"
 msgstr "Gestionnaire de projet"
 
-#: epl/apps/project/models/project.py:49
+#: epl/apps/project/models/project.py:64
 msgid "Instructor"
 msgstr "Instructeur"
 
-#: epl/apps/project/models/project.py:50
+#: epl/apps/project/models/project.py:65
 msgid "Controller"
 msgstr "Contrôleur"
 
-#: epl/apps/project/models/project.py:51
+#: epl/apps/project/models/project.py:66
 msgid "Guest"
 msgstr "Invité"
 
-#: epl/apps/project/models/project.py:70
+#: epl/apps/project/models/project.py:85
 msgid "Project User Role"
 msgstr "Rôle utilisateur du projet"
 
-#: epl/apps/project/models/project.py:71
+#: epl/apps/project/models/project.py:86
 msgid "Project User Roles"
 msgstr "Rôles utilisateurs du projet"
 
-#: epl/apps/project/serializers/project.py:18 epl/apps/user/serializers.py:177
+#: epl/apps/project/serializers/collection.py:45
+msgid "Library to which the collection belongs"
+msgstr ""
+
+#: epl/apps/project/serializers/collection.py:51
+msgid "Project to which the collection belongs"
+msgstr ""
+
+#: epl/apps/project/serializers/collection.py:74
+msgid "CSV file to be imported."
+msgstr ""
+
+#: epl/apps/project/serializers/collection.py:75
+msgid "Library ID to which the collection belongs."
+msgstr ""
+
+#: epl/apps/project/serializers/collection.py:76
+msgid "Project ID to which the collection belongs."
+msgstr ""
+
+#: epl/apps/project/serializers/collection.py:112
+msgid "Missing required fields in the CSV file."
+msgstr ""
+
+#: epl/apps/project/serializers/collection.py:120
+#, python-format
+msgid "Column(s) %(column)s missing in the CSV file."
+msgstr ""
+
+#: epl/apps/project/serializers/collection.py:129
+#, python-format
+msgid "Library with ID %(id)s does not exist."
+msgstr ""
+
+#: epl/apps/project/serializers/collection.py:136
+#, python-format
+msgid "Project with ID %(id)s does not exist."
+msgstr ""
+
+#: epl/apps/project/serializers/project.py:18 epl/apps/user/serializers.py:178
 msgid "User's roles in this project"
 msgstr "Rôles de l'utilisateur dans ce projet"
 
@@ -155,7 +258,7 @@ msgstr "Utilisateur"
 msgid "Library id"
 msgstr "Bibliothèque"
 
-#: epl/apps/project/serializers/project.py:42
+#: epl/apps/project/serializers/project.py:42 epl/apps/user/serializers.py:216
 #, fuzzy
 #| msgid "Invalid token format."
 msgid "Invalid role."
@@ -167,83 +270,95 @@ msgstr "Format de jeton invalide."
 msgid "User does not exist."
 msgstr "L'utilisateur n'est pas actif"
 
-#: epl/apps/project/serializers/project.py:56
+#: epl/apps/project/serializers/project.py:56 epl/apps/user/serializers.py:211
 msgid "Library does not exist."
 msgstr ""
 
-#: epl/apps/project/serializers/project.py:75
+#: epl/apps/project/serializers/project.py:77
 msgid "Role not found for this user in the project."
 msgstr ""
 
-#: epl/apps/project/views/library.py:16
+#: epl/apps/project/views/library.py:17
 msgid "List all libraries"
 msgstr "Lister toutes les bibliothèques"
 
-#: epl/apps/project/views/library.py:24
+#: epl/apps/project/views/library.py:25
 msgid "Create a new library"
 msgstr "Créer une nouvelle bibliothèque"
 
-#: epl/apps/project/views/library.py:33
+#: epl/apps/project/views/library.py:34
 msgid "Retrieve library details"
 msgstr "Récupérer les détails de la bibliothèque"
 
-#: epl/apps/project/views/library.py:42
+#: epl/apps/project/views/library.py:43
 msgid "Update a library"
 msgstr "Mettre à jour une bibliothèque"
 
-#: epl/apps/project/views/library.py:52
+#: epl/apps/project/views/library.py:53
 msgid "Partially update a library"
 msgstr "Mettre à jour partiellement une bibliothèque"
 
-#: epl/apps/project/views/library.py:62
+#: epl/apps/project/views/library.py:63
 msgid "Delete a library"
 msgstr "Supprimer une bibliothèque"
 
-#: epl/apps/project/views/project.py:25
+#: epl/apps/project/views/project.py:26
 msgid "List all projects"
 msgstr "Lister tous les projets"
 
-#: epl/apps/project/views/project.py:42
+#: epl/apps/project/views/project.py:43
 #, fuzzy
 #| msgid "Created at"
 msgid "Create a new project"
 msgstr "Créé le"
 
-#: epl/apps/project/views/project.py:51
+#: epl/apps/project/views/project.py:52
 msgid "Retrieve project details"
 msgstr "Récupérer les détails du projet"
 
-#: epl/apps/project/views/project.py:60
+#: epl/apps/project/views/project.py:61
 msgid "Update a project"
 msgstr "Mettre à jour un projet"
 
-#: epl/apps/project/views/project.py:70
+#: epl/apps/project/views/project.py:71
 msgid "Partially update a project"
 msgstr "Mettre à jour partiellement un projet"
 
-#: epl/apps/project/views/project.py:80
+#: epl/apps/project/views/project.py:81
 msgid "Delete a project"
 msgstr "Supprimer un projet"
 
-#: epl/apps/project/views/project.py:107
+#: epl/apps/project/views/project.py:108
 msgid "List users associated with a project"
 msgstr "Lister les utilisateurs associés à un projet"
 
-#: epl/apps/project/views/project.py:128
+#: epl/apps/project/views/project.py:129
 #, fuzzy
 #| msgid "User's roles in the project"
 msgid "Assign roles for a user in a project"
 msgstr "Rôles de l'utilisateur dans le projet"
 
-#: epl/apps/project/views/project.py:149
+#: epl/apps/project/views/project.py:150
 #, fuzzy
 #| msgid "User's roles in the project"
 msgid "Remove roles for a user in a project"
 msgstr "Rôles de l'utilisateur dans le projet"
 
-#: epl/apps/project/views/project.py:170
+#: epl/apps/project/views/project.py:171
 msgid "List all roles"
 msgstr "Lister tous les rôles"
+
+#: epl/apps/project/views/project.py:185
+#, fuzzy
+#| msgid "Update a project"
+msgid "Update invitations for a project"
+msgstr "Mettre à jour un projet"
+
+#: epl/apps/project/views/project.py:187
+msgid ""
+"Update the list of invitations for a project. The request body should be an "
+"object with an 'invitations' key containing a list of invitations."
+msgstr ""
 
 #: epl/apps/tenant/models.py:10
 msgid "Tenant name"
@@ -273,80 +388,82 @@ msgstr "Utilisateur"
 msgid "Users"
 msgstr "Utilisateurs"
 
-#: epl/apps/user/serializers.py:28
+#: epl/apps/user/serializers.py:29
 msgid "Old password is incorrect"
 msgstr "L'ancien mot de passe est erroné"
 
-#: epl/apps/user/serializers.py:33 epl/apps/user/serializers.py:98
+#: epl/apps/user/serializers.py:34 epl/apps/user/serializers.py:99
+#: epl/apps/user/tests/views/test_reset_password.py:116
 msgid "New password and confirm password do not match"
 msgstr "Le nouveau mot de passe et sa confirmation ne correspondent pas"
 
-#: epl/apps/user/serializers.py:64
+#: epl/apps/user/serializers.py:65
 msgid "User is not active"
 msgstr "L'utilisateur n'est pas actif"
 
-#: epl/apps/user/serializers.py:86
+#: epl/apps/user/serializers.py:87
 msgid "Invalid uidb64"
 msgstr ""
 
-#: epl/apps/user/serializers.py:100
+#: epl/apps/user/serializers.py:101
 msgid "Token is invalid or has already been used"
 msgstr ""
 
-#: epl/apps/user/serializers.py:116
+#: epl/apps/user/serializers.py:117
 msgid "User's roles in the project"
 msgstr "Rôles de l'utilisateur dans le projet"
 
-#: epl/apps/user/serializers.py:140
+#: epl/apps/user/serializers.py:141
 msgid "Whether the user can log in locally with username and password?"
 msgstr ""
 "L'utilisateur peut-il se connecter localement avec un nom d'utilisateur et "
 "un mot de passe ?"
 
-#: epl/apps/user/serializers.py:145
+#: epl/apps/user/serializers.py:146
 #, fuzzy
 #| msgid "Tenant settings"
 msgid "User settings"
 msgstr "Configuration du tenant"
 
-#: epl/apps/user/serializers.py:177
+#: epl/apps/user/serializers.py:178
 msgid "Role in project"
 msgstr "Rôle dans le projet"
 
-#: epl/apps/user/serializers.py:202
+#: epl/apps/user/serializers.py:206
+#, fuzzy
+#| msgid "User is not active"
+msgid "Project does not exist."
+msgstr "L'utilisateur n'est pas actif"
+
+#: epl/apps/user/serializers.py:221 epl/apps/user/tests/views/test_invite.py:35
 msgid "Email is already linked to an account"
 msgstr "L'email est déjà lié à un compte"
 
-#: epl/apps/user/serializers.py:213
+#: epl/apps/user/serializers.py:237
 msgid "Token is required."
 msgstr "Le jeton est requis."
 
-#: epl/apps/user/serializers.py:220
+#: epl/apps/user/serializers.py:244
 msgid "Invalid token format."
 msgstr "Format de jeton invalide."
 
-#: epl/apps/user/serializers.py:223
+#: epl/apps/user/serializers.py:252
 #, fuzzy
 #| msgid "Handshake token expired"
 msgid "Invite token expired"
 msgstr "Le jeton d'authentification a expiré"
 
-#: epl/apps/user/serializers.py:225
+#: epl/apps/user/serializers.py:254
 #, fuzzy
 #| msgid "Invalid handshake token"
 msgid "Invalid invite token"
 msgstr "Le jeton d'authentification n'est pas valide"
 
-#: epl/apps/user/serializers.py:251
+#: epl/apps/user/serializers.py:288
 #, fuzzy
 #| msgid "New password and confirm password do not match"
 msgid "Password and confirm password do not match"
 msgstr "Le nouveau mot de passe et sa confirmation ne correspondent pas"
-
-#: epl/apps/user/tests/services/test_email.py:23 epl/services/user/email.py:24
-#: epl/templates/emails/password_changed.txt:3
-msgid "Password Change"
-msgstr "Modification du mot de passe"
 
 #: epl/apps/user/tests/services/test_email.py:35
 #: epl/templates/emails/password_changed.txt:5
@@ -367,11 +484,6 @@ msgstr "Si vous êtes à l'origine de ce changement"
 msgid "If you did NOT make this change"
 msgstr "Si vous n'avez PAS fait ce changement"
 
-#: epl/apps/user/tests/services/test_email.py:50 epl/services/user/email.py:44
-#: epl/templates/emails/password_reset.txt:3
-msgid "Password Reset"
-msgstr "Réinitialisation du mot de passe"
-
 #: epl/apps/user/tests/services/test_email.py:61
 #: epl/templates/emails/password_reset.txt:5
 msgid "Did you forget your password ?"
@@ -389,22 +501,26 @@ msgstr "Cliquez sur le lien pour réinitialiser votre mot de passe"
 msgid "This link is only valid for 1 hour"
 msgstr "Ce lien n'est valable que pendant 24 heures"
 
-#: epl/apps/user/tests/services/test_email.py:66
-msgid ""
-"If you do not want to reset your password, you can ignore this message and "
-"your password will not change"
-msgstr ""
-"Si vous ne souhaitez pas réinitialiser votre mot de passe, vous pouvez "
-"ignorer ce message et votre mot de passe ne changera pas"
+#: epl/apps/user/tests/validators/test_zxcvbn_validator.py:36
+#: epl/apps/user/validators.py:27 epl/apps/user/validators.py:34
+msgid "The password is too weak"
+msgstr "Le mot de passe est trop faible"
+
+#: epl/apps/user/tests/views/test_create_account.py:58
+#, fuzzy
+#| msgid "this password is too common"
+msgid "This password is too common"
+msgstr "Le mot de passe est trop courant"
+
+#: epl/apps/user/tests/views/test_post_login_handshake.py:48
+#: epl/apps/user/views.py:179
+msgid "Handshake token expired"
+msgstr "Le jeton d'authentification a expiré"
 
 #: epl/apps/user/validators.py:13
 msgid ""
 "The min_score parameter of the ZxcvbnPasswordValidator must be an integer."
 msgstr "Le paramètre min_score de ZxcvbnPasswordValidator doit être un entier."
-
-#: epl/apps/user/validators.py:27 epl/apps/user/validators.py:34
-msgid "The password is too weak"
-msgstr "Le mot de passe est trop faible"
 
 #: epl/apps/user/views.py:48
 msgid "Change the user's password"
@@ -441,10 +557,6 @@ msgstr "Le jeton d'authentification n'est pas valide"
 #, fuzzy
 #| msgid "Handshake token expired"
 msgid "Handshake token"
-msgstr "Le jeton d'authentification a expiré"
-
-#: epl/apps/user/views.py:179
-msgid "Handshake token expired"
 msgstr "Le jeton d'authentification a expiré"
 
 #: epl/apps/user/views.py:181
@@ -487,44 +599,48 @@ msgstr "Envoyer un email d'invitation"
 msgid "Invitation email sent successfully."
 msgstr "L'email a été envoyé."
 
-#: epl/apps/user/views.py:314
+#: epl/apps/user/views.py:322
 #, fuzzy
 #| msgid "Invalid handshake token"
 msgid "Validate invitation token"
 msgstr "Le jeton d'authentification n'est pas valide"
 
-#: epl/apps/user/views.py:315
+#: epl/apps/user/views.py:323
 msgid ""
 "Validates an invitation token and returns the associated email address if "
 "valid."
 msgstr ""
 "Valide un jeton d'invitation et retourne l'adresse email associée si valide."
 
-#: epl/apps/user/views.py:320
+#: epl/apps/user/views.py:328
 msgid "Email address associated with the invitation"
 msgstr "Adresse email associée à l'invitation"
 
-#: epl/apps/user/views.py:338
+#: epl/apps/user/views.py:346
 msgid "Create a new user account"
 msgstr "Créer un nouveau compte utilisateur"
 
-#: epl/apps/user/views.py:339
+#: epl/apps/user/views.py:347
 msgid "Creates a new user account based on an invitation token"
 msgstr "Crée un nouveau compte utilisateur basé sur un jeton d'invitation"
 
-#: epl/apps/user/views.py:344 epl/apps/user/views.py:355
+#: epl/apps/user/views.py:352 epl/apps/user/views.py:363
 #, fuzzy
 #| msgid "Your password has been changed successfully."
 msgid "Account created successfully."
 msgstr "Votre mot de passe a été changé avec succès."
 
+#: epl/libs/filters.py:11
+msgid "Exclude IDs"
+msgstr ""
+
+#: epl/libs/filters.py:12
+msgid "List of IDs to exclude."
+msgstr ""
+
 #: epl/services/permissions/serializers.py:61
 msgid "View is not in serializer context or is not a GenericApiView"
 msgstr ""
-
-#: epl/services/user/email.py:63 epl/templates/emails/invite.txt:3
-msgid "Invitation"
-msgstr "Invitation"
 
 #: epl/templates/403.html:6
 msgid "You are not allowed to see this page"
@@ -537,6 +653,10 @@ msgstr "Page non trouvée"
 #: epl/templates/500.html:6
 msgid "Error"
 msgstr "Erreur"
+
+#: epl/templates/emails/invite.txt:3
+msgid "Invitation"
+msgstr "Invitation"
 
 #: epl/templates/emails/invite.txt:5
 msgid "You have been invited to join Eplouribousse"
@@ -572,6 +692,10 @@ msgstr "Cette invitation va expirer dans 7 jours"
 msgid "This is an automated message, please do not reply"
 msgstr "Ceci est un message automatique, vous ne pouvez pas y répondre"
 
+#: epl/templates/emails/password_changed.txt:3
+msgid "Password Change"
+msgstr "Modification du mot de passe"
+
 #: epl/templates/emails/password_changed.txt:8
 msgid "you can ignore this email"
 msgstr "Vous pouvez ignorer ce message"
@@ -591,6 +715,10 @@ msgstr ""
 "Pour des raisons de sécurité, nous vous recommandons de changer votre mot de "
 "passe au plus vite"
 
+#: epl/templates/emails/password_reset.txt:3
+msgid "Password Reset"
+msgstr "Réinitialisation du mot de passe"
+
 #: epl/templates/emails/password_reset.txt:10
 msgid "If you do not want to reset your password"
 msgstr "Si vous ne voulez pas réinitialiser votre mot de passe"
@@ -598,6 +726,17 @@ msgstr "Si vous ne voulez pas réinitialiser votre mot de passe"
 #: epl/templates/emails/password_reset.txt:10
 msgid "you can ignore this message and your password will not change"
 msgstr "vous pouvez ignorer ce message et votre mot de passe ne changera pas"
+
+#: epl/validators.py:45
+msgid "ISSN must be 8 characters long"
+msgstr ""
+
+#~ msgid ""
+#~ "If you do not want to reset your password, you can ignore this message "
+#~ "and your password will not change"
+#~ msgstr ""
+#~ "Si vous ne souhaitez pas réinitialiser votre mot de passe, vous pouvez "
+#~ "ignorer ce message et votre mot de passe ne changera pas"
 
 #~ msgid "Signature has expired"
 #~ msgstr "La signature a expiré"

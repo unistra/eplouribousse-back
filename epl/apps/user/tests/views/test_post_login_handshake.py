@@ -1,6 +1,8 @@
+import json
 import uuid
 from unittest.mock import patch
 
+from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from rest_framework import status
@@ -42,7 +44,8 @@ class HandshakeViewTest(TestCase):
         with patch("epl.apps.user.views.HANDSHAKE_TOKEN_MAX_AGE", 0):
             response = self.post(reverse("login_handshake"), {"t": token})
         self.response_forbidden(response)
-        self.assertIn("Handshake token expired", str(response.content))
+        detail = json.loads(response.content.decode())["detail"]
+        self.assertIn(str(_("Handshake token expired")), detail)
 
     def test_active_user_returns_jwt(self):
         with tenant_context(self.tenant):

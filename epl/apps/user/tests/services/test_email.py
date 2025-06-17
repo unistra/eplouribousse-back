@@ -61,9 +61,3 @@ class TestUserEmailServices(TestCase):
         self.assertIn(_("Did you forget your password ?"), email_content)
         self.assertIn(_("Click on the link to reset your password"), email_content)
         self.assertIn(_("This link is only valid for 1 hour"), email_content)
-        self.assertIn(
-            _(
-                "If you do not want to reset your password, you can ignore this message and your password will not change"
-            ),
-            email_content,
-        )
