@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
+from epl.apps.project.models import Library
 from epl.models import UUIDPrimaryKeyField
 
 
@@ -16,6 +17,7 @@ class Project(models.Model):
     id = UUIDPrimaryKeyField()
     name = models.CharField(_("Name"), max_length=255)
     description = models.TextField(_("Description"), blank=True)
+    libraries = models.ManyToManyField(Library)
     is_private = models.BooleanField(_("Is private"), default=False)
     active_after = models.DateTimeField(_("Active after"), default=now)
     status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.CREATED)

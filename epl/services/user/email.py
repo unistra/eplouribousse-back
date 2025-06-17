@@ -55,15 +55,15 @@ def send_invite_email(
     project_id: str = None,
     library_id: str = None,
     role: str = None,
-    assigned_by=None,
+    assigned_by_id=None,
 ) -> None:
     invite_token: str = signer.sign_object(
         {
-            "email": str(request.data["email"]),
-            "project_id": project_id,
-            "library_id": library_id,
-            "role": role,
-            "assigned_by": assigned_by,
+            "email": str(email),
+            "project_id": str(project_id),
+            "library_id": str(library_id),
+            "role": str(role),
+            "assigned_by_id": str(assigned_by_id),
         }
     )
 

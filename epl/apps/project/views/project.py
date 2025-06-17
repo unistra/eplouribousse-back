@@ -181,7 +181,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @extend_schema(
-        tags=["project", "invitation"],
+        tags=["project"],
         summary=_("Update invitations for a project"),
         description=_(
             "Update the list of invitations for a project. "
