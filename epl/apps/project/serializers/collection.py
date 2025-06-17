@@ -44,17 +44,11 @@ FIELD_CLEANERS = {
 
 
 class CollectionSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Collection model.
-    Used to import .csv files into the database.
-    """
-
     library = serializers.PrimaryKeyRelatedField(
         queryset=Library.objects.all(),
         help_text=_("Library to which the collection belongs"),
         required=True,
     )
-
     project = serializers.PrimaryKeyRelatedField(
         queryset=Project.objects.all(),  # Verify that the project exists
         help_text=_("Project to which the collection belongs"),
@@ -75,6 +69,7 @@ class CollectionSerializer(serializers.ModelSerializer):
             "missing",
             "publication_history",
             "numbering",
+            "notes",
         ]
         read_only_fields = ["id"]
 
@@ -100,8 +95,6 @@ class ImportSerializer(serializers.Serializer):
         csv_reader = self.get_file_reader(csv_file)
 
         user = self.context.get("request").user
-
-        # print(f"Importing collections for library: {library.name}, project: {project.name} by user: {user.username}")
 
         rows_with_errors = []
         loaded_collections = {}
