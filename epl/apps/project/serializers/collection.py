@@ -1,14 +1,18 @@
 import csv
 import io
+import logging
 from collections import Counter
 
 from django.core.exceptions import ValidationError as ModelValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from epl.apps.project.models import Library, Project
 from epl.apps.project.models.collection import Collection
+
+logger = logging.getLogger(__name__)
 
 FIELD_MAPPING = {
     "Titre": "title",
@@ -20,21 +24,26 @@ FIELD_MAPPING = {
 }
 
 REQUIRED_FIELDS = (
-    "title",
-    "code",
+    "Titre",
+    "PPN",
 )
 
+
+def stripper(val):
+    return val.strip() if val and isinstance(val, str) else ""
+
+
 FIELD_CLEANERS = {
-    "title": lambda x: x.strip(),
-    "code": lambda x: x.strip(),
-    "issn": lambda x: x.replace(" ", "").upper(),
-    "call_number": lambda x: x.strip(),
-    "hold_statement": lambda x: x.strip(),
-    "missing": lambda x: x.strip(),
+    "title": stripper,
+    "code": stripper,
+    "issn": lambda x: stripper(x).upper(),
+    "call_number": stripper,
+    "hold_statement": stripper,
+    "missing": stripper,
 }
 
 
-class CollectionSerializer:
+class CollectionSerializer(serializers.ModelSerializer):
     """
     Serializer for the Collection model.
     Used to import .csv files into the database.
@@ -71,9 +80,9 @@ class CollectionSerializer:
 
 
 class ImportSerializer(serializers.Serializer):
-    csv_file = serializers.FileField(required=True, help_text=_("CSV file to be imported."))
-    library_id = serializers.UUIDField(required=True, help_text=_("Library ID to which the collection belongs."))
-    project_id = serializers.UUIDField(required=True, help_text=_("Project ID to which the collection belongs."))
+    csv_file = serializers.FileField(required=True, help_text=_("CSV file to be imported."), write_only=True)
+    library = serializers.UUIDField(required=True, help_text=_("Library ID to which the collection belongs."))
+    project = serializers.UUIDField(required=True, help_text=_("Project ID to which the collection belongs."))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -90,7 +99,11 @@ class ImportSerializer(serializers.Serializer):
         csv_file = self.validated_data["csv_file"]
         csv_reader = self.get_file_reader(csv_file)
 
-        missing_required_fields = []
+        user = self.context.get("request").user
+
+        # print(f"Importing collections for library: {library.name}, project: {project.name} by user: {user.username}")
+
+        rows_with_errors = []
         loaded_collections = {}
         current_row = 0
         for row in csv_reader:
@@ -99,17 +112,21 @@ class ImportSerializer(serializers.Serializer):
             data = {FIELD_MAPPING.get(key): value for key, value in row.items() if key in FIELD_MAPPING}
             for name, cleaner in FIELD_CLEANERS.items():
                 data[name] = cleaner(data[name])
-            data["library"] = self.validated_data["library_id"]
-            data["project"] = self.validated_data["project_id"]
+            data["library"] = self.validated_data["library"]
+            data["project"] = self.validated_data["project"]
+            data["created_by"] = user
 
             try:
                 Collection.objects.create(**data)
                 loaded_collections[data["code"]] = loaded_collections.get(data["code"], 0) + 1
-            except ModelValidationError:
-                missing_required_fields.append((current_row, [field for field in REQUIRED_FIELDS if not data[field]]))
+            except (ModelValidationError, DRFValidationError):
+                logger.error("Error creating collection from row %d: %s", current_row, data, exc_info=True)
+                rows_with_errors.append(current_row)
 
-        if missing_required_fields:
-            raise serializers.ValidationError({"csv_file": _("Missing required fields in the CSV file.")})
+        if rows_with_errors:
+            raise serializers.ValidationError(
+                {"csv_file": _("Error in rows(s) %(rows)s") % {"rows": ", ".join(str(row) for row in rows_with_errors)}}
+            )
 
         return Counter(loaded_collections.values())
 
@@ -122,16 +139,16 @@ class ImportSerializer(serializers.Serializer):
 
         return value
 
-    def validate_library_id(self, value):
+    def validate_library(self, value):
         try:
             library = Library.objects.get(pk=value)
         except Library.DoesNotExist:
             raise serializers.ValidationError(_("Library with ID %(id)s does not exist.") % {"id": value})
-        return library.id
+        return library
 
-    def validate_project_id(self, value):
+    def validate_project(self, value):
         try:
             project = Project.objects.get(pk=value)
         except Project.DoesNotExist:
             raise serializers.ValidationError(_("Project with ID %(id)s does not exist.") % {"id": value})
-        return project.id
+        return project
