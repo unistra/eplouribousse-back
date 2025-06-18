@@ -1,9 +1,12 @@
+from unittest.mock import MagicMock, patch
+
 from django.conf import settings
-from django.core import mail
+from django.core import mail, signing
 from django.utils.translation import gettext as _
+from rest_framework.request import Request
 
 from epl.apps.user.models import User
-from epl.services.user.email import send_password_change_email, send_password_reset_email
+from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
 from epl.tests import TestCase
 
 
@@ -61,3 +64,40 @@ class TestUserEmailServices(TestCase):
         self.assertIn(_("Did you forget your password ?"), email_content)
         self.assertIn(_("Click on the link to reset your password"), email_content)
         self.assertIn(_("This link is only valid for 1 hour"), email_content)
+
+    @patch("epl.services.user.email.send_mail")
+    @patch("epl.services.user.email.render_to_string")
+    @patch("epl.services.user.email.get_front_domain")
+    def test_send_invite_email(self, mock_get_front_domain, mock_render_to_string, mock_send_mail):
+        mock_get_front_domain.return_value = "http://testdomain"
+        mock_render_to_string.return_value = "Email content"
+        signer = signing.TimestampSigner()
+        request = MagicMock(spec=Request)
+        email = "invitee@example.com"
+        project_id = "123"
+        library_id = "456"
+        role = "INSTRUCTOR"
+        assigned_by_id = "789"
+
+        send_invite_email(
+            email=email,
+            request=request,
+            signer=signer,
+            project_id=project_id,
+            library_id=library_id,
+            role=role,
+            assigned_by_id=assigned_by_id,
+        )
+
+        args, kwargs = mock_render_to_string.call_args
+        context = args[1]
+        invitation_link = context["invitation_link"]
+
+        self.assertTrue(invitation_link.startswith("http://testdomain/create-account?t="))
+        token = invitation_link.split("t=")[1]
+        data = signer.unsign_object(token)
+        self.assertEqual(data["email"], email)
+        self.assertEqual(data["project_id"], project_id)
+        self.assertEqual(data["library_id"], library_id)
+        self.assertEqual(data["role"], role)
+        self.assertEqual(data["assigned_by_id"], assigned_by_id)
