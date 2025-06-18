@@ -78,9 +78,6 @@ class ProjectAssignRoleTest(TestCase):
             user=self.user_one,
         )
 
-        print(f"Response status: {response.status_code}")
-        print(f"Response data: {response.data}")
-
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["role"], data["role"])
         self.assertEqual(response.data["user_id"], str(self.user_one.id))
@@ -235,7 +232,6 @@ class ProjectAssignRoleTest(TestCase):
             role=Role.INSTRUCTOR,
             library=self.library_one,
         )
-        print(f"User roles: {UserRole.objects.all()}")
 
         # Remove the role
         data = {
@@ -249,8 +245,6 @@ class ProjectAssignRoleTest(TestCase):
             user=self.user_one,
         )
 
-        print(f"Delete response status: {response.status_code}")
-        print(f"Delete response data: {response.data}")
         self.assertEqual(response.status_code, 204)
 
         self.assertFalse(

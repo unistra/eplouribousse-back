@@ -1,14 +1,18 @@
 import csv
 import io
+import logging
 from collections import Counter
 
 from django.core.exceptions import ValidationError as ModelValidationError
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from epl.apps.project.models import Library, Project
 from epl.apps.project.models.collection import Collection
+
+logger = logging.getLogger(__name__)
 
 FIELD_MAPPING = {
     "Titre": "title",
@@ -99,7 +103,7 @@ class ImportSerializer(serializers.Serializer):
 
         # print(f"Importing collections for library: {library.name}, project: {project.name} by user: {user.username}")
 
-        missing_required_fields = []
+        rows_with_errors = []
         loaded_collections = {}
         current_row = 0
         for row in csv_reader:
@@ -115,11 +119,14 @@ class ImportSerializer(serializers.Serializer):
             try:
                 Collection.objects.create(**data)
                 loaded_collections[data["code"]] = loaded_collections.get(data["code"], 0) + 1
-            except ModelValidationError:
-                missing_required_fields.append((current_row, [field for field in REQUIRED_FIELDS if not data[field]]))
+            except (ModelValidationError, DRFValidationError):
+                logger.error("Error creating collection from row %d: %s", current_row, data, exc_info=True)
+                rows_with_errors.append(current_row)
 
-        if missing_required_fields:
-            raise serializers.ValidationError({"csv_file": _("Missing required fields in the CSV file.")})
+        if rows_with_errors:
+            raise serializers.ValidationError(
+                {"csv_file": _("Error in rows(s) %(rows)s") % {"rows": ", ".join(str(row) for row in rows_with_errors)}}
+            )
 
         return Counter(loaded_collections.values())
 
