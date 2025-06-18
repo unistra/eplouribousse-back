@@ -2,12 +2,12 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, mixins, parsers, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from epl.apps.project.filters.collection import CollectionFilter
 from epl.apps.project.models import Collection
+from epl.apps.project.permissions.collection import CollectionPermission
 from epl.apps.project.serializers.collection import (
     CollectionSerializer,
     ImportSerializer,
@@ -30,7 +30,7 @@ from epl.schema_serializers import UnauthorizedSerializer
 class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [CollectionPermission]
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter, CollectionFilter]
     search_fields = ["title", "=code"]

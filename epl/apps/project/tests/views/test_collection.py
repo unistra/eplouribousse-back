@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import urlencode
 from uuid import uuid4
 
 from django.conf import settings
@@ -6,7 +7,10 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 
-from epl.apps.project.models import Collection, Library, Project
+from epl.apps.project.models import Project, Library, Collection
+from epl.apps.project.tests.factories.collection import CollectionFactory
+from epl.apps.project.tests.factories.library import LibraryFactory
+from epl.apps.project.tests.factories.project import ProjectFactory
 from epl.apps.user.models import User
 from epl.tests import TestCase
 
@@ -238,3 +242,48 @@ class CollectionViewSetTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Collection.objects.filter(library=self.library, project=self.project).exists())
+
+
+class CollectionListViewTest(TestCase):
+    def setUp(self):
+        self.collections = []
+        super().setUp()
+
+    def create_collection(self, count=1):
+        with tenant_context(self.tenant):
+            for _ in range(count):
+                self.collections.append(CollectionFactory())
+
+    def test_anonymous_user_can_list_collections(self):
+        self.create_collection(1)
+        response = self.get(reverse("collection-list"), user=None)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["next"], None)
+
+    def test_collection_list(self):
+        self.create_collection(15)
+        response = self.get(reverse("collection-list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 15)
+        self.assertEqual(response.data["next"], 2)
+
+    def test_collection_list_can_be_filtered_on_project(self):
+        project_a = ProjectFactory()
+        collection_project_a = CollectionFactory(project=project_a)
+        _ = CollectionFactory()
+        url = f"{reverse('collection-list')}?{urlencode({'project': project_a.id})}"
+        response = self.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], str(collection_project_a.id))
+
+    def test_collection_list_can_be_filtered_on_library(self):
+        library_a = LibraryFactory()
+        collection_a = CollectionFactory(library=library_a)
+        _ = CollectionFactory()
+        url = f"{reverse('collection-list')}?{urlencode({'library': library_a.id})}"
+        response = self.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], str(collection_a.id))

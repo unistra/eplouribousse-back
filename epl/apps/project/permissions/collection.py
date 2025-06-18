@@ -7,7 +7,7 @@ from epl.apps.user.models import User
 
 class CollectionPermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated)
+        return True
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
