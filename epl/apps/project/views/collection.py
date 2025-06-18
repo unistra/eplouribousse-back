@@ -58,7 +58,7 @@ class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
                         "description": _("Project ID to which the collection belongs"),
                     },
                 },
-                "required": ["csv_file", "library_id", "project_id"],
+                "required": ["csv_file", "library", "project"],
             }
         },
         responses={

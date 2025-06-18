@@ -85,7 +85,10 @@ class ImportSerializer(serializers.Serializer):
 
     def get_file_reader(self, csv_file):
         if not self.csv_reader:
-            self.csv_reader = csv.DictReader(io.StringIO(csv_file.read().decode("utf-8-sig")))
+            self.csv_reader = csv.DictReader(
+                io.StringIO(csv_file.read().decode("utf-8-sig")),
+                delimiter="\t",
+            )
 
         return self.csv_reader
 
@@ -101,6 +104,7 @@ class ImportSerializer(serializers.Serializer):
         current_row = 0
         for row in csv_reader:
             current_row += 1
+            row_errors = []
             # map the fields to the model fields
             data = {FIELD_MAPPING.get(key): value for key, value in row.items() if key in FIELD_MAPPING}
             for name, cleaner in FIELD_CLEANERS.items():
@@ -109,16 +113,34 @@ class ImportSerializer(serializers.Serializer):
             data["project"] = self.validated_data["project"]
             data["created_by"] = user
 
+            for field in REQUIRED_FIELDS:
+                if not data.get(FIELD_MAPPING[field]):
+                    row_errors.append(_("Field '%(field)s' is required.") % {"field": field})
+
             try:
                 Collection.objects.create(**data)
                 loaded_collections[data["code"]] = loaded_collections.get(data["code"], 0) + 1
-            except (ModelValidationError, DRFValidationError):
-                logger.error("Error creating collection from row %d: %s", current_row, data, exc_info=True)
-                rows_with_errors.append(current_row)
+            except (ModelValidationError, DRFValidationError) as error:
+                if hasattr(error, "error_dict"):
+                    for field_errors in error.error_dict.values():
+                        row_errors.extend(str(e) for e in field_errors)
+                elif hasattr(error, "detail") and isinstance(error.detail, dict):
+                    for field_errors in error.detail.values():
+                        if isinstance(field_errors, list):
+                            row_errors.extend(str(e) for e in field_errors)
+                        else:
+                            row_errors.append(str(field_errors))
+                else:
+                    row_errors.append(str(error))
+
+            if row_errors:
+                rows_with_errors.append((current_row, row_errors))
 
         if rows_with_errors:
             raise serializers.ValidationError(
-                {"csv_file": _("Error in rows(s) %(rows)s") % {"rows": ", ".join(str(row) for row in rows_with_errors)}}
+                {
+                    "csv_file": [{"row": row_number, "errors": errors} for row_number, errors in rows_with_errors],
+                }
             )
 
         return Counter(loaded_collections.values())
