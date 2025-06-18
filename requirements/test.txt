@@ -231,9 +231,9 @@ django-extensions==3.2.3 ; python_version == "3.12" \
     --hash=sha256:9600b7562f79a92cbf1fde6403c04fee314608fefbb595502e34383ae8203401
 django-tenants==3.8.0 ; python_version == "3.12" \
     --hash=sha256:07d009d5d01be2d65c3f5ddbf323d58d1228838fc1a64fded15c8e5c6f41cf8f
-django==4.2.22 ; python_version == "3.12" \
-    --hash=sha256:0a32773b5b7f4e774a155ee253ab24a841fed7e9e9061db08bf2ce9711da404d \
-    --hash=sha256:e726764b094407c313adba5e2e866ab88f00436cad85c540a5bf76dc0a912c9e
+django==4.2.23 ; python_version == "3.12" \
+    --hash=sha256:42fdeaba6e6449d88d4f66de47871015097dc6f1b87910db00a91946295cfae4 \
+    --hash=sha256:dafbfaf52c2f289bd65f4ab935791cb4fb9a198f2a5ba9faf35d7338a77e9803
 djangorestframework-camel-case==1.4.2 ; python_version == "3.12" \
     --hash=sha256:cdae75846648abb6585c7470639a1d2fb064dc45f8e8b62aaa50be7f1a7a61f4
 djangorestframework-simplejwt==5.5.0 ; python_version == "3.12" \
@@ -442,9 +442,9 @@ pyyaml==6.0.2 ; python_version == "3.12" \
 referencing==0.36.2 ; python_version == "3.12" \
     --hash=sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa \
     --hash=sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0
-requests==2.32.3 ; python_version == "3.12" \
-    --hash=sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760 \
-    --hash=sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6
+requests==2.32.4 ; python_version == "3.12" \
+    --hash=sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c \
+    --hash=sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422
 rpds-py==0.25.1 ; python_version == "3.12" \
     --hash=sha256:0317177b1e8691ab5879f4f33f4b6dc55ad3b344399e23df2e499de7b10a548d \
     --hash=sha256:036ded36bedb727beeabc16dc1dad7cb154b3fa444e936a03b67a86dc6a5066e \
