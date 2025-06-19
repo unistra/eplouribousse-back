@@ -9,9 +9,7 @@ class LibraryPermission(BasePermission):
         match view.action:
             case "create" | "list":
                 return bool(request.user and self.user_has_permission(view.action, request.user))
-            case _:
-                return bool(request.user and request.user.is_authenticated)
-        return False
+        return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
@@ -28,5 +26,4 @@ class LibraryPermission(BasePermission):
                 return user.is_authenticated and user.is_project_creator
             case "list" | "retrieve":
                 return user.is_authenticated
-            case _:
-                return False
+        return False

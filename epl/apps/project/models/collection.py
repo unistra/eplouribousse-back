@@ -7,7 +7,7 @@ from epl.validators import IssnValidator
 
 class Collection(models.Model):
     id = UUIDPrimaryKeyField()
-    title = models.CharField(_("Title"), max_length=255, db_index=True)
+    title = models.CharField(_("Title"), max_length=510, db_index=True)
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
     library = models.ForeignKey("Library", on_delete=models.CASCADE)  # RCR
     project = models.ForeignKey("Project", on_delete=models.CASCADE)
