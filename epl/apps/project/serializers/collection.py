@@ -130,6 +130,9 @@ class ImportSerializer(serializers.Serializer):
                             row_errors.extend(str(e) for e in field_errors)
                         else:
                             row_errors.append(str(field_errors))
+                elif hasattr(error, "detail") and isinstance(error.detail, list):
+                    for field_error in error.detail:
+                        row_errors.append(str(field_error))
                 else:
                     row_errors.append(str(error))
 
