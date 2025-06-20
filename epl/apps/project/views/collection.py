@@ -1,5 +1,7 @@
+from django.db import models
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import filters, mixins, parsers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,6 +13,7 @@ from epl.apps.project.permissions.collection import CollectionPermission
 from epl.apps.project.serializers.collection import (
     CollectionSerializer,
     ImportSerializer,
+    ResourceSerializer,
 )
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer
@@ -94,3 +97,55 @@ class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         imported_collections: dict[int, int] = serializer.save()
         return Response(imported_collections, status=status.HTTP_200_OK)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=["collection", "resource"],
+        parameters=[
+            OpenApiParameter(
+                name="library",
+                required=True,
+                location=OpenApiParameter.QUERY,
+                description=_("Library ID to which the resource belongs"),
+                type=OpenApiTypes.UUID,
+                pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            ),
+            OpenApiParameter(
+                name="project",
+                required=True,
+                location=OpenApiParameter.QUERY,
+                description=_("Project ID to which the resource belongs"),
+                type=OpenApiTypes.UUID,
+                pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            ),
+        ],
+    )
+)
+class ResourceViewSet(mixins.ListModelMixin, GenericViewSet):
+    queryset = Collection.objects.none()
+    serializer_class = ResourceSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["title", "=code"]
+
+    def get_queryset(self):
+        library = self.request.query_params.get("library", None)
+        project = self.request.query_params.get("project", None)
+
+        # Sous-requête pour compter le nombre d'exemplaires pour chaque code
+        count_subquery = (
+            Collection.objects.filter(code=models.OuterRef("code"), library=library, project=project)
+            .values("code")
+            .annotate(count=models.Count("id"))
+            .values("count")
+        )
+
+        # Récupérer les collections uniques par code avec l'annotation du nombre d'exemplaires
+        unique_collections = (
+            Collection.objects.filter(library=library)
+            .annotate(count=models.Subquery(count_subquery[:1]))
+            .values("code", "title", "count")
+            .distinct()
+        )
+        return unique_collections

@@ -50,6 +50,22 @@ class CollectionSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class ResourceSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    title = serializers.CharField(max_length=510, read_only=True)
+    code = serializers.CharField(max_length=510, read_only=True)
+    count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Collection
+        fields = [
+            "id",
+            "title",
+            "code",
+            "count",
+        ]
+
+
 class ImportSerializer(serializers.Serializer):
     csv_file = serializers.FileField(required=True, help_text=_("CSV file to be imported."), write_only=True)
     library = serializers.UUIDField(required=True, help_text=_("Library ID to which the collection belongs."))
