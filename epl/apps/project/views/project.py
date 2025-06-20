@@ -12,6 +12,7 @@ from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
     InvitationSerializer,
     ProjectDetailSerializer,
+    ProjectLibrarySerializer,
     ProjectSerializer,
     ProjectUserSerializer,
     UserRoleSerializer,
@@ -241,4 +242,47 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = self.get_object()
         serializer = InvitationSerializer(context={"project": project})
         serializer.clear()
+        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        tags=["project"],
+        summary="Assign a library to the project",
+        description="Allows you to link a library to the project. The library must be created before adding it to the project",
+        request=ProjectLibrarySerializer,
+        responses={
+            status.HTTP_200_OK: ProjectDetailSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(detail=True, methods=["post"], url_path="libraries")
+    def add_library(self, request, pk=None):
+        project = self.get_object()
+        serializer = ProjectLibrarySerializer(data=request.data, context={"project": project, "request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        tags=["project"],
+        summary="Unassign a library to the project",
+        description="Allows you to remove a library to the project",
+        request=ProjectLibrarySerializer,
+        parameters=[ProjectLibrarySerializer],
+        responses={
+            status.HTTP_200_OK: ProjectDetailSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @add_library.mapping.delete
+    def remove_library(self, request, pk=None):
+        project = self.get_object()
+        serializer = ProjectLibrarySerializer(
+            data=request.query_params, context={"project": project, "request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(ProjectDetailSerializer(project).data, status=status.HTTP_200_OK)
