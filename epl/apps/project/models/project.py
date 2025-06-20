@@ -22,17 +22,6 @@ class Project(models.Model):
     active_after = models.DateTimeField(_("Active after"), default=now)
     status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.CREATED)
     settings = models.JSONField(_("Settings"), default=dict)
-    # Invitations type:
-    # List[Dict[str, Union[str, None]]]
-    # Example:
-    # [
-    #     {
-    #         "email": str,
-    #         "role": str, # Value should be one of Role.choices
-    #         "library": Optional[uuid.UUID],  # Role from UserRole
-    #     },
-    #     ...
-    # ]
     invitations = models.JSONField(_("Invitations"), default=dict, blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
