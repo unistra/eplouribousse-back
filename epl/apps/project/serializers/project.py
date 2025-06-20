@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from epl.apps.project.models import Project, Role, UserRole
+from epl.apps.project.models import Project, Role, Status, UserRole
 from epl.apps.project.models.library import Library
 from epl.apps.project.serializers.library import LibrarySerializer
 from epl.apps.user.models import User
@@ -55,6 +55,20 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class SetStatusSerializer(serializers.ModelSerializer):
+    status = serializers.ChoiceField(choices=Status.choices, help_text=_("Project status"))
+
+    class Meta:
+        model = Project
+        fields = ["id", "status"]
+        read_only_fields = ["id"]
+
+
+class StatusListSerializer(serializers.Serializer):
+    status = serializers.IntegerField(help_text=_("Project status"))
+    label = serializers.CharField(help_text=_("Label"))
 
 
 class AssignRoleSerializer(serializers.Serializer):

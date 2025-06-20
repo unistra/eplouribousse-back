@@ -7,7 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from epl.apps.project.models import Project, Role, UserRole
+from epl.apps.project.models import Project, Role, Status, UserRole
+from epl.apps.project.permissions.project import ProjectStatusPermissions
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
     InvitationSerializer,
@@ -15,6 +16,8 @@ from epl.apps.project.serializers.project import (
     ProjectLibrarySerializer,
     ProjectSerializer,
     ProjectUserSerializer,
+    SetStatusSerializer,
+    StatusListSerializer,
     UserRoleSerializer,
 )
 from epl.apps.user.models import User
@@ -89,10 +92,6 @@ from epl.schema_serializers import UnauthorizedSerializer
     ),
 )
 class ProjectViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet to handle all project operations.
-    """
-
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
@@ -129,6 +128,46 @@ class ProjectViewSet(viewsets.ModelViewSet):
             .distinct()
         )
         serializer = ProjectUserSerializer(users, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        tags=["project"],
+        summary=_("Update the status of a project"),
+        request=SetStatusSerializer,
+        responses={
+            status.HTTP_200_OK: SetStatusSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(detail=True, methods=["patch"], url_path="status", permission_classes=[ProjectStatusPermissions])
+    def update_status(self, request, pk=None):
+        """
+        Change the status of a project.
+        """
+        project = self.get_object()
+        serializer = SetStatusSerializer(instance=project, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        tags=["project"],
+        summary=_("List all project statuses"),
+        request=None,
+        responses={
+            status.HTTP_200_OK: StatusListSerializer(many=True),
+        },
+    )
+    @action(detail=False, methods=["get"], url_path="status", permission_classes=[AllowAny], pagination_class=None)
+    def list_statuses(self, request, pk=None):
+        """
+        List all available project statuses.
+        """
+        statuses = [{"status": _s[0], "label": _s[1]} for _s in Status.choices]
+        serializer = StatusListSerializer(statuses, many=True)
         return Response(serializer.data)
 
     @extend_schema(
