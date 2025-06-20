@@ -28,19 +28,14 @@ class ProjectUserSerializer(serializers.ModelSerializer):
 
 
 class UserRoleSerializer(serializers.Serializer):
-    role = serializers.CharField(help_text=_("Role"))
+    role = serializers.ChoiceField(choices=Role.choices)
     label = serializers.CharField(help_text=_("Role label"))
 
 
 class AssignRoleSerializer(serializers.Serializer):
-    role = serializers.CharField(help_text=_("Role"))
+    role = serializers.ChoiceField(choices=Role.choices)
     user_id = serializers.UUIDField(help_text=_("User id"))
     library_id = serializers.UUIDField(help_text=_("Library id"), required=False)
-
-    def validate_role(self, role):
-        if role not in Role.values:
-            raise serializers.ValidationError(_("Invalid role."))
-        return role
 
     def validate_user(self, user_id):
         try:
