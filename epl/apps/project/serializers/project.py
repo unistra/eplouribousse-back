@@ -164,3 +164,28 @@ class InvitationSerializer(serializers.Serializer):
         project = self.context["project"]
         project.invitations = []
         project.save()
+
+
+class ProjectLibrarySerializer(serializers.Serializer):
+    library_id = serializers.UUIDField()
+
+    def validate_library_id(self, value):
+        if not Library.objects.filter(id=value).exists():
+            raise serializers.ValidationError(_("Library does not exist."))
+
+        if self.context["request"].method == "DELETE":
+            project = self.context["project"]
+            if not project.libraries.filter(id=value).exists():
+                raise serializers.ValidationError(_("Library is not attached to the project."))
+        return value
+
+    def save(self):
+        project = self.context["project"]
+        library_id = self.validated_data.get("library_id")
+        if self.context["request"].method == "POST":
+            if not project.libraries.filter(id=library_id).exists():
+                project.libraries.add(Library.objects.get(id=library_id))
+        elif self.context["request"].method == "DELETE":
+            if project.libraries.filter(id=library_id).exists():
+                project.libraries.remove(Library.objects.get(id=library_id))
+        return None
