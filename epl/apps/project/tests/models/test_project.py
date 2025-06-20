@@ -14,13 +14,13 @@ class ProjectModelTest(TenantTestCase):
             name="Test Project",
             description="A test project",
             is_private=True,
-            status=Status.CREATED,
+            status=Status.DRAFT,
         )
         self.project.libraries.add(self.library)
 
     def test_project_creation(self):
         self.assertEqual(self.project.name, "Test Project")
-        self.assertEqual(self.project.status, Status.CREATED)
+        self.assertEqual(self.project.status, Status.DRAFT)
         self.assertTrue(self.project.is_private)
         self.assertIn(self.library, self.project.libraries.all())
 

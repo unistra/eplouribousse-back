@@ -7,10 +7,13 @@ from epl.models import UUIDPrimaryKeyField
 
 
 class Status(models.IntegerChoices):
-    CREATED = 10, _("Created")
-    DRAFT = 20, _("Draft")
-    REVIEW = 30, _("Review")
-    ACTIVE = 40, _("Active")
+    DRAFT = 10, _("Draft")
+    REVIEW = 20, _("Review")
+    READY = 30, _("Ready")
+    POSITIONING = 40, _("Positioning")
+    INSTRUCTION_BOUND = 50, _("Instruction Bound Copies")
+    INSTRUCTION_UNBOUND = 60, _("Instruction Unbound Copies")
+    ARCHIVED = 100, _("Archived")
 
 
 class Project(models.Model):
@@ -20,7 +23,7 @@ class Project(models.Model):
     libraries = models.ManyToManyField(Library)
     is_private = models.BooleanField(_("Is private"), default=False)
     active_after = models.DateTimeField(_("Active after"), default=now)
-    status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.CREATED)
+    status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.DRAFT)
     settings = models.JSONField(_("Settings"), default=dict)
     invitations = models.JSONField(_("Invitations"), default=dict, blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
