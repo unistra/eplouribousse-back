@@ -140,7 +140,6 @@ class InvitationSerializer(serializers.Serializer):
 
             invitations.append(invitation)
             project.invitations = invitations
-            print(invitations)
             project.save()
 
         elif self.context["request"].method == "DELETE":
