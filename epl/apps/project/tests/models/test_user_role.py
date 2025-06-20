@@ -1,4 +1,5 @@
 from django.db import IntegrityError
+from django.utils.translation import gettext_lazy as _
 from django_tenants.test.cases import TenantTestCase
 
 from epl.apps.project.models import Project, Role, UserRole
@@ -35,7 +36,7 @@ class UserRoleModelTest(TenantTestCase):
 
     def test_userrole_str(self):
         """Tests the string representation of a UserRole"""
-        expected_str = f"{self.user1} - Instructor ({self.project1})"
+        expected_str = f"{self.user1} - {_('Instructor')} ({self.project1})"
         self.assertEqual(str(self.role1), expected_str)
 
     def test_userrole_unique_constraint(self):
@@ -93,7 +94,7 @@ class UserRoleModelTest(TenantTestCase):
         """Tests that a valid role can be created"""
         user_role = UserRole.objects.create(user=self.user1, project=self.project1, role=Role.PROJECT_MANAGER)
         self.assertEqual(user_role.role, Role.PROJECT_MANAGER)
-        self.assertEqual(user_role.get_role_display(), "Project Manager")
+        self.assertEqual(user_role.get_role_display(), _("Project Manager"))
 
     def test_project_can_be_null_or_blank(self):
         """

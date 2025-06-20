@@ -1,7 +1,8 @@
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
@@ -10,7 +11,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from epl.apps.project.models import Project
+from epl.apps.project.models import Project, Role
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.user.email import send_password_change_email
@@ -196,6 +197,24 @@ class UserListSerializer(ModelSerializer):
 
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
+    project_id = serializers.CharField(required=False, allow_blank=True)
+    library_id = serializers.CharField(required=False, allow_blank=True)
+    role = serializers.ChoiceField(required=False, choices=Role.choices)
+
+    def validate_project_id(self, value):
+        if value and not Project.objects.filter(id=value).exists():
+            raise serializers.ValidationError(_("Project does not exist."))
+        return value
+
+    def validate_library_id(self, value):
+        if value and not Project.objects.filter(libraries__id=value).exists():
+            raise serializers.ValidationError(_("Library does not exist."))
+        return value
+
+    def validate_role(self, value):
+        if value and value not in [choice[0] for choice in Role.choices]:
+            raise serializers.ValidationError(_("Invalid role."))
+        return value
 
     def validate(self, attrs):
         if User.objects.filter(email=attrs["email"]).exists():
@@ -206,9 +225,14 @@ class EmailSerializer(serializers.Serializer):
 class InviteTokenSerializer(serializers.Serializer):
     token = serializers.CharField(write_only=True, required=True)
     email = serializers.EmailField(read_only=True)
+    project_id = serializers.CharField(read_only=True, required=False)
+    library_id = serializers.CharField(read_only=True, required=False)
+    role = serializers.CharField(read_only=True, required=False)
+    assigned_by_id = serializers.CharField(read_only=True, required=False)
 
     def validate(self, attrs):
         invite_token = attrs.get("token")
+
         if not invite_token:
             raise serializers.ValidationError(_("Token is required."))
 
@@ -219,6 +243,11 @@ class InviteTokenSerializer(serializers.Serializer):
             if not email:
                 raise serializers.ValidationError(_("Invalid token format."))
             attrs["email"] = email
+            attrs["project_id"] = token_data.get("project_id")
+            attrs["library_id"] = token_data.get("library_id")
+            attrs["role"] = token_data.get("role")
+            attrs["assigned_by_id"] = token_data.get("assigned_by_id")
+
         except SignatureExpired:
             raise serializers.ValidationError(_("Invite token expired"))
         except BadSignature:
@@ -234,6 +263,10 @@ class CreateAccountSerializer(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         self.email = None
+        self.project_id = None
+        self.library_id = None
+        self.role = None
+        self.assigned_by_id = None
         super().__init__(*args, **kwargs)
 
     def validate_token(self, token_value):
@@ -244,6 +277,10 @@ class CreateAccountSerializer(serializers.Serializer):
         token_serializer.is_valid(raise_exception=True)
 
         self.email = token_serializer.validated_data.get("email")
+        self.project_id = token_serializer.validated_data.get("project_id")
+        self.library_id = token_serializer.validated_data.get("library_id")
+        self.role = token_serializer.validated_data.get("role")
+        self.assigned_by_id = token_serializer.validated_data.get("assigned_by_id")
         return token_value
 
     def validate(self, attrs):
@@ -258,5 +295,18 @@ class CreateAccountSerializer(serializers.Serializer):
         return attrs
 
     def save(self, **kwargs):
-        user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
-        return user
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
+                assigned_by = User.objects.filter(id=self.assigned_by_id).first()
+
+                if self.project_id and self.role:
+                    project = Project.objects.get(id=self.project_id)
+                    user_role = project.user_roles.create(user=user, role=self.role, assigned_by=assigned_by)
+                    if self.library_id:
+                        library = project.libraries.get(pk=self.library_id)
+                        user_role.library = library
+                        user_role.save()
+            return user
+        except (IntegrityError, ObjectDoesNotExist) as e:
+            raise serializers.ValidationError(str(e))

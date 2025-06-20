@@ -4,6 +4,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import mail
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 
@@ -112,5 +113,5 @@ class TestResetPasswordView(TestCase):
         )
         user.refresh_from_db()
         self.response_bad_request(response)
-        self.assertIn("New password and confirm password do not match", str(response.content))
+        self.assertIn(str(_("New password and confirm password do not match")), str(response.content))
         self.assertFalse(user.check_password(new_password))

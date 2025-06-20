@@ -48,8 +48,24 @@ def send_password_reset_email(user: User, front_domain: str):
     )
 
 
-def send_invite_email(email: str, request: Request, signer: signing.TimestampSigner) -> None:
-    invite_token: str = signer.sign_object({"email": str(request.data["email"])})
+def send_invite_email(
+    email: str,
+    request: Request,
+    signer: signing.TimestampSigner,
+    project_id: str = None,
+    library_id: str = None,
+    role: str = None,
+    assigned_by_id=None,
+) -> None:
+    invite_token: str = signer.sign_object(
+        {
+            "email": str(email),
+            "project_id": str(project_id),
+            "library_id": str(library_id),
+            "role": str(role),
+            "assigned_by_id": str(assigned_by_id),
+        }
+    )
 
     front_domain = get_front_domain(request)
     invitation_link = f"{front_domain}/create-account?t={invite_token}"
