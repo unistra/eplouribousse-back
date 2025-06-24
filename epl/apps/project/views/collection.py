@@ -13,6 +13,7 @@ from epl.apps.project.permissions.collection import CollectionPermission
 from epl.apps.project.serializers.collection import (
     CollectionSerializer,
     ImportSerializer,
+    PositionSerializer,
     ResourceSerializer,
 )
 from epl.libs.pagination import PageNumberPagination
@@ -97,6 +98,30 @@ class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         imported_collections: dict[int, int] = serializer.save()
         return Response(imported_collections, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        tags=["collection"],
+        summary="Position a collection",
+        description="Set or update the position of a collection by providing its new rank.",
+        request=PositionSerializer,
+        responses=PositionSerializer,
+    )
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="position",
+        url_name="position",
+        serializer_class=PositionSerializer,
+    )
+    def position(self, request, pk=None):
+        """
+        Position a collection.
+        """
+        collection = self.get_object()
+        serializer = self.get_serializer(collection, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(PositionSerializer(collection).data, status=status.HTTP_200_OK)
 
 
 @extend_schema_view(

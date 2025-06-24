@@ -128,3 +128,11 @@ class ImportSerializer(serializers.Serializer):
         except Project.DoesNotExist:
             raise serializers.ValidationError(_("Project with ID %(id)s does not exist.") % {"id": value})
         return project
+
+
+class PositionSerializer(serializers.ModelSerializer):
+    position = serializers.IntegerField(min_value=1, max_value=4, help_text=_("Position (rank) between 1 and 4"))
+
+    class Meta:
+        model = Collection
+        fields = ["position"]

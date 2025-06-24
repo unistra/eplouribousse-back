@@ -23,6 +23,25 @@ class Collection(models.Model):
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     created_by = models.ForeignKey("user.User", on_delete=models.SET_NULL, null=True, verbose_name=_("Created by"))
 
+    alias = models.CharField(
+        "Alias", max_length=255, blank=True, help_text=_("Alias for a duplicate collection in the same library")
+    )
+    position = models.IntegerField("Rank", null=True, blank=True, help_text=_("Positioning rank of a collection"))
+    is_excluded = models.BooleanField(
+        "Is excluded",
+        default=False,
+        help_text=_("Indicates if the collection is excluded from the deduplication process"),
+    )
+    exclusion_reason = models.CharField(
+        "Exclusion reason",
+        max_length=255,
+        blank=True,
+        help_text=_("Reason for excluding the collection from deduplication"),
+    )
+    positioning_comment = models.TextField(
+        "Positioning comment", blank=True, help_text=_("Instructor's comment on the collection positioning")
+    )
+
     class Meta:
         verbose_name = _("Collection")
         verbose_name_plural = _("Collections")

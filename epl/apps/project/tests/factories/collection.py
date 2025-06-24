@@ -18,6 +18,7 @@ class CollectionFactory(factory.django.DjangoModelFactory):
     project = factory.SubFactory(ProjectFactory)
     issn = factory.LazyAttribute(lambda _: CollectionFactory.generate_valid_issn())
     created_by = factory.SubFactory(UserFactory)
+    position = None
 
     @staticmethod
     def generate_valid_issn():
