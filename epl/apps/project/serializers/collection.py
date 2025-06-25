@@ -136,3 +136,16 @@ class PositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         fields = ["position"]
+
+
+class PositioningCommentSerializer(serializers.ModelSerializer):
+    positioning_comment = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        help_text=_("Instructor's comment on the collection positioning"),
+    )
+
+    class Meta:
+        model = Collection
+        fields = ["positioning_comment"]

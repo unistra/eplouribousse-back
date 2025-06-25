@@ -13,6 +13,7 @@ from epl.apps.project.permissions.collection import CollectionPermission
 from epl.apps.project.serializers.collection import (
     CollectionSerializer,
     ImportSerializer,
+    PositioningCommentSerializer,
     PositionSerializer,
     ResourceSerializer,
 )
@@ -122,6 +123,26 @@ class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(PositionSerializer(collection).data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        tags=["collection"],
+        summary="Set or update the positioning comment",
+        description="Set or update the instructor's comment on the collection positioning.",
+        request=PositioningCommentSerializer,
+        responses=PositioningCommentSerializer,
+    )
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="positioning-comment",
+        serializer_class=PositioningCommentSerializer,
+    )
+    def positioning_comment(self, request, pk=None):
+        collection = self.get_object()
+        serializer = self.get_serializer(collection, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(PositioningCommentSerializer(collection).data, status=status.HTTP_200_OK)
 
 
 @extend_schema_view(
