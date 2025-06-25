@@ -138,6 +138,34 @@ class PositionSerializer(serializers.ModelSerializer):
         fields = ["position"]
 
 
+class ExclusionSerializer(serializers.ModelSerializer):
+    exclusion_reason = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        help_text=_("Reason for excluding the collection from deduplication"),
+    )
+
+    class Meta:
+        model = Collection
+        fields = ["exclusion_reason"]
+
+    def validate_exclusion_reason(self, value):
+        collection = self.instance
+        project = collection.project if collection else None
+        if project:
+            valid_reasons = project.get_exclusion_reasons()
+            if value not in valid_reasons:
+                raise serializers.ValidationError(_("Invalid exlusion reason."))
+        return value
+
+    def update(self, instance, validated_data):
+        instance.position = 0
+        instance.exclusion_reason = validated_data["exclusion_reason"]
+        instance.save()
+        return instance
+
+
 class PositioningCommentSerializer(serializers.ModelSerializer):
     positioning_comment = serializers.CharField(
         max_length=255,

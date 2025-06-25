@@ -26,12 +26,8 @@ class Collection(models.Model):
     alias = models.CharField(
         "Alias", max_length=255, blank=True, help_text=_("Alias for a duplicate collection in the same library")
     )
-    position = models.IntegerField("Rank", null=True, blank=True, help_text=_("Positioning rank of a collection"))
-    is_excluded = models.BooleanField(
-        "Is excluded",
-        default=False,
-        help_text=_("Indicates if the collection is excluded from the deduplication process"),
-    )
+    position = models.IntegerField("Position", null=True, blank=True, help_text=_("Positioning rank of a collection"))
+
     exclusion_reason = models.CharField(
         "Exclusion reason",
         max_length=255,

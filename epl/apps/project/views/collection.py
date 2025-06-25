@@ -12,6 +12,7 @@ from epl.apps.project.models import Collection
 from epl.apps.project.permissions.collection import CollectionPermission
 from epl.apps.project.serializers.collection import (
     CollectionSerializer,
+    ExclusionSerializer,
     ImportSerializer,
     PositioningCommentSerializer,
     PositionSerializer,
@@ -126,6 +127,26 @@ class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
 
     @extend_schema(
         tags=["collection"],
+        summary="Exclude a collection",
+        description="Exclude a collection by providing a valid exclusion reason.",
+        request=ExclusionSerializer,
+        responses=ExclusionSerializer,
+    )
+    @action(
+        detail=True,
+        methods=["patch"],
+        url_path="exclude",
+        serializer_class=ExclusionSerializer,
+    )
+    def exclude(self, request, pk=None):
+        collection = self.get_object()
+        serializer = self.get_serializer(collection, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(ExclusionSerializer(collection).data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        tags=["collection"],
         summary="Set or update the positioning comment",
         description="Set or update the instructor's comment on the collection positioning.",
         request=PositioningCommentSerializer,
@@ -134,10 +155,10 @@ class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
     @action(
         detail=True,
         methods=["patch"],
-        url_path="positioning-comment",
+        url_path="comment-positioning",
         serializer_class=PositioningCommentSerializer,
     )
-    def positioning_comment(self, request, pk=None):
+    def comment_positioning(self, request, pk=None):
         collection = self.get_object()
         serializer = self.get_serializer(collection, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)

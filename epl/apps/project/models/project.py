@@ -5,6 +5,12 @@ from django.utils.translation import gettext_lazy as _
 from epl.apps.project.models import Library
 from epl.models import UUIDPrimaryKeyField
 
+DEFAULT_EXCLUSION_REASONS = [
+    "Participation in another project",
+    "Incorrect assignment",
+    "Other",
+]
+
 
 class Status(models.IntegerChoices):
     DRAFT = 10, _("Draft")
@@ -42,6 +48,12 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_exclusion_reasons(self):
+        return self.settings.get("exclusion_reasons", DEFAULT_EXCLUSION_REASONS)
+
+    def get_translated_exclusion_reasons(self):
+        return [_(reason) for reason in self.get_exclusion_reasons()]
 
 
 class Role(models.TextChoices):
