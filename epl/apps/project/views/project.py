@@ -47,7 +47,7 @@ from epl.schema_serializers import UnauthorizedSerializer
         tags=["project"],
         summary=_("Create a new project"),
         responses={
-            status.HTTP_201_CREATED: ProjectSerializer,
+            status.HTTP_201_CREATED: ProjectDetailSerializer,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },

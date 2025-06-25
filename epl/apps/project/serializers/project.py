@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -34,8 +36,13 @@ class UserRoleSerializer(serializers.Serializer):
     label = serializers.CharField(help_text=_("Role label"))
 
 
+class RoleList(TypedDict):
+    user: str
+    role: str
+
+
 class ProjectDetailSerializer(serializers.ModelSerializer):
-    roles = ProjectUserSerializer(source="user_roles", many=True)
+    roles = serializers.SerializerMethodField()
     libraries = LibrarySerializer(many=True)
 
     class Meta:
@@ -55,6 +62,15 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_roles(self, instance) -> list[RoleList]:
+        return [
+            {
+                "user": user_role.user.id,
+                "role": user_role.role,
+            }
+            for user_role in instance.user_roles.all()
+        ]
 
 
 class SetStatusSerializer(serializers.ModelSerializer):
