@@ -56,7 +56,7 @@ from epl.schema_serializers import UnauthorizedSerializer
         tags=["project"],
         summary=_("Retrieve project details"),
         responses={
-            status.HTTP_200_OK: ProjectSerializer,
+            status.HTTP_200_OK: ProjectDetailSerializer,
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
         },

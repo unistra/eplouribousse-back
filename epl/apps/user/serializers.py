@@ -183,6 +183,12 @@ class ProjectUserSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "email", "first_name", "last_name", "roles"]
 
 
+class NestedUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "last_name"]
+
+
 class UserListSerializer(ModelSerializer):
     class Meta:
         model = User

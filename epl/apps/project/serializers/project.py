@@ -1,5 +1,3 @@
-from typing import TypedDict
-
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -8,6 +6,7 @@ from epl.apps.project.models import Project, Role, Status, UserRole
 from epl.apps.project.models.library import Library
 from epl.apps.project.serializers.library import LibrarySerializer
 from epl.apps.user.models import User
+from epl.apps.user.serializers import NestedUserSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -36,13 +35,17 @@ class UserRoleSerializer(serializers.Serializer):
     label = serializers.CharField(help_text=_("Role label"))
 
 
-class RoleList(TypedDict):
-    user: str
-    role: str
+class NestedUserRoleSerializer(serializers.ModelSerializer):
+    user = NestedUserSerializer()
+    role = serializers.CharField()
+
+    class Meta:
+        model = UserRole
+        fields = ["user", "role", "library"]
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
-    roles = serializers.SerializerMethodField()
+    roles = NestedUserRoleSerializer(many=True, read_only=True, source="user_roles")
     libraries = LibrarySerializer(many=True)
 
     class Meta:
@@ -62,15 +65,6 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
-
-    def get_roles(self, instance) -> list[RoleList]:
-        return [
-            {
-                "user": user_role.user.id,
-                "role": user_role.role,
-            }
-            for user_role in instance.user_roles.all()
-        ]
 
 
 class SetStatusSerializer(serializers.ModelSerializer):
