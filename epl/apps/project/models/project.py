@@ -49,11 +49,10 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
-    def get_exclusion_reasons(self):
-        return self.settings.get("exclusion_reasons", DEFAULT_EXCLUSION_REASONS)
-
-    def get_translated_exclusion_reasons(self):
-        return [_(reason) for reason in self.get_exclusion_reasons()]
+    # todo utiliser get_text_lazy (quand on provisionne les raisons d'exclusion à la création du projet)
+    @property
+    def exclusion_reasons(self):
+        return self.settings.get("exclusion_reasons", [])
 
 
 class Role(models.TextChoices):

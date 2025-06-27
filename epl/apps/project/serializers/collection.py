@@ -141,8 +141,8 @@ class PositionSerializer(serializers.ModelSerializer):
 class ExclusionSerializer(serializers.ModelSerializer):
     exclusion_reason = serializers.CharField(
         max_length=255,
-        required=False,
-        allow_blank=True,
+        required=True,
+        allow_blank=False,
         help_text=_("Reason for excluding the collection from deduplication"),
     )
 
@@ -152,11 +152,9 @@ class ExclusionSerializer(serializers.ModelSerializer):
 
     def validate_exclusion_reason(self, value):
         collection = self.instance
-        project = collection.project if collection else None
-        if project:
-            valid_reasons = project.get_exclusion_reasons()
-            if value not in valid_reasons:
-                raise serializers.ValidationError(_("Invalid exlusion reason."))
+        project = collection.project
+        if value not in project.exclusion_reasons:
+            raise serializers.ValidationError(_("Invalid exclusion reason."))
         return value
 
     def update(self, instance, validated_data):

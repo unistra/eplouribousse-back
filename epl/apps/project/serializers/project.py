@@ -12,7 +12,7 @@ from epl.apps.user.serializers import NestedUserSerializer
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "status", "created_at", "updated_at"]
+        fields = ["id", "name", "description", "status", "settings", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
 

@@ -27,7 +27,6 @@ class Collection(models.Model):
         "Alias", max_length=255, blank=True, help_text=_("Alias for a duplicate collection in the same library")
     )
     position = models.IntegerField("Position", null=True, blank=True, help_text=_("Positioning rank of a collection"))
-
     exclusion_reason = models.CharField(
         "Exclusion reason",
         max_length=255,
@@ -47,5 +46,16 @@ class Collection(models.Model):
         return f"{self.code} - {self.title}"
 
     def save(self, *args, **kwargs):
+        if self.position is not None and self.position != 0:
+            self.exclusion_reason = ""
         self.full_clean()
         return super().save(*args, **kwargs)
+
+    @property
+    def is_excluded(self):
+        return self.position == 0
+
+    @is_excluded.setter
+    def is_excluded(self, value):
+        if value:
+            self.position = 0
