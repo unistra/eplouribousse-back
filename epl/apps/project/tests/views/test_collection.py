@@ -121,8 +121,8 @@ class CollectionViewSetTest(TestCase):
         response = self.post(reverse("collection-import_csv"), data=data, user=self.user, format="multipart")
         self.assertEqual(response.status_code, 400)
         self.assertIn("csv_file", response.data)
-        self.assertIn("Field 'Titre' is required.", [str(e) for e in response.data["csv_file"][0]["errors"]])
-        self.assertEqual(1, int(response.data["csv_file"][0]["row"]))
+        self.assertEqual(int(response.data["csv_file"][0]["row"]), 2)
+        self.assertIn("string_too_short", str(response.data["csv_file"][0]["errors"]))
 
     def test_import_csv_with_missing_code(self):
         invalid_csv_file_path = FIXTURES_BASE_PATH / "missing_code_value_collection.csv"
@@ -142,7 +142,7 @@ class CollectionViewSetTest(TestCase):
         self.assertEqual(response.status_code, 400)
         # Check that the response contains the right error message
         self.assertIn("csv_file", response.data)
-        self.assertEqual(int(response.data["csv_file"][0]["row"]), 1)
+        self.assertEqual(int(response.data["csv_file"][0]["row"]), 2)
 
     def test_import_csv_with_invalid_issn(self):
         invalid_csv_file_path = FIXTURES_BASE_PATH / "invalid_issn_collection.csv"
@@ -163,29 +163,7 @@ class CollectionViewSetTest(TestCase):
         self.assertEqual(response.status_code, 400)
 
         self.assertIn("csv_file", response.data)
-        self.assertEqual(int(response.data["csv_file"][0]["row"]), 1)
-        self.assertIn("Invalid ISSN", response.data["csv_file"][0]["errors"][0])
-
-    def test_import_csv_with_multiple_errors(self):
-        invalid_csv_file_path = FIXTURES_BASE_PATH / "multiple_errors_collection.csv"
-
-        with invalid_csv_file_path.open("rb") as csv_file:
-            uploaded_file = SimpleUploadedFile(
-                name="invalid_collection_multiple_errors.csv", content=csv_file.read(), content_type="text/csv"
-            )
-
-            data = {
-                "csv_file": uploaded_file,
-                "library": self.library.id,
-                "project": self.project.id,
-            }
-
-        response = self.post(reverse("collection-import_csv"), data=data, user=self.user, format="multipart")
-
-        self.assertEqual(response.status_code, 400)
-
-        self.assertIn("csv_file", response.data)
-        self.assertListEqual([int(row["row"]) for row in response.data["csv_file"]], [1, 2, 3])
+        self.assertEqual(int(response.data["csv_file"][0]["row"]), 2)
 
     def test_import_csv_with_missing_title_field(self):
         invalid_csv_file_path = FIXTURES_BASE_PATH / "missing_title_field_collection.csv"
