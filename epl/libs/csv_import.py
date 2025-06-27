@@ -1,3 +1,4 @@
+import json
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -7,8 +8,8 @@ from epl.validators import IssnValidator
 
 
 class CollectionModel(BaseModel):
-    title: Annotated[str, Field(alias="Titre", max_length=510)]
-    code: Annotated[str, Field(alias="PPN", max_length=25)]
+    title: Annotated[str, Field(alias="Titre", min_length=1, max_length=510)]
+    code: Annotated[str, Field(alias="PPN", min_length=1, max_length=25)]
     issn: Annotated[str, Field(alias="Issn", max_length=9)] = ""
     call_number: Annotated[str, Field(alias="Cote")] = ""
     hold_statement: Annotated[str, Field(alias="Etat de collection")] = ""
@@ -31,8 +32,8 @@ class CollectionModel(BaseModel):
             value = value.strip().upper()
         try:
             value = IssnValidator()(value)
-        except Exception as err:
-            raise ValueError(f"Invalid ISSN: {str(err)}")
+        except Exception:
+            raise ValueError("Invalid ISSN")
         return value
 
 
@@ -50,6 +51,6 @@ def handle_import(
                 CollectionModel(**row, created_by_id=created_by, project_id=project_id, library_id=library_id)
             )
         except ValidationError as e:
-            errors.append((row_number, str(e)))
+            errors.append((row_number, json.loads(e.json())))
 
     return collections, errors

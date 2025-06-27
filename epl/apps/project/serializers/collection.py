@@ -13,33 +13,10 @@ from epl.libs.csv_import import handle_import
 
 logger = logging.getLogger(__name__)
 
-FIELD_MAPPING = {
-    "Titre": "title",
-    "PPN": "code",
-    "Issn": "issn",
-    "Cote": "call_number",
-    "Etat de collection": "hold_statement",
-    "Lacunes": "missing",
-}
-
 REQUIRED_FIELDS = (
     "Titre",
     "PPN",
 )
-
-
-def stripper(val):
-    return val.strip() if val and isinstance(val, str) else ""
-
-
-FIELD_CLEANERS = {
-    "title": stripper,
-    "code": stripper,
-    "issn": lambda x: stripper(x).upper(),
-    "call_number": stripper,
-    "hold_statement": stripper,
-    "missing": stripper,
-}
 
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -104,7 +81,7 @@ class ImportSerializer(serializers.Serializer):
         collections, errors = handle_import(csv_reader, library.id, project.id, user.id)
 
         if errors:
-            raise serializers.ValidationError({"csv_file": errors})
+            raise serializers.ValidationError({"csv_file": [{"row": row, "errors": errs} for row, errs in errors]})
         else:
             Collection.objects.bulk_create({Collection(**col.model_dump()) for col in collections})
 
