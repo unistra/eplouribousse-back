@@ -98,3 +98,63 @@ class TestUserManager(TestCase):
         user = User.objects.create_superuser(email="first.last@example.com")
         user.refresh_from_db()
         self.assertTrue(user.is_staff)
+
+
+class IsInstructorForTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            from epl.apps.project.models import Library, Project
+
+            self.user = User.objects.create_user(email="instructor@example.com")
+            self.other_user = User.objects.create_user(email="other@example.com")
+            self.assigner = User.objects.create_user(email="assigner@example.com")
+
+            self.project1 = Project.objects.create(name="Test Project 1", description="Test project description")
+            self.project2 = Project.objects.create(name="Test Project 2", description="Another test project")
+
+            self.library1 = Library.objects.create(name="Library 1", alias="LIB1", code="LIB001")
+            self.library2 = Library.objects.create(name="Library 2", alias="LIB2", code="LIB002")
+
+            self.project1.libraries.add(self.library1, self.library2)
+            self.project2.libraries.add(self.library1)
+
+    def test_user_is_instructor_for_specific_project_and_library(self):
+        UserRole.objects.create(
+            user=self.user,
+            role=Role.INSTRUCTOR,
+            project=self.project1,
+            library=self.library1,
+            assigned_by=self.assigner,
+        )
+        self.assertTrue(self.user.is_instructor_for(self.project1, self.library1))
+
+    def test_user_is_not_instructor_for_different_project(self):
+        UserRole.objects.create(
+            user=self.user,
+            role=Role.INSTRUCTOR,
+            project=self.project1,
+            library=self.library1,
+            assigned_by=self.assigner,
+        )
+        self.assertFalse(self.user.is_instructor_for(self.project2, self.library1))
+
+    def test_user_is_not_instructor_for_different_library(self):
+        UserRole.objects.create(
+            user=self.user,
+            role=Role.INSTRUCTOR,
+            project=self.project1,
+            library=self.library1,
+            assigned_by=self.assigner,
+        )
+        self.assertFalse(self.user.is_instructor_for(self.project1, self.library2))
+
+    def test_user_is_not_instructor_with_different_role(self):
+        UserRole.objects.create(
+            user=self.user,
+            role=Role.PROJECT_ADMIN,
+            project=self.project1,
+            library=self.library1,
+            assigned_by=self.assigner,
+        )
+        self.assertFalse(self.user.is_instructor_for(self.project1, self.library1))

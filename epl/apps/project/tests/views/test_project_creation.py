@@ -29,7 +29,6 @@ class ProjectCreationTest(TestCase):
         }
         response = self.post(reverse("project-list"), data=data, content_type="application/json", user=self.user)
         self.response_created(response)
-        print(response.data)
         self.assertIn("exclusion_reasons", response.data["settings"])
         self.assertCountEqual(
             response.data["settings"]["exclusion_reasons"],

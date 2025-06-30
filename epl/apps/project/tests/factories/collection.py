@@ -25,7 +25,7 @@ class CollectionFactory(factory.django.DjangoModelFactory):
         # Generate 7 random digits
         digits = [str(random.randint(0, 9)) for _ in range(7)]  # noqa: S311
 
-        # Caclulate the check digit for ISSN
+        # Calculate the check digit for ISSN
         check_digit = 0
         for i in range(7):
             check_digit += int(digits[i]) * (8 - i)

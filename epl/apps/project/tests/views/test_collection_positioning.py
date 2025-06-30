@@ -3,7 +3,11 @@ from uuid import uuid4
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 
-from epl.apps.project.models import Collection, Library, Project, Role, UserRole
+from epl.apps.project.models import Role, UserRole
+from epl.apps.project.tests.factories.collection import CollectionFactory
+from epl.apps.project.tests.factories.library import LibraryFactory
+from epl.apps.project.tests.factories.project import ProjectFactory
+from epl.apps.project.tests.factories.user import UserFactory
 from epl.apps.user.models import User
 from epl.tests import TestCase
 
@@ -12,17 +16,15 @@ class CollectionPositionViewSetTest(TestCase):
     def setUp(self):
         super().setUp()
         with tenant_context(self.tenant):
-            self.user = User.objects.create_user(email="test_user@eplouribousse.fr")
-            self.project = Project.objects.create(name="test_project", description="Test project for collections")
-            self.library = Library.objects.create(name="test_library", alias="TL", code="12345")
+            self.user = UserFactory()
+            self.project = ProjectFactory()
+            self.library = LibraryFactory()
 
-        self.collection = Collection.objects.create(
-            title="Test Collection", code="TEST001", library=self.library, project=self.project, created_by=self.user
-        )
+            self.collection = CollectionFactory(library=self.library, project=self.project, created_by=self.user)
 
-        UserRole.objects.create(
-            user=self.user, project=self.project, library=self.library, role=Role.INSTRUCTOR, assigned_by=self.user
-        )
+            UserRole.objects.create(
+                user=self.user, project=self.project, library=self.library, role=Role.INSTRUCTOR, assigned_by=self.user
+            )
 
     # Positioning a collection - tests / PATCH /api/collections/{id}/position/
     def test_position_collection_success(self):
@@ -47,7 +49,6 @@ class CollectionPositionViewSetTest(TestCase):
         )
         self.response_bad_request(response)
         self.assertIn("position", response.data)
-        print(response.data)
 
     def test_position_collection_requires_authentication(self):
         data = {"position": 1}
@@ -98,7 +99,6 @@ class CollectionPositionViewSetTest(TestCase):
             content_type="application/json",
             user=self.user,
         )
-        print(response)
         self.response_ok(response)
         self.collection.refresh_from_db()
         self.assertEqual(
