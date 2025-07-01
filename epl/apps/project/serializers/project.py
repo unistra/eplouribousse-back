@@ -102,14 +102,21 @@ class AssignRoleSerializer(serializers.Serializer):
 
     def save(self):
         if self.context["request"].method == "POST":
-            return UserRole.objects.get_or_create(
+            user_role, _created = UserRole.objects.filter(
                 user_id=self.validated_data["user_id"],
                 role=self.validated_data["role"],
                 library_id=self.validated_data.get(
                     "library_id"
                 ),  # get method is used to avoid KeyError if library_id is not provided
                 project=self.context["project"],
+            ).get_or_create(
+                user_id=self.validated_data["user_id"],
+                role=self.validated_data["role"],
+                library_id=self.validated_data.get("library_id"),
+                project=self.context["project"],
+                assigned_by=self.context["request"].user,
             )
+            return user_role
         elif self.context["request"].method == "DELETE":
             result = UserRole.objects.filter(
                 user_id=self.validated_data["user_id"],
