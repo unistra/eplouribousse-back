@@ -14,7 +14,16 @@ class CollectionPermission(permissions.BasePermission):
             return bool(request.user and request.user.is_authenticated)
 
         match view.action:
-            case "create" | "update" | "partial_update" | "destroy" | "import_csv":
+            case (
+                "create"
+                | "update"
+                | "partial_update"
+                | "destroy"
+                | "import_csv"
+                | "position"
+                | "exclude"
+                | "comment_positioning"
+            ):
                 return bool(request.user and self.user_has_permission(view.action, request.user, obj))
 
         return False
@@ -24,6 +33,8 @@ class CollectionPermission(permissions.BasePermission):
         match action:
             case "import_csv":
                 return bool(user and user.is_authenticated and user.is_project_creator)
+            case "partial_update" | "position" | "exclude" | "comment_positioning":
+                return bool(user and user.is_authenticated and user.is_instructor_for(obj.project, obj.library))
             case "create" | "update" | "partial_update" | "destroy":
                 return False
 

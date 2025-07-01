@@ -26,6 +26,15 @@ from epl.schema_serializers import UnauthorizedSerializer
 
 
 @extend_schema_view(
+    create=extend_schema(  # Swagger doesn't let me send the request when under format application/x-www-form-urlencoded ??
+        tags=["project"],
+        summary=_("Create a new project"),
+        responses={
+            status.HTTP_201_CREATED: ProjectDetailSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
+    ),
     list=extend_schema(
         tags=["project"],
         summary=_("List all projects"),
@@ -42,15 +51,6 @@ from epl.schema_serializers import UnauthorizedSerializer
                 description="Filter projects by user_id",
             )
         ],
-    ),
-    create=extend_schema(  # Swagger doesn't let me send the request when under format application/x-www-form-urlencoded ??
-        tags=["project"],
-        summary=_("Create a new project"),
-        responses={
-            status.HTTP_201_CREATED: ProjectDetailSerializer,
-            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
-            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
-        },
     ),
     retrieve=extend_schema(
         tags=["project"],

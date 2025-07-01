@@ -23,6 +23,20 @@ class Collection(models.Model):
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     created_by = models.ForeignKey("user.User", on_delete=models.SET_NULL, null=True, verbose_name=_("Created by"))
 
+    alias = models.CharField(
+        "Alias", max_length=255, blank=True, help_text=_("Alias for a duplicate collection in the same library")
+    )
+    position = models.IntegerField("Position", null=True, blank=True, help_text=_("Positioning rank of a collection"))
+    exclusion_reason = models.CharField(
+        "Exclusion reason",
+        max_length=255,
+        blank=True,
+        help_text=_("Reason for excluding the collection from deduplication"),
+    )
+    positioning_comment = models.TextField(
+        "Positioning comment", blank=True, help_text=_("Instructor's comment on the collection positioning")
+    )
+
     class Meta:
         verbose_name = _("Collection")
         verbose_name_plural = _("Collections")
@@ -32,5 +46,16 @@ class Collection(models.Model):
         return f"{self.code} - {self.title}"
 
     def save(self, *args, **kwargs):
+        if self.position is not None and self.position != 0:
+            self.exclusion_reason = ""
         self.full_clean()
         return super().save(*args, **kwargs)
+
+    @property
+    def is_excluded(self):
+        return self.position == 0
+
+    @is_excluded.setter
+    def is_excluded(self, value):
+        if value:
+            self.position = 0

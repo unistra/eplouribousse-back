@@ -50,6 +50,22 @@ class CollectionSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class ResourceSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    title = serializers.CharField(max_length=510, read_only=True)
+    code = serializers.CharField(max_length=510, read_only=True)
+    count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Collection
+        fields = [
+            "id",
+            "title",
+            "code",
+            "count",
+        ]
+
+
 class ImportSerializer(serializers.Serializer):
     csv_file = serializers.FileField(required=True, help_text=_("CSV file to be imported."), write_only=True)
     library = serializers.UUIDField(required=True, help_text=_("Library ID to which the collection belongs."))
@@ -112,3 +128,50 @@ class ImportSerializer(serializers.Serializer):
         except Project.DoesNotExist:
             raise serializers.ValidationError(_("Project with ID %(id)s does not exist.") % {"id": value})
         return project
+
+
+class PositionSerializer(serializers.ModelSerializer):
+    position = serializers.IntegerField(min_value=1, max_value=4, help_text=_("Position (rank) between 1 and 4"))
+
+    class Meta:
+        model = Collection
+        fields = ["position"]
+
+
+class ExclusionSerializer(serializers.ModelSerializer):
+    exclusion_reason = serializers.CharField(
+        max_length=255,
+        required=True,
+        allow_blank=False,
+        help_text=_("Reason for excluding the collection from deduplication"),
+    )
+
+    class Meta:
+        model = Collection
+        fields = ["exclusion_reason"]
+
+    def validate_exclusion_reason(self, value):
+        collection = self.instance
+        project = collection.project
+        if value not in project.exclusion_reasons:
+            raise serializers.ValidationError(_("Invalid exclusion reason."))
+        return value
+
+    def update(self, instance, validated_data):
+        instance.position = 0
+        instance.exclusion_reason = validated_data["exclusion_reason"]
+        instance.save()
+        return instance
+
+
+class PositioningCommentSerializer(serializers.ModelSerializer):
+    positioning_comment = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        help_text=_("Instructor's comment on the collection positioning"),
+    )
+
+    class Meta:
+        model = Collection
+        fields = ["positioning_comment"]

@@ -66,3 +66,6 @@ class User(AbstractUser):
                 pass  # Role already exists
         else:
             UserRole.objects.filter(user=self, role=Role.PROJECT_CREATOR).delete()
+
+    def is_instructor_for(self, project, library) -> bool:
+        return UserRole.objects.filter(user=self, role=Role.INSTRUCTOR, project=project, library=library).exists()
