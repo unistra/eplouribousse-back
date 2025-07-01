@@ -289,7 +289,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         description="Allows you to link a library to the project. The library must be created before adding it to the project",
         request=ProjectLibrarySerializer,
         responses={
-            status.HTTP_200_OK: ProjectDetailSerializer,
+            status.HTTP_200_OK: ProjectLibrarySerializer,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
@@ -301,7 +301,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = ProjectLibrarySerializer(data=request.data, context={"project": project, "request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         tags=["project"],
@@ -324,4 +324,4 @@ class ProjectViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
