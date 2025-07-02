@@ -44,9 +44,78 @@ class NestedUserRoleSerializer(serializers.ModelSerializer):
         fields = ["user", "role", "library_id"]
 
 
+class InvitationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    role = serializers.ChoiceField(choices=Role.choices)
+    library_id = serializers.UUIDField(required=False, allow_null=True)
+
+    def validate_library_id(self, library_id):
+        role = self.initial_data.get("role")
+        if role is not None and role != Role.INSTRUCTOR:
+            raise serializers.ValidationError(_("Library should not be provided for this role."))
+        project = self.context["project"]
+        if not project.libraries.filter(pk=library_id).exists():
+            raise serializers.ValidationError(_("Library is not attached to the project."))
+        return str(library_id)
+
+    def validate(self, attrs):
+        project = self.context["project"]
+        try:
+            Project.objects.get(pk=project.pk)
+        except Project.DoesNotExist:
+            raise serializers.ValidationError(_("Project does not exist."))
+
+        role = self.initial_data.get("role")
+        if role == Role.INSTRUCTOR and "library" not in self.initial_data:
+            raise serializers.ValidationError(_("Library must be provided for instructor role."))
+        return attrs
+
+    def save(self):
+        if self.context["request"].method == "POST":
+            project = self.context["project"]
+            invitations = project.invitations or []
+            invitation = self.validated_data.copy()
+
+            for inv in invitations:
+                if (
+                    inv.get("email") == invitation.get("email")
+                    and inv.get("role") == invitation.get("role")
+                    and inv.get("library_id") == invitation.get("library_id")
+                ):
+                    raise ValidationError(_("This invitation already exists."))
+
+            invitations.append(invitation)
+            project.invitations = invitations
+            project.save()
+
+        elif self.context["request"].method == "DELETE":
+            project = self.context["project"]
+            invitations = project.invitations or []
+            invitation = self.validated_data
+
+            for inv in invitations:
+                if (
+                    inv.get("email") == invitation.get("email")
+                    and inv.get("role") == invitation.get("role")
+                    and inv.get("library_id") == invitation.get("library_id")
+                ):
+                    invitations.remove(inv)
+                    project.invitations = invitations
+                    project.save()
+                    return
+
+            raise ValidationError(_("Invitation not found."))
+
+    def clear(self):
+        project = self.context["project"]
+        project.invitations = []
+        project.save()
+
+
 class ProjectDetailSerializer(serializers.ModelSerializer):
     roles = NestedUserRoleSerializer(many=True, read_only=True, source="user_roles")
     libraries = LibrarySerializer(many=True)
+    invitations = InvitationSerializer(many=True)
 
     class Meta:
         model = Project
@@ -127,74 +196,6 @@ class AssignRoleSerializer(serializers.Serializer):
             if not result[0]:
                 raise serializers.ValidationError(_("Role not found for this user in the project."))
         return None
-
-
-class InvitationSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    role = serializers.ChoiceField(choices=Role.choices)
-    library_id = serializers.UUIDField(required=False, allow_null=True)
-
-    def validate_library_id(self, library_id):
-        role = self.initial_data.get("role")
-        if role is not None and role != Role.INSTRUCTOR:
-            raise serializers.ValidationError(_("Library should not be provided for this role."))
-        project = self.context["project"]
-        if not project.libraries.filter(pk=library_id).exists():
-            raise serializers.ValidationError(_("Library is not attached to the project."))
-        return str(library_id)
-
-    def validate(self, attrs):
-        project = self.context["project"]
-        try:
-            Project.objects.get(pk=project.pk)
-        except Project.DoesNotExist:
-            raise serializers.ValidationError(_("Project does not exist."))
-
-        role = self.initial_data.get("role")
-        if role == Role.INSTRUCTOR and "library" not in self.initial_data:
-            raise serializers.ValidationError(_("Library must be provided for instructor role."))
-        return attrs
-
-    def save(self):
-        if self.context["request"].method == "POST":
-            project = self.context["project"]
-            invitations = project.invitations or []
-            invitation = self.validated_data.copy()
-
-            for inv in invitations:
-                if (
-                    inv.get("email") == invitation.get("email")
-                    and inv.get("role") == invitation.get("role")
-                    and inv.get("library_id") == invitation.get("library_id")
-                ):
-                    raise ValidationError(_("This invitation already exists."))
-
-            invitations.append(invitation)
-            project.invitations = invitations
-            project.save()
-
-        elif self.context["request"].method == "DELETE":
-            project = self.context["project"]
-            invitations = project.invitations or []
-            invitation = self.validated_data
-
-            for inv in invitations:
-                if (
-                    inv.get("email") == invitation.get("email")
-                    and inv.get("role") == invitation.get("role")
-                    and inv.get("library_id") == invitation.get("library_id")
-                ):
-                    invitations.remove(inv)
-                    project.invitations = invitations
-                    project.save()
-                    return
-
-            raise ValidationError(_("Invitation not found."))
-
-    def clear(self):
-        project = self.context["project"]
-        project.invitations = []
-        project.save()
 
 
 class ProjectLibrarySerializer(serializers.Serializer):

@@ -233,7 +233,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         description="The invitation given will not be sent immediately. It should contain the email of the user to invite and the role they will have in the project, and the library_id if they're assigned to the role 'instructor'",
         request=InvitationSerializer,
         responses={
-            status.HTTP_201_CREATED: ProjectDetailSerializer,
+            status.HTTP_201_CREATED: InvitationSerializer,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
@@ -245,7 +245,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = InvitationSerializer(data=request.data, context={"project": project, "request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_201_CREATED)
+        return Response(InvitationSerializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         tags=["project"],
@@ -253,7 +253,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         description="The invitation, given as parameters in the request, will be removed from the list of invitations. Be careful, every field might be used to identify the invitation, so if you want to remove an invitation for a specific user, you should provide the email, the role and the library_id if the role is 'instructor'",
         request=InvitationSerializer,
         responses={
-            status.HTTP_200_OK: ProjectDetailSerializer,
+            status.HTTP_204_NO_CONTENT: None,
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
         },
         parameters=[InvitationSerializer],
@@ -264,13 +264,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = InvitationSerializer(data=request.query_params, context={"project": project, "request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
         tags=["project"],
         summary="Clear all invitations for a project",
         responses={
-            status.HTTP_200_OK: ProjectDetailSerializer,
+            status.HTTP_204_NO_CONTENT: None,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
@@ -281,7 +281,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = self.get_object()
         serializer = InvitationSerializer(context={"project": project})
         serializer.clear()
-        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(
         tags=["project"],
