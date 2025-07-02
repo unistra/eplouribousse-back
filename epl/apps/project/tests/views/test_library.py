@@ -5,6 +5,7 @@ from django_tenants.utils import tenant_context
 
 from epl.apps.project.models import Role, UserRole
 from epl.apps.project.models.library import Library
+from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
 from epl.apps.project.tests.factories.user import UserFactory
@@ -89,3 +90,16 @@ class ProjectLibraryViewsTest(TestCase):
             0,
         )
         self.assertFalse(self.user.project_roles.filter(project=self.project, library=self.library).exists())
+
+    def test_when_removing_a_library_collections_are_removed_too(self):
+        _collection_1 = CollectionFactory()
+        _collection_2 = CollectionFactory()
+        self.project.collection_set.add(_collection_1, _collection_2)
+        self.project.libraries.add(self.library)
+        url = reverse("project-add-library", kwargs={"pk": self.project.id})
+        response = self.delete(f"{url}?library_id={self.library.id}", user=self.user)
+        self.response_no_content(response)
+        self.assertEqual(
+            self.project.libraries.count(),
+            0,
+        )

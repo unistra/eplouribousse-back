@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from epl.apps.project.models import Project, Role, Status, UserRole
+from epl.apps.project.models import Collection, Project, Role, Status, UserRole
 from epl.apps.project.models.library import Library
 from epl.apps.project.serializers.library import LibrarySerializer
 from epl.apps.user.models import User
@@ -220,4 +220,5 @@ class ProjectLibrarySerializer(serializers.Serializer):
         elif self.context["request"].method == "DELETE":
             project.libraries.remove(library)
             UserRole.objects.filter(project_id=project.id, library_id=library.id).delete()
+            Collection.objects.filter(project_id=project.id, library_id=library.id).delete()
         return None
