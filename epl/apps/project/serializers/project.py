@@ -41,7 +41,7 @@ class NestedUserRoleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserRole
-        fields = ["user", "role", "library"]
+        fields = ["user", "role", "library_id"]
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
@@ -132,9 +132,9 @@ class AssignRoleSerializer(serializers.Serializer):
 class InvitationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     role = serializers.ChoiceField(choices=Role.choices)
-    library = serializers.UUIDField(required=False, allow_null=True)
+    library_id = serializers.UUIDField(required=False, allow_null=True)
 
-    def validate_library(self, library_id):
+    def validate_library_id(self, library_id):
         role = self.initial_data.get("role")
         if role is not None and role != Role.INSTRUCTOR:
             raise serializers.ValidationError(_("Library should not be provided for this role."))
@@ -165,7 +165,7 @@ class InvitationSerializer(serializers.Serializer):
                 if (
                     inv.get("email") == invitation.get("email")
                     and inv.get("role") == invitation.get("role")
-                    and inv.get("library") == invitation.get("library")
+                    and inv.get("library_id") == invitation.get("library_id")
                 ):
                     raise ValidationError(_("This invitation already exists."))
 
@@ -182,7 +182,7 @@ class InvitationSerializer(serializers.Serializer):
                 if (
                     inv.get("email") == invitation.get("email")
                     and inv.get("role") == invitation.get("role")
-                    and inv.get("library") == invitation.get("library")
+                    and inv.get("library_id") == invitation.get("library_id")
                 ):
                     invitations.remove(inv)
                     project.invitations = invitations
