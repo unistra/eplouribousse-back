@@ -213,11 +213,11 @@ class ProjectLibrarySerializer(serializers.Serializer):
 
     def save(self):
         project = self.context["project"]
-        library_id = self.validated_data.get("library_id")
+        library = Library.objects.get(id=self.validated_data.get("library_id"))
         if self.context["request"].method == "POST":
-            if not project.libraries.filter(id=library_id).exists():
-                project.libraries.add(Library.objects.get(id=library_id))
+            if not project.libraries.filter(id=library.id).exists():
+                project.libraries.add(library)
         elif self.context["request"].method == "DELETE":
-            if project.libraries.filter(id=library_id).exists():
-                project.libraries.remove(Library.objects.get(id=library_id))
+            project.libraries.remove(library)
+            UserRole.objects.filter(project_id=project.id, library_id=library.id).delete()
         return None
