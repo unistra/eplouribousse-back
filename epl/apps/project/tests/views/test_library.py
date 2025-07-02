@@ -94,7 +94,7 @@ class ProjectLibraryViewsTest(TestCase):
     def test_when_removing_a_library_collections_are_removed_too(self):
         _collection_1 = CollectionFactory()
         _collection_2 = CollectionFactory()
-        self.project.collection_set.add(_collection_1, _collection_2)
+        self.project.collections.add(_collection_1, _collection_2)
         self.project.libraries.add(self.library)
         url = reverse("project-add-library", kwargs={"pk": self.project.id})
         response = self.delete(f"{url}?library_id={self.library.id}", user=self.user)

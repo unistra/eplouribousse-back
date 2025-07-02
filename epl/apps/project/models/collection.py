@@ -9,8 +9,8 @@ class Collection(models.Model):
     id = UUIDPrimaryKeyField()
     title = models.CharField(_("Title"), max_length=510, db_index=True)
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
-    library = models.ForeignKey("Library", on_delete=models.CASCADE)  # RCR
-    project = models.ForeignKey("Project", on_delete=models.CASCADE)
+    library = models.ForeignKey("Library", on_delete=models.CASCADE, related_name="collections")  # RCR
+    project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="collections")
     issn = models.CharField(_("ISSN"), max_length=9, blank=True, validators=[IssnValidator()])
     call_number = models.CharField(_("Call number"), blank=True)  # Cote
     hold_statement = models.CharField(_("Hold statement"), blank=True)  # État de la collection

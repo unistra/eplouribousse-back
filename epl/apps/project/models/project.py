@@ -31,7 +31,7 @@ class Project(models.Model):
     active_after = models.DateTimeField(_("Active after"), default=now)
     status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.DRAFT)
     settings = models.JSONField(_("Settings"), default=dict)
-    invitations = models.JSONField(_("Invitations"), default=dict, blank=True)
+    invitations = models.JSONField(_("Invitations"), default=list, blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
 
