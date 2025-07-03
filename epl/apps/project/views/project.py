@@ -11,6 +11,7 @@ from epl.apps.project.models import Project, Role, Status, UserRole
 from epl.apps.project.permissions.project import ProjectStatusPermissions
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
+    ExclusionReasonSerializer,
     InvitationSerializer,
     ProjectDetailSerializer,
     ProjectLibrarySerializer,
@@ -325,3 +326,50 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(
+        tags=["project"],
+        summary="Add an exclusion reason for collections in the project settings.",
+        description="Allows you to add an exclusion reason for collections in the project settings. This exclusion reason will be added to the default ones.",
+        request=ExclusionReasonSerializer,
+        responses={
+            status.HTTP_201_CREATED: ExclusionReasonSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(detail=True, methods=["post"], url_path="exclusion_reason")
+    def add_exclusion_reason(self, request, pk=None):
+        project = self.get_object()
+        serializer = ExclusionReasonSerializer(data=request.data, context={"project": project, "request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        tags=["project"],
+        summary="Remove an exclusion reason for collections in the project settings.",
+        description="Allows you to to remove an exclusion reason for collections in the project settings. This exclusion reason will be removed from the existing ones.",
+        request=ExclusionReasonSerializer,
+        parameters=[
+            OpenApiParameter(
+                name="exclusion_reason",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="The exclusion reason that should be removed.",
+                required=True,
+            )
+        ],
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(detail=True, methods=["delete"], url_path="exclusion_reason")
+    def remove_exclusion_reason(self, request, pk=None):
+        project = self.get_object()
+        serializer = ExclusionReasonSerializer(data=request.data, context={"project": project, "request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_200_OK)
