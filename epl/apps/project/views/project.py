@@ -340,7 +340,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         },
     )
     @action(detail=True, methods=["post"], url_path="exclusion_reason")
-    def add_exclusion_reason(self, request, pk=None):
+    def exclusion_reason(self, request, pk=None):
         project = self.get_object()
         serializer = ExclusionReasonSerializer(data=request.data, context={"project": project, "request": request})
         serializer.is_valid(raise_exception=True)
@@ -366,10 +366,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
         },
     )
-    @action(detail=True, methods=["delete"], url_path="exclusion_reason")
+    @exclusion_reason.mapping.delete
     def remove_exclusion_reason(self, request, pk=None):
         project = self.get_object()
-        serializer = ExclusionReasonSerializer(data=request.data, context={"project": project, "request": request})
+        serializer = ExclusionReasonSerializer(
+            data=request.query_params, context={"project": project, "request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_200_OK)
+        return Response(ProjectDetailSerializer(project).data, status=status.HTTP_204_NO_CONTENT)

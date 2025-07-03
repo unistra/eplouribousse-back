@@ -247,7 +247,7 @@ class ExclusionReasonSerializer(serializers.Serializer):
                 return exclusion_reason
 
             project.settings["exclusion_reasons"].append(exclusion_reason)
-            project.settings["exclusion_reason"].sort()
+            project.settings["exclusion_reasons"].sort()
             project.save(update_fields=["settings"])
 
         elif self.context["request"].method == "DELETE":
