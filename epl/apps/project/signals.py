@@ -11,5 +11,8 @@ def initialize_project_settings(sender, instance, **kwargs):
     Add default exclusion reasons if not already set.
     """
     if kwargs["created"]:
-        instance.settings["exclusion_reasons"] = DEFAULT_EXCLUSION_REASONS.copy()
+        exclusion_reasons = [
+            str(reason) for reason in DEFAULT_EXCLUSION_REASONS
+        ]  # traduction is forced at the evaluation of the str function
+        instance.settings["exclusion_reasons"] = exclusion_reasons
         instance.save(update_fields=["settings"])
