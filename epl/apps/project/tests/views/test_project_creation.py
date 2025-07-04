@@ -90,17 +90,14 @@ class ExclusionReasonsTest(TestCase):
         self.assertIn("exclusion_reason", response.data)
 
     def test_remove_exclusion_reason_success(self):
-        print(self.project.settings["exclusion_reasons"])
         data = {"exclusion_reason": "Other"}
 
         url = f"{reverse('project-exclusion-reason', kwargs={'pk': self.project.pk})}?{urlencode(data)}"
         data = {"exclusion_reason": "Other"}
         response = self.delete(url, data=data, user=self.user)
-        print(response)
 
         self.response_no_content(response)
         self.project.refresh_from_db()
-        print(self.project.settings["exclusion_reasons"])
         self.assertNotIn("Other", self.project.settings["exclusion_reasons"])
         self.assertEqual(len(self.project.settings["exclusion_reasons"]), 2)
 
