@@ -222,3 +222,39 @@ class ProjectLibrarySerializer(serializers.Serializer):
             UserRole.objects.filter(project_id=project.id, library_id=library.id).delete()
             Collection.objects.filter(project_id=project.id, library_id=library.id).delete()
         return None
+
+
+class ExclusionReasonSerializer(serializers.Serializer):
+    """
+    Add or delete an exclusion reason for a project.
+    """
+
+    exclusion_reason = serializers.CharField(
+        max_length=255,
+        required=True,
+        allow_blank=False,
+        help_text=_("Exclusion reason to add or delete from the project"),
+    )
+
+    def save(self):
+        project = self.context["project"]
+        exclusion_reason = self.validated_data["exclusion_reason"]
+
+        if self.context["request"].method == "POST":
+            exclusion_reasons = project.settings.get("exclusion_reasons", [])
+
+            if exclusion_reason in exclusion_reasons:
+                return exclusion_reason
+
+            project.settings["exclusion_reasons"].append(exclusion_reason)
+            project.settings["exclusion_reasons"].sort()
+            project.save(update_fields=["settings"])
+
+        elif self.context["request"].method == "DELETE":
+            exclusion_reasons = project.settings.get("exclusion_reasons", [])
+
+            if exclusion_reason not in exclusion_reasons:
+                return None
+
+            project.settings["exclusion_reasons"].remove(exclusion_reason)
+            project.save(update_fields=["settings"])

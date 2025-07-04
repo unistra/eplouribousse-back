@@ -54,8 +54,3 @@ class Collection(models.Model):
     @property
     def is_excluded(self):
         return self.position == 0
-
-    @is_excluded.setter
-    def is_excluded(self, value):
-        if value:
-            self.position = 0

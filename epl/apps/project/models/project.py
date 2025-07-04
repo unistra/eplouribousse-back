@@ -6,9 +6,9 @@ from epl.apps.project.models import Library
 from epl.models import UUIDPrimaryKeyField
 
 DEFAULT_EXCLUSION_REASONS = [
-    "Participation in another project",
-    "Incorrect assignment",
-    "Other",
+    _("Participation in another project"),
+    _("Incorrect assignment"),
+    _("Other"),
 ]
 
 
