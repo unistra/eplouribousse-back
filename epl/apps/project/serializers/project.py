@@ -197,6 +197,20 @@ class AssignRoleSerializer(serializers.Serializer):
                 raise serializers.ValidationError(_("Role not found for this user in the project."))
         return None
 
+    def to_representation(self, instance):
+        user = User.objects.get(pk=instance.get("user_id"))
+        data = {
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+            },
+            "role": instance.get("role"),
+            "libraryId": str(instance.get("library_id")) if instance.get("library_id") else None,
+        }
+        return data
+
 
 class ProjectLibrarySerializer(serializers.Serializer):
     library_id = serializers.UUIDField()
