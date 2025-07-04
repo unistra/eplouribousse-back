@@ -235,4 +235,8 @@ class ProjectLibrarySerializer(serializers.Serializer):
             project.libraries.remove(library)
             UserRole.objects.filter(project_id=project.id, library_id=library.id).delete()
             Collection.objects.filter(project_id=project.id, library_id=library.id).delete()
+            project.invitations = [
+                inv for inv in (project.invitations or []) if inv.get("library_id") != str(library.id)
+            ]
+            project.save()
         return None
