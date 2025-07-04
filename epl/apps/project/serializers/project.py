@@ -66,7 +66,7 @@ class InvitationSerializer(serializers.Serializer):
             raise serializers.ValidationError(_("Project does not exist."))
 
         role = self.initial_data.get("role")
-        if role == Role.INSTRUCTOR and "library" not in self.initial_data:
+        if role == Role.INSTRUCTOR and "library_id" not in self.initial_data:
             raise serializers.ValidationError(_("Library must be provided for instructor role."))
         return attrs
 
