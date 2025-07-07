@@ -207,7 +207,7 @@ class AssignRoleSerializer(serializers.Serializer):
                 "lastName": user.last_name,
             },
             "role": instance.get("role"),
-            "libraryId": str(instance.get("library_id")) if instance.get("library_id") else None,
+            "library_id": str(instance.get("library_id")) if instance.get("library_id") else None,
         }
         return data
 

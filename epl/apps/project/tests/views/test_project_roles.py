@@ -78,9 +78,11 @@ class ProjectAssignRoleTest(TestCase):
             user=self.user_one,
         )
 
+        print(response.data)
+
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["role"], data["role"])
-        self.assertEqual(response.data["user_id"], str(self.user_one.id))
+        self.assertEqual(response.data["user"]["id"], str(self.user_one.id))
         self.assertEqual(response.data["library_id"], str(self.library_one.id))
 
     def test_assign_role_without_library(self):
