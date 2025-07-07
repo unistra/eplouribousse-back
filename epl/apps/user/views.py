@@ -25,6 +25,7 @@ from epl.apps.user.serializers import (
     UserListSerializer,
     UserSerializer,
 )
+from epl.libs.filters import ExcludeFilter
 from epl.libs.pagination import PageNumberPagination
 from epl.permissions import IsSuperUser
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
@@ -239,7 +240,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = UserListSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ExcludeFilter]
     search_fields = ["first_name", "last_name", "email", "username"]
     ordering_fields = ["first_name", "last_name", "email"]
 
