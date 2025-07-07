@@ -3,14 +3,11 @@
 {% trans "Invitation to review project settings" %} - Eplouribousse
 
 #todo: give the right
-{% trans "As the administrator of the {{project}} project, you are invited to review its settings and modify them if necessary." %}.
+{%trans "The {{project.name"}} project is now available.}
+{% trans "As administrator, you must, in consultation with your co-administrators and the project leaders, check and, if necessary, modify the settings and parameters before the project goes live.
+If you believe this message is the result of an error, please contact the project creator: {{ project_creator_email }}" %}.
 
-
-- {% trans "To access the project" %}, {% trans "please click on the link below and complete your registration" %}:
-
-#todo: add link to project parameter review page
-#todo : vérifier que ça correspond au texte de Georges.
-===>    {{ project_link }}
+===>    {{ front_domain }}
 
 - {% trans "If you need any assistance" %}, {% trans "please contact the site administrator at the following address" %}:
 

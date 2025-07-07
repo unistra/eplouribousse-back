@@ -53,7 +53,6 @@ class Project(models.Model):
         self.libraries.clear()
         super().delete(*args, **kwargs)
 
-    # todo utiliser get_text_lazy (quand on provisionne les raisons d'exclusion à la création du projet)
     @property
     def exclusion_reasons(self):
         return self.settings.get("exclusion_reasons", [])

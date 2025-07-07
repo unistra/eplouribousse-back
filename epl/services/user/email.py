@@ -88,22 +88,24 @@ def send_invite_project_admins_to_review_email(
     email: str,
     request: Request,
     project_name: str,
-    project_id: str,
+    tenant_schema_name: str,
+    project_creator_email: str,
 ) -> None:
     front_domain = get_front_domain(request)
-    invitation_link = f"{front_domain}/review-project/{project_id}"  # todo: modify ou retour au dashboard (plus simple)
 
     email_content = render_to_string(
         "emails/invite_project_admin_to_review.txt",
         {
             "email_support": settings.EMAIL_SUPPORT,
-            "invitation_link": invitation_link,
             "project_name": project_name,
+            "front_domain": front_domain,
+            "tenant_schema_name": tenant_schema_name,
+            "project_creator_email": project_creator_email,
         },
     )
 
     send_mail(
-        subject=f"[eplouribousse] {_('Invitation to review project')}",
+        subject=f"eplouribousse | {tenant_schema_name} | _('creation of the {project_name} project')",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,

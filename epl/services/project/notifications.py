@@ -46,7 +46,19 @@ def invite_project_admins_to_review(project: Project, request):
         project_roles__role=Role.PROJECT_ADMIN,
     )
 
+    tenant_schema_name = request.tenant_schema_name
+
+    project_creator_email = User.objects.filter(
+        project_roles__project=project,
+        project_roles__role=Role.PROJECT_CREATOR,
+    ).email
+
     for project_admin in project_admins:
         send_invite_project_admins_to_review_email(
-            email=project_admin.email, request=request, project_name=project.name, project_id=str(project.id)
+            email=project_admin.email,
+            request=request,
+            project_name=project.name,
+            project_id=str(project.id),
+            tenant_schema_name=tenant_schema_name,
+            project_creator_email=project_creator_email,
         )
