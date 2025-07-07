@@ -66,7 +66,7 @@ class InvitationSerializer(serializers.Serializer):
             raise serializers.ValidationError(_("Project does not exist."))
 
         role = self.initial_data.get("role")
-        if role == Role.INSTRUCTOR and "library" not in self.initial_data:
+        if role == Role.INSTRUCTOR and "library_id" not in self.initial_data:
             raise serializers.ValidationError(_("Library must be provided for instructor role."))
         return attrs
 
@@ -155,14 +155,14 @@ class AssignRoleSerializer(serializers.Serializer):
     user_id = serializers.UUIDField(help_text=_("User id"))
     library_id = serializers.UUIDField(help_text=_("Library id"), required=False)
 
-    def validate_user(self, user_id):
+    def validate_user_id(self, user_id):
         try:
             user = User.objects.active().get(pk=user_id)
         except User.DoesNotExist:
             raise serializers.ValidationError(_("User does not exist."))
         return user.id
 
-    def validate_library(self, library_id):
+    def validate_library_id(self, library_id):
         try:
             library = Library.objects.get(pk=library_id)
         except Library.DoesNotExist:
@@ -197,6 +197,20 @@ class AssignRoleSerializer(serializers.Serializer):
                 raise serializers.ValidationError(_("Role not found for this user in the project."))
         return None
 
+    def to_representation(self, instance):
+        user = User.objects.get(pk=instance.get("user_id"))
+        data = {
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "firstName": user.first_name,
+                "lastName": user.last_name,
+            },
+            "role": instance.get("role"),
+            "library_id": str(instance.get("library_id")) if instance.get("library_id") else None,
+        }
+        return data
+
 
 class ProjectLibrarySerializer(serializers.Serializer):
     library_id = serializers.UUIDField()
@@ -221,6 +235,10 @@ class ProjectLibrarySerializer(serializers.Serializer):
             project.libraries.remove(library)
             UserRole.objects.filter(project_id=project.id, library_id=library.id).delete()
             Collection.objects.filter(project_id=project.id, library_id=library.id).delete()
+            project.invitations = [
+                inv for inv in (project.invitations or []) if inv.get("library_id") != str(library.id)
+            ]
+            project.save()
         return None
 
 
