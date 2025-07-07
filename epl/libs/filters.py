@@ -7,7 +7,7 @@ class ExcludeFilter(filters.BaseFilterBackend):
     Filter that excludes records with specific IDs.
     """
 
-    exclude_param = "exclude"
+    exclude_param = "exclude[]"
     exclude_title = _("Exclude IDs")
     exclude_description = _("List of IDs to exclude.")
 
