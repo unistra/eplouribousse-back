@@ -7,6 +7,10 @@ from epl.apps.project.models.library import Library
 from epl.apps.project.serializers.library import LibrarySerializer
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
+from epl.services.project.notifications import (
+    invite_project_admins_to_review,
+    invite_unregistered_users_to_epl,
+)
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -143,6 +147,35 @@ class SetStatusSerializer(serializers.ModelSerializer):
         model = Project
         fields = ["id", "status"]
         read_only_fields = ["id"]
+
+    def save(self, **kwargs):
+        project = self.instance
+        old_status = project.status
+        new_status = self.validated_data.get("status")
+
+        if old_status == new_status:
+            return project
+
+        project.status = new_status
+        project.save(update_fields=["status"])
+
+        match old_status, new_status:
+            case Status.DRAFT, Status.REVIEW:
+                # A) Send invitation emails to new users
+                invite_unregistered_users_to_epl(project, self.context["request"])
+                # B) Send notification to project admins (already registered) to review the project.
+                # Admins that are not registered atm, will receive this notification when they create their account.
+                invite_project_admins_to_review(project, self.context["request"])
+            case Status.REVIEW, Status.READY:
+                # todo : send notification to project manager : he can publish the project
+                pass
+            case Status.READY, Status.POSITIONING:
+                # todo : notification to instructors : they can start positioning
+                pass
+            case Status.POSITIONING, Status.INSTRUCTION_BOUND:
+                # todo : send notification to instructors : they can start instruction bound copies
+                pass
+        return None
 
 
 class StatusListSerializer(serializers.Serializer):

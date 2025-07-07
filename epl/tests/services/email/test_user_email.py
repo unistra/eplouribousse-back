@@ -6,7 +6,7 @@ from django.utils.translation import gettext as _
 from rest_framework.request import Request
 
 from epl.apps.user.models import User
-from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
+from epl.services.user.email import send_invite_to_epl_email, send_password_change_email, send_password_reset_email
 from epl.tests import TestCase
 
 
@@ -79,7 +79,7 @@ class TestUserEmailServices(TestCase):
         role = "INSTRUCTOR"
         assigned_by_id = "789"
 
-        send_invite_email(
+        send_invite_to_epl_email(
             email=email,
             request=request,
             signer=signer,
