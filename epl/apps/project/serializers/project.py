@@ -155,14 +155,14 @@ class AssignRoleSerializer(serializers.Serializer):
     user_id = serializers.UUIDField(help_text=_("User id"))
     library_id = serializers.UUIDField(help_text=_("Library id"), required=False)
 
-    def validate_user(self, user_id):
+    def validate_user_id(self, user_id):
         try:
             user = User.objects.active().get(pk=user_id)
         except User.DoesNotExist:
             raise serializers.ValidationError(_("User does not exist."))
         return user.id
 
-    def validate_library(self, library_id):
+    def validate_library_id(self, library_id):
         try:
             library = Library.objects.get(pk=library_id)
         except Library.DoesNotExist:
