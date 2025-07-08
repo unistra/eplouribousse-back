@@ -60,10 +60,10 @@ def send_invite_email(
     invite_token: str = signer.sign_object(
         {
             "email": str(email),
-            "project_id": str(project_id),
-            "library_id": str(library_id),
-            "role": str(role),
-            "assigned_by_id": str(assigned_by_id),
+            "project_id": str(project_id) if project_id else None,
+            "library_id": str(library_id) if library_id else None,
+            "role": str(role) if role else None,
+            "assigned_by_id": str(assigned_by_id) if assigned_by_id else None,
         }
     )
 
