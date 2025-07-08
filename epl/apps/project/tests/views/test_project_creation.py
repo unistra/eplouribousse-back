@@ -104,7 +104,7 @@ class ExclusionReasonsTest(TestCase):
     def test_remove_exclusion_reason_not_found(self):
         data = {"exclusion_reason": "Non-existent reason"}
         url = f"{reverse('project-exclusion-reason', kwargs={'pk': self.project.pk})}?{urlencode(data)}"
-        response = self.delete(url, data=data, user=self.user)
+        response = self.delete(url, user=self.user)
         self.response_no_content(response)
         self.project.refresh_from_db()
         self.assertEqual(len(self.project.settings["exclusion_reasons"]), 3)
