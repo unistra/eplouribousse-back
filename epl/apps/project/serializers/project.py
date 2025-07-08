@@ -2,19 +2,22 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from epl.apps.project.models import Collection, Library, Project, ProjectLibrary, Role, Status, UserRole
+from epl.apps.project.models import Collection, Library, Project, Role, Status, UserRole
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
+from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
     invite_project_admins_to_review,
     invite_unregistered_users_to_epl,
 )
 
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjectSerializer(AclSerializerMixin, serializers.ModelSerializer):
+    acl = AclField()
+
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "status", "settings", "created_at", "updated_at"]
+        fields = ["id", "name", "description", "status", "settings", "created_at", "updated_at", "acl"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
@@ -135,10 +138,11 @@ class ProjectLibraryDetailSerializer(serializers.ModelSerializer):
         ]
 
 
-class ProjectDetailSerializer(serializers.ModelSerializer):
+class ProjectDetailSerializer(AclSerializerMixin, serializers.ModelSerializer):
     roles = NestedUserRoleSerializer(many=True, read_only=True, source="user_roles")
     libraries = ProjectLibraryDetailSerializer(many=True, source="projectlibrary_set", read_only=True)
     invitations = InvitationSerializer(many=True)
+    acl = AclField(exclude=["users"])
 
     class Meta:
         model = Project
@@ -155,6 +159,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "libraries",
             "created_at",
             "updated_at",
+            "acl",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 

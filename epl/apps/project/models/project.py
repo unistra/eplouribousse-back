@@ -35,6 +35,14 @@ class Project(models.Model):
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
 
+    _extended_permissions = [
+        "add_library",
+        "update_status",
+        "exclusion_reason",
+        "remove_exclusion_reason",
+        "status",
+    ]
+
     class Meta:
         verbose_name = _("Project")
         verbose_name_plural = _("Projects")
