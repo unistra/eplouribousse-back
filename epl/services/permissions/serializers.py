@@ -15,7 +15,10 @@ class AclSerializerMixin(serializers.Serializer):
     extended_permissions = []
 
     def get_acl(self, instance):
-        permissions = self._get_permissions(instance)
+        acl_field = self.fields["acl"]
+        exclude = getattr(acl_field, "exclude", [])
+        include = getattr(acl_field, "include", [])
+        permissions = self._get_permissions(instance, include=include, exclude=exclude)
         permission_classes = self._get_permission_classes()
         user = self.context["request"].user
         return {
@@ -39,7 +42,9 @@ class AclSerializerMixin(serializers.Serializer):
             if hasattr(permission_class, "user_has_permission") and callable(permission_class.user_has_permission)
         )
 
-    def _get_permissions(self, instance: models.Model) -> list[str]:
+    def _get_permissions(
+        self, instance: models.Model, include: list[str] = None, exclude: list[str] = None
+    ) -> list[str]:
         """
         Get all permissions: base_permissions and extended_permissions that
         can be defined on the model's Meta class
@@ -49,7 +54,17 @@ class AclSerializerMixin(serializers.Serializer):
             "_extended_permissions",
             [],
         )
-        return list(set(self.base_permissions + extended_permissions))
+        # All permissions defined on the model
+        permissions = list(set(self.base_permissions + extended_permissions))
+
+        if include:
+            # If include is defined, return only those permissions
+            # Include takes precedence over exclude
+            return [perm for perm in permissions if perm in include]
+        if exclude:
+            # If exclude is defined, return all permissions except those
+            return [perm for perm in permissions if perm not in exclude]
+        return permissions
 
     def _get_permission_classes(self) -> list[BasePermission]:
         """
@@ -63,4 +78,10 @@ class AclSerializerMixin(serializers.Serializer):
         return getattr(view, "permission_classes", [])
 
 
-class AclField(serializers.SerializerMethodField): ...
+class AclField(serializers.SerializerMethodField):
+    def __init__(self, **kwargs):
+        if exclude := kwargs.pop("exclude", None):
+            self.exclude = exclude
+        if include := kwargs.pop("include", None):
+            self.include = include
+        super().__init__(**kwargs)
