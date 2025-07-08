@@ -200,12 +200,7 @@ class AssignRoleSerializer(serializers.Serializer):
     def to_representation(self, instance):
         user = User.objects.get(pk=instance.get("user_id"))
         data = {
-            "user": {
-                "id": str(user.id),
-                "email": user.email,
-                "firstName": user.first_name,
-                "lastName": user.last_name,
-            },
+            "user": NestedUserSerializer(user).data,
             "role": instance.get("role"),
             "library_id": str(instance.get("library_id")) if instance.get("library_id") else None,
         }
