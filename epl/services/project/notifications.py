@@ -11,7 +11,7 @@ def invite_unregistered_users_to_epl(project: Project, request):
     This function is intended to be called when the project goes from "DRAFT" into "REVIEW".
     """
 
-    invitations_list = (project.invitations or {}).get("invitations", [])
+    invitations_list = project.invitations or []
 
     if not invitations_list:
         return
@@ -46,19 +46,21 @@ def invite_project_admins_to_review(project: Project, request):
         project_roles__role=Role.PROJECT_ADMIN,
     )
 
-    tenant_schema_name = request.tenant_schema_name
+    tenant_name = request.tenant.name
 
-    project_creator_email = User.objects.filter(
+    project_creator = User.objects.filter(
         project_roles__project=project,
         project_roles__role=Role.PROJECT_CREATOR,
-    ).email
+    ).first()
+
+    project_creator_email = project_creator.email if project_creator else None
 
     for project_admin in project_admins:
         send_invite_project_admins_to_review_email(
             email=project_admin.email,
             request=request,
             project_name=project.name,
-            project_id=str(project.id),
-            tenant_schema_name=tenant_schema_name,
+            # project_id=str(project.id),
+            tenant_name=tenant_name,
             project_creator_email=project_creator_email,
         )

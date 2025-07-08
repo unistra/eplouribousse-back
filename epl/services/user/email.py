@@ -88,7 +88,7 @@ def send_invite_project_admins_to_review_email(
     email: str,
     request: Request,
     project_name: str,
-    tenant_schema_name: str,
+    tenant_name: str,
     project_creator_email: str,
 ) -> None:
     front_domain = get_front_domain(request)
@@ -99,13 +99,13 @@ def send_invite_project_admins_to_review_email(
             "email_support": settings.EMAIL_SUPPORT,
             "project_name": project_name,
             "front_domain": front_domain,
-            "tenant_schema_name": tenant_schema_name,
+            "tenant_name": tenant_name,
             "project_creator_email": project_creator_email,
         },
     )
 
     send_mail(
-        subject=f"eplouribousse | {tenant_schema_name} | _('creation of the {project_name} project')",
+        subject=f"eplouribousse | {tenant_name} | _('creation of the {project_name} project')",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,

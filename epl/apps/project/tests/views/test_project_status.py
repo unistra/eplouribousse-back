@@ -1,8 +1,12 @@
+from django.core import mail
+from django.core.signing import TimestampSigner
 from django_tenants.urlresolvers import reverse
+from django_tenants.utils import tenant_context
 
-from epl.apps.project.models import Project, Status
+from epl.apps.project.models import Project, Role, Status, UserRole
 from epl.apps.project.tests.factories.project import ProjectFactory
 from epl.apps.project.tests.factories.user import UserFactory
+from epl.apps.user.models import User
 from epl.tests import TestCase
 
 
@@ -40,3 +44,100 @@ class UpdateProjectStatusTest(TestCase):
             user=user,
         )
         self.response_bad_request(response)
+
+
+class TestUpdateProjectStatusToReviewTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project_creator = UserFactory()
+            self.project_admin = UserFactory()
+
+            self.project = ProjectFactory(
+                name="Test Project",
+                description="This is a test project.",
+                status=Status.DRAFT,
+                invitations=[{"email": "new_project_admin@test.com", "role": "project_admin"}],
+            )
+
+            self.project.user_roles.create(user=self.project_creator, role="project_creator")
+            self.project.user_roles.create(user=self.project_admin, role="project_admin")
+
+    def test_set_status_to_review_success(self):
+        url = reverse("project-update-status", kwargs={"pk": self.project.id})
+        data = {"status": Status.REVIEW}
+
+        response = self.patch(url, data=data, content_type="application/json", user=self.project_creator)
+
+        self.response_ok(response)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.status, Status.REVIEW)
+
+    def test_set_status_to_review_sends_notifications(self):
+        url = reverse("project-update-status", kwargs={"pk": self.project.id})
+        data = {"status": Status.REVIEW}
+
+        response = self.patch(url, data=data, content_type="application/json", user=self.project_creator)
+
+        self.response_ok(response)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.status, Status.REVIEW)
+
+        print(len(mail.outbox), "Emails sent after status update to review")
+        review_email_0 = mail.outbox[0]
+        print(f"Email subject: {review_email_0.subject}")
+        print(f"Email to: {review_email_0.to}")
+        print(f"Email body: {review_email_0.body}")
+
+        review_email_1 = mail.outbox[1]
+        print(f"Email subject: {review_email_1.subject}")
+        print(f"Email to: {review_email_1.to}")
+        print(f"Email body: {review_email_1.body}")
+
+    def test_send_invitation_to_review_project_after_new_project_admin_subscription(self):
+        print(len(mail.outbox))
+
+        invited_user_email = "new_project_admin@test.com"
+        invited_user_role = Role.PROJECT_ADMIN
+        invited_user_password = "SecurePassword123!"  # noqa: S105
+
+        invitation_payload = {
+            "email": str(invited_user_email),
+            "project_id": str(self.project.id),
+            "library_id": None,
+            "role": str(invited_user_role),
+            "assigned_by_id": str(self.project_creator.id),
+        }
+        signer = TimestampSigner(salt="epl.apps.user.views:invite")  # todo: implémentation du salt à améliorer
+        token = signer.sign_object(invitation_payload)
+        registration_url = reverse("create_account")
+
+        registration_data = {
+            "token": token,
+            "password": invited_user_password,
+            "confirm_password": invited_user_password,
+        }
+
+        response = self.client.post(registration_url, registration_data, format="json")
+
+        self.response_created(response)
+
+        try:
+            new_user = User.objects.get(email=invited_user_email)
+        except User.DoesNotExist:
+            self.fail("User was not created in the database.")
+
+        self.assertTrue(UserRole.objects.filter(user=new_user, project=self.project, role=Role.PROJECT_ADMIN).exists())
+
+        for i, email in enumerate(mail.outbox):
+            print(f"----- Email {i + 1} -----")
+            print(f"Email subject: {email.subject}")
+            print(f"Email to: {email.to}")
+            print(f"Email body: {email.body}")
+            print("-" * 20)
+
+        self.assertEqual(len(mail.outbox), 2)
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, [new_user.email])
+        self.assertIn("creation", sent_email.subject.lower())
+        # self.assertIn(self.project.name, sent_email.body)

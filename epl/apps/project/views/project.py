@@ -148,7 +148,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         Change the status of a project.
         """
         project = self.get_object()
-        serializer = SetStatusSerializer(instance=project, data=request.data, partial=True)
+        serializer = SetStatusSerializer(
+            instance=project, data=request.data, partial=True, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
