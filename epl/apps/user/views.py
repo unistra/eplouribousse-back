@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.defaults import permission_denied
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view, inline_serializer
+from ipware import get_client_ip
 from rest_framework import filters, mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -14,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from epl.apps.project.models import ActionLog
 from epl.apps.user.models import User
 from epl.apps.user.serializers import (
     CreateAccountSerializer,
@@ -68,6 +70,12 @@ def change_password(request: Request) -> Response:
     serializer.save()
 
     send_password_change_email(request.user)
+    ActionLog.log(
+        message="User has changed their password",
+        actor=request.user,
+        obj=request.user,
+        ip=get_client_ip(request)[0],
+    )
     return Response({"detail": _("Your password has been changed successfully.")}, status=status.HTTP_200_OK)
 
 
@@ -93,7 +101,8 @@ def reset_password(request: Request) -> Response:
         context={"request": request},
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    user = serializer.save()
+    ActionLog.log(message="User has reset their password", actor=user, obj=user, ip=get_client_ip(request)[0])
 
     return Response({"detail": _("Your password has been successfully reset.")}, status=status.HTTP_200_OK)
 
@@ -124,6 +133,7 @@ def send_reset_email(request):
     try:
         user = User.objects.active().get(email=email)
         send_password_reset_email(user, front_domain)
+        ActionLog.log(message="User has requested a password reset", actor=user, obj=user, ip=get_client_ip(request)[0])
     except User.DoesNotExist:
         pass
 
@@ -143,6 +153,7 @@ def login_success(request) -> HttpResponseRedirect:
         f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}/handshake?t={authentication_token}"
     )
     logger.info(f"Successful login: redirect to front at {front_url}")
+    ActionLog.log(message="User has logged in", actor=request.user, obj=request.user, ip=get_client_ip(request)[0])
 
     return HttpResponseRedirect(iri_to_uri(front_url))
 
