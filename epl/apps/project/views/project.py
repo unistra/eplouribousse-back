@@ -8,16 +8,16 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from epl.apps.project.models import Project, Role, Status, UserRole
-from epl.apps.project.permissions.project import ProjectStatusPermissions
+from epl.apps.project.permissions.project import ProjectPermission
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
+    ChangeStatusSerializer,
     ExclusionReasonSerializer,
     InvitationSerializer,
     ProjectDetailSerializer,
     ProjectLibrarySerializer,
     ProjectSerializer,
     ProjectUserSerializer,
-    SetStatusSerializer,
     StatusListSerializer,
     UserRoleSerializer,
 )
@@ -134,21 +134,21 @@ class ProjectViewSet(viewsets.ModelViewSet):
     @extend_schema(
         tags=["project"],
         summary=_("Update the status of a project"),
-        request=SetStatusSerializer,
+        request=ChangeStatusSerializer,
         responses={
-            status.HTTP_200_OK: SetStatusSerializer,
+            status.HTTP_200_OK: ChangeStatusSerializer,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
         },
     )
-    @action(detail=True, methods=["patch"], url_path="status", permission_classes=[ProjectStatusPermissions])
+    @action(detail=True, methods=["patch"], url_path="status", permission_classes=[ProjectPermission])
     def update_status(self, request, pk=None):
         """
         Change the status of a project.
         """
         project = self.get_object()
-        serializer = SetStatusSerializer(
+        serializer = ChangeStatusSerializer(
             instance=project, data=request.data, partial=True, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)

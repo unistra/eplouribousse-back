@@ -58,11 +58,11 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
                 name="Test Project",
                 description="This is a test project.",
                 status=Status.DRAFT,
-                invitations=[{"email": "new_project_admin@test.com", "role": "project_admin"}],
+                invitations=[{"email": "new_project_admin@test.com", "role": Role.PROJECT_ADMIN}],
             )
 
-            self.project.user_roles.create(user=self.project_creator, role="project_creator")
-            self.project.user_roles.create(user=self.project_admin, role="project_admin")
+            self.project.user_roles.create(user=self.project_creator, role=Role.PROJECT_CREATOR)
+            self.project.user_roles.create(user=self.project_admin, role=Role.PROJECT_ADMIN)
 
     def test_set_status_to_review_success(self):
         url = reverse("project-update-status", kwargs={"pk": self.project.id})

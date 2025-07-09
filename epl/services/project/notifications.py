@@ -1,5 +1,3 @@
-from django.core import signing
-
 from epl.apps.project.models import Project, Role
 from epl.apps.user.models import User
 from epl.services.user.email import send_invite_project_admins_to_review_email, send_invite_to_epl_email
@@ -10,11 +8,9 @@ def invite_unregistered_users_to_epl(project: Project, request):
     Parse the invitations to join epl (stored in project.invitations) and sends an email for each one.
     This function is intended to be called when the project goes from "DRAFT" into "REVIEW".
     """
+    from epl.apps.user.views import _get_invite_signer
 
     invitations_list = project.invitations or []
-
-    if not invitations_list:
-        return
 
     for invitation in invitations_list:
         email = invitation.get("email")
@@ -24,7 +20,8 @@ def invite_unregistered_users_to_epl(project: Project, request):
         send_invite_to_epl_email(
             email=email,
             request=request,
-            signer=signing.TimestampSigner(salt=f"{__name__}:invite"),
+            # signer = TimestampSigner(salt=INVITE_TOKEN_SALT),
+            signer=_get_invite_signer(),
             project_id=str(project.id),
             library_id=invitation.get("library_id"),
             role=invitation.get("role"),

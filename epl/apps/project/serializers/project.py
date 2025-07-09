@@ -140,7 +140,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
-class SetStatusSerializer(serializers.ModelSerializer):
+class ChangeStatusSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(choices=Status.choices, help_text=_("Project status"))
 
     class Meta:
@@ -175,7 +175,7 @@ class SetStatusSerializer(serializers.ModelSerializer):
             case Status.POSITIONING, Status.INSTRUCTION_BOUND:
                 # todo : send notification to instructors : they can start instruction bound copies
                 pass
-        return None
+        return project
 
 
 class StatusListSerializer(serializers.Serializer):

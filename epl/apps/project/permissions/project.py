@@ -1,7 +1,7 @@
 from rest_framework.permissions import BasePermission
 
 
-class ProjectStatusPermissions(BasePermission):
+class ProjectPermission(BasePermission):
     def has_permission(self, request, view):
         # todo : Implement a more specific permission check if needed
         return bool(request.user and request.user.is_authenticated)
