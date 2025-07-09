@@ -47,6 +47,9 @@ def invite_project_admins_to_review(project: Project, request):
     )
 
     tenant_name = request.tenant.name
+    tenant_schema_name = request.tenant.schema_name
+    print(f"tenant: {request.tenant}")  # todo: remove this print statement
+    print(f"tenant schema name: {tenant_schema_name}")  # todo: remove this print statement
 
     project_creator = User.objects.filter(
         project_roles__project=project,

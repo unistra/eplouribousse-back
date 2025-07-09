@@ -7,6 +7,7 @@ from epl.apps.project.models import Project, Role, Status, UserRole
 from epl.apps.project.tests.factories.project import ProjectFactory
 from epl.apps.project.tests.factories.user import UserFactory
 from epl.apps.user.models import User
+from epl.apps.user.views import INVITE_TOKEN_SALT
 from epl.tests import TestCase
 
 
@@ -73,7 +74,7 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         self.project.refresh_from_db()
         self.assertEqual(self.project.status, Status.REVIEW)
 
-    def test_set_status_to_review_sends_notifications(self):
+    def test_set_status_to_review_sends_invitations(self):
         url = reverse("project-update-status", kwargs={"pk": self.project.id})
         data = {"status": Status.REVIEW}
 
@@ -81,18 +82,27 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
 
         self.response_ok(response)
         self.project.refresh_from_db()
-        self.assertEqual(self.project.status, Status.REVIEW)
 
-        print(len(mail.outbox), "Emails sent after status update to review")
-        review_email_0 = mail.outbox[0]
-        print(f"Email subject: {review_email_0.subject}")
-        print(f"Email to: {review_email_0.to}")
-        print(f"Email body: {review_email_0.body}")
+        for i, email in enumerate(mail.outbox):
+            print(f"----- Email {i + 1} -----")
+            print(f"Email subject: {email.subject}")
+            print(f"Email to: {email.to}")
+            print(f"Email body: {email.body}")
+            print("-" * 20)
 
-        review_email_1 = mail.outbox[1]
-        print(f"Email subject: {review_email_1.subject}")
-        print(f"Email to: {review_email_1.to}")
-        print(f"Email body: {review_email_1.body}")
+        self.assertEqual(len(mail.outbox), 2)
+
+        # first email should be an invitation to epl, adresse to
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, ["new_project_admin@test.com"])
+        self.assertIn("invitation", sent_email.subject.lower())
+        self.assertIn("invited", sent_email.body.lower())
+
+        # second email should be a notification to review the project, for the already registered project admin
+        sent_email = mail.outbox[1]
+        self.assertEqual(sent_email.to, [self.project_admin.email])
+        self.assertIn(self.project.name, sent_email.subject)
+        self.assertIn("Invitation to review project settings", sent_email.body)
 
     def test_send_invitation_to_review_project_after_new_project_admin_subscription(self):
         print(len(mail.outbox))
@@ -108,7 +118,7 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
             "role": str(invited_user_role),
             "assigned_by_id": str(self.project_creator.id),
         }
-        signer = TimestampSigner(salt="epl.apps.user.views:invite")  # todo: implémentation du salt à améliorer
+        signer = TimestampSigner(salt=INVITE_TOKEN_SALT)
         token = signer.sign_object(invitation_payload)
         registration_url = reverse("create_account")
 
@@ -140,4 +150,4 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         sent_email = mail.outbox[0]
         self.assertEqual(sent_email.to, [new_user.email])
         self.assertIn("creation", sent_email.subject.lower())
-        # self.assertIn(self.project.name, sent_email.body)
+        self.assertIn(self.project.name, sent_email.body)
