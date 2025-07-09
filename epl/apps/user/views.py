@@ -101,10 +101,8 @@ def reset_password(request: Request) -> Response:
         context={"request": request},
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save()
-    ActionLog.log(
-        message="User has reset their password", actor=request.user, obj=request.user, ip=get_client_ip(request)[0]
-    )
+    user = serializer.save()
+    ActionLog.log(message="User has reset their password", actor=user, obj=user, ip=get_client_ip(request)[0])
 
     return Response({"detail": _("Your password has been successfully reset.")}, status=status.HTTP_200_OK)
 
