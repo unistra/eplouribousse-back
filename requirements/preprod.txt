@@ -232,6 +232,9 @@ django-cors-headers==4.7.0 ; python_version == "3.12" \
 django-extensions==3.2.3 ; python_version == "3.12" \
     --hash=sha256:44d27919d04e23b3f40231c4ab7af4e61ce832ef46d610cc650d53e68328410a \
     --hash=sha256:9600b7562f79a92cbf1fde6403c04fee314608fefbb595502e34383ae8203401
+django-ipware==7.0.1 ; python_version == "3.12" \
+    --hash=sha256:d9ec43d2bf7cdf216fed8d494a084deb5761a54860a53b2e74346a4f384cff47 \
+    --hash=sha256:db16bbee920f661ae7f678e4270460c85850f03c6761a4eaeb489bdc91f64709
 django-tenants==3.8.0 ; python_version == "3.12" \
     --hash=sha256:07d009d5d01be2d65c3f5ddbf323d58d1228838fc1a64fded15c8e5c6f41cf8f
 django==4.2.23 ; python_version == "3.12" \
@@ -485,6 +488,9 @@ pysaml2==7.5.0 ; python_version == "3.12" \
 python-dateutil==2.9.0.post0 ; python_version == "3.12" \
     --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
     --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
+python-ipware==3.0.0 ; python_version == "3.12" \
+    --hash=sha256:9117b1c4dddcb5d5ca49e6a9617de2fc66aec2ef35394563ac4eecabdf58c062 \
+    --hash=sha256:fc936e6e7ec9fcc107f9315df40658f468ac72f739482a707181742882e36b60
 python-stdnum==2.1 ; python_version == "3.12" \
     --hash=sha256:25eabcf5f307dd4150fd8f1c03f4512a6caeb84c9f09be1448711f5803373c58 \
     --hash=sha256:6b01645969eb3dfd55061a0114d593753cd9e653cea9083198b7eea12644397a
