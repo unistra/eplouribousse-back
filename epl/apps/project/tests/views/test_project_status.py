@@ -82,17 +82,9 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
 
         self.response_ok(response)
         self.project.refresh_from_db()
-
-        for i, email in enumerate(mail.outbox):
-            print(f"----- Email {i + 1} -----")
-            print(f"Email subject: {email.subject}")
-            print(f"Email to: {email.to}")
-            print(f"Email body: {email.body}")
-            print("-" * 20)
-
         self.assertEqual(len(mail.outbox), 2)
 
-        # first email should be an invitation to epl, adresse to
+        # first email should be an invitation to epl
         sent_email = mail.outbox[0]
         self.assertEqual(sent_email.to, ["new_project_admin@test.com"])
         self.assertIn("invitation", sent_email.subject.lower())
@@ -105,8 +97,6 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         self.assertIn("Invitation to review project settings", sent_email.body)
 
     def test_send_invitation_to_review_project_after_new_project_admin_subscription(self):
-        print(len(mail.outbox))
-
         invited_user_email = "new_project_admin@test.com"
         invited_user_role = Role.PROJECT_ADMIN
         invited_user_password = "SecurePassword123!"  # noqa: S105
@@ -139,15 +129,8 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
 
         self.assertTrue(UserRole.objects.filter(user=new_user, project=self.project, role=Role.PROJECT_ADMIN).exists())
 
-        for i, email in enumerate(mail.outbox):
-            print(f"----- Email {i + 1} -----")
-            print(f"Email subject: {email.subject}")
-            print(f"Email to: {email.to}")
-            print(f"Email body: {email.body}")
-            print("-" * 20)
-
         self.assertEqual(len(mail.outbox), 2)
         sent_email = mail.outbox[0]
         self.assertEqual(sent_email.to, [new_user.email])
-        self.assertIn("creation", sent_email.subject.lower())
+        self.assertIn("Project 'Test Project' has been launched", sent_email.subject)
         self.assertIn(self.project.name, sent_email.body)

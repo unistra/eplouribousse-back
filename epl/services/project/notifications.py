@@ -40,16 +40,12 @@ def invite_project_admins_to_review(project: Project, request):
      - and the user with a role of PROJECT_ADMIN is already registered in the database.
     """
 
-    # get all project admins
     project_admins = User.objects.filter(
         project_roles__project=project,
         project_roles__role=Role.PROJECT_ADMIN,
     )
 
     tenant_name = request.tenant.name
-    tenant_schema_name = request.tenant.schema_name
-    print(f"tenant: {request.tenant}")  # todo: remove this print statement
-    print(f"tenant schema name: {tenant_schema_name}")  # todo: remove this print statement
 
     project_creator = User.objects.filter(
         project_roles__project=project,
@@ -63,7 +59,6 @@ def invite_project_admins_to_review(project: Project, request):
             email=project_admin.email,
             request=request,
             project_name=project.name,
-            # project_id=str(project.id),
             tenant_name=tenant_name,
             project_creator_email=project_creator_email,
         )
