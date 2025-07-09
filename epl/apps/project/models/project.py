@@ -1,14 +1,15 @@
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _lazy
 
 from epl.apps.project.models import Library
 from epl.models import UUIDPrimaryKeyField
 
 DEFAULT_EXCLUSION_REASONS = [
-    _("Participation in another project"),
-    _("Incorrect assignment"),
-    _("Other"),
+    _lazy("Participation in another project"),
+    _lazy("Incorrect assignment"),
+    _lazy("Other"),
 ]
 
 
@@ -53,7 +54,6 @@ class Project(models.Model):
         self.libraries.clear()
         super().delete(*args, **kwargs)
 
-    # todo utiliser get_text_lazy (quand on provisionne les raisons d'exclusion à la création du projet)
     @property
     def exclusion_reasons(self):
         return self.settings.get("exclusion_reasons", [])

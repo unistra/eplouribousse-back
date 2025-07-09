@@ -48,7 +48,7 @@ def send_password_reset_email(user: User, front_domain: str):
     )
 
 
-def send_invite_email(
+def send_invite_to_epl_email(
     email: str,
     request: Request,
     signer: signing.TimestampSigner,
@@ -71,12 +71,41 @@ def send_invite_email(
     invitation_link = f"{front_domain}/create-account?t={invite_token}"
 
     email_content = render_to_string(
-        "emails/invite.txt",
+        "emails/invite_to_epl.txt",
         {"email_support": settings.EMAIL_SUPPORT, "invitation_link": invitation_link},
     )
 
     send_mail(
         subject=f"[eplouribousse] {_('Invitation')}",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+        message=email_content,
+    )
+
+
+def send_invite_project_admins_to_review_email(
+    email: str,
+    request: Request,
+    project_name: str,
+    tenant_name: str,
+    project_creator_email: str,
+) -> None:
+    front_domain = get_front_domain(request)
+
+    email_content = render_to_string(
+        "emails/invite_project_admin_to_review.txt",
+        {
+            "email_support": settings.EMAIL_SUPPORT,
+            "project_name": project_name,
+            "front_domain": front_domain,
+            "tenant_name": tenant_name,
+            "project_creator_email": project_creator_email,
+        },
+    )
+
+    send_mail(
+        subject=f"eplouribousse | {tenant_name} | _('Project '{project_name}' has been launched')",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,

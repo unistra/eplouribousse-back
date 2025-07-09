@@ -19,6 +19,16 @@ class TestCase(TenantTestCase):
         super().setUp()
         self.client = TenantClient(self.tenant)
 
+    @classmethod
+    def setup_tenant(cls, tenant):
+        tenant.name = "Tenant name"
+        return tenant
+
+    @classmethod
+    def setup_domain(cls, domain):
+        domain.front_domain = "front.domain"
+        return domain
+
     def _perform_request(self, method, path, *args, **kwargs):
         if user := kwargs.pop("user", None):
             self.client.force_authenticate(user)

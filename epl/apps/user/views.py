@@ -30,7 +30,7 @@ from epl.libs.pagination import PageNumberPagination
 from epl.permissions import IsSuperUser
 from epl.schema_serializers import UnauthorizedSerializer, ValidationErrorSerializer
 from epl.services.tenant import get_front_domain
-from epl.services.user.email import send_invite_email, send_password_change_email, send_password_reset_email
+from epl.services.user.email import send_invite_to_epl_email, send_password_change_email, send_password_reset_email
 
 logger = logging.getLogger(__name__)
 
@@ -302,7 +302,7 @@ def invite(request: Request) -> Response:
     serializer = EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
-    send_invite_email(
+    send_invite_to_epl_email(
         email=serializer.validated_data.get("email"),
         project_id=serializer.validated_data.get("project_id"),
         library_id=serializer.validated_data.get("library_id"),

@@ -14,6 +14,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from epl.apps.project.models import Project, Role
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
+from epl.services.project.notifications import invite_project_admins_to_review
 from epl.services.user.email import send_password_change_email
 from epl.validators import JSONSchemaValidator
 
@@ -128,7 +129,7 @@ class UserNestedProjectSerializer(serializers.ModelSerializer):
         """
         Get all roles of the user in the project.
         """
-        return [role.role for role in projet.user_roles.filter(user=self.context["user"])]
+        return [str(role.role) for role in projet.user_roles.filter(user=self.context["user"])]
 
 
 class UserSerializer(ModelSerializer):
@@ -313,6 +314,9 @@ class CreateAccountSerializer(serializers.Serializer):
                         library = project.libraries.get(pk=self.library_id)
                         user_role.library = library
                         user_role.save()
+                    # If the user has a project_admin role, he is notified that he must review the project's settings.
+                    if self.role == Role.PROJECT_ADMIN:
+                        invite_project_admins_to_review(project, self.context["request"])
             return user
         except (IntegrityError, ObjectDoesNotExist) as e:
             raise serializers.ValidationError(str(e))
