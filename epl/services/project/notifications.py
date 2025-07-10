@@ -20,7 +20,6 @@ def invite_unregistered_users_to_epl(project: Project, request):
         send_invite_to_epl_email(
             email=email,
             request=request,
-            # signer = TimestampSigner(salt=INVITE_TOKEN_SALT),
             signer=_get_invite_signer(),
             project_id=str(project.id),
             library_id=invitation.get("library_id"),
