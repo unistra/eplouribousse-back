@@ -3,13 +3,14 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.db import IntegrityError, transaction
-from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import AuthUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken, Token
 
 from epl.apps.project.models import Project, Role
 from epl.apps.user.models import User
@@ -47,7 +48,17 @@ class PasswordChangeSerializer(serializers.Serializer):
         return user
 
 
+class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
+    # We add the audience to the token to ensure it is valid for the current tenant only
+    def get_token(self, user: AuthUser) -> Token:
+        token = super().get_token(user)
+        token["aud"] = self.context["request"].tenant.id.hex
+        return token
+
+
 class TokenObtainSerializer(serializers.Serializer):
+    # We need this for external authentication as the
+    # BaseTokenObtainPairSerializer expects username and password fields
     refresh = serializers.CharField(read_only=True)
     access = serializers.CharField(read_only=True)
 
@@ -56,14 +67,12 @@ class TokenObtainSerializer(serializers.Serializer):
 
     def get_token(self, user: User):
         token = RefreshToken.for_user(user)
-        token["iss"] = self.context["request"].get_host()
-        token["sub"] = str(user.pk)
-        token["nbf"] = timezone.now().timestamp()
+        token["aud"] = self.context["request"].tenant.id.hex
         return token
 
     def validate_user(self, attrs, user: User):
         if not user.is_active:
-            raise ValidationError(_("User is not active"))
+            raise ValidationError(_("User is inactive"))
         data = super().validate(attrs)
         refresh = self.get_token(user)
         data["refresh"] = str(refresh)

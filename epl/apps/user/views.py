@@ -23,6 +23,7 @@ from epl.apps.user.serializers import (
     InviteTokenSerializer,
     PasswordChangeSerializer,
     PasswordResetSerializer,
+    TokenObtainPairSerializer,
     TokenObtainSerializer,
     UserListSerializer,
     UserSerializer,
@@ -192,7 +193,7 @@ def login_handshake(request: Request) -> Response:
     except (signing.BadSignature, User.DoesNotExist):
         raise PermissionDenied(_("Invalid handshake token"))
 
-    serializer = TokenObtainSerializer(data={}, context={"user": user, "request": request})
+    serializer = TokenObtainPairSerializer(data={}, context={"user": user, "request": request})
     if serializer.is_valid(raise_exception=True):
         logger.info(f"Successful handshake for user {user.id}")
         return Response(serializer.validated_data)
