@@ -316,12 +316,12 @@ class CreateAccountSerializer(serializers.Serializer):
                     # If the user has a project_admin role, he is notified that he must review the project's settings.
                     if self.role == Role.PROJECT_ADMIN:
                         invite_project_admins_to_review(project, self.context["request"])
-                    # # If the user has an invitation pending in project.invitations, it is removed.
-                    # if self.email in [invitation.get("email") for invitation in project.invitations]:
-                    #     project.invitations = [
-                    #         invitation for invitation in project.invitations if invitation.get("email") != self.email
-                    #     ]
-                    #     project.save()
+                    # If the user has an invitation pending in project.invitations, it is removed.
+                    if self.email in [invitation.get("email") for invitation in project.invitations]:
+                        project.invitations = [
+                            invitation for invitation in project.invitations if invitation.get("email") != self.email
+                        ]
+                        project.save()
             return user
         except (IntegrityError, ObjectDoesNotExist) as e:
             raise serializers.ValidationError(str(e))
