@@ -305,10 +305,9 @@ class CreateAccountSerializer(serializers.Serializer):
         try:
             with transaction.atomic():
                 user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
-                assigned_by = User.objects.get(id=self.assigned_by_id)
-
                 if self.project_id and self.role:
                     project = Project.objects.get(id=self.project_id)
+                    assigned_by = User.objects.get(id=self.assigned_by_id)
                     user_role = project.user_roles.create(user=user, role=self.role, assigned_by=assigned_by)
                     if self.library_id:
                         library = project.libraries.get(pk=self.library_id)
@@ -317,12 +316,12 @@ class CreateAccountSerializer(serializers.Serializer):
                     # If the user has a project_admin role, he is notified that he must review the project's settings.
                     if self.role == Role.PROJECT_ADMIN:
                         invite_project_admins_to_review(project, self.context["request"])
-                    # If the user has an invitation pending in project.invitations, it is removed.
-                    if self.email in [invitation.get("email") for invitation in project.invitations]:
-                        project.invitations = [
-                            invitation for invitation in project.invitations if invitation.get("email") != self.email
-                        ]
-                        project.save()
+                    # # If the user has an invitation pending in project.invitations, it is removed.
+                    # if self.email in [invitation.get("email") for invitation in project.invitations]:
+                    #     project.invitations = [
+                    #         invitation for invitation in project.invitations if invitation.get("email") != self.email
+                    #     ]
+                    #     project.save()
             return user
         except (IntegrityError, ObjectDoesNotExist) as e:
             raise serializers.ValidationError(str(e))
