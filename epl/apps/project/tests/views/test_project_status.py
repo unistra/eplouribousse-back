@@ -119,7 +119,7 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         }
 
         response = self.client.post(registration_url, registration_data, format="json")
-
+        self.project.refresh_from_db()
         self.response_created(response)
 
         try:
@@ -134,3 +134,5 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         self.assertEqual(sent_email.to, [new_user.email])
         self.assertIn("Project 'Test Project' has been launched", sent_email.subject)
         self.assertIn(self.project.name, sent_email.body)
+
+        self.assertEqual(len(self.project.invitations), 0)
