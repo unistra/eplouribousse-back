@@ -78,8 +78,6 @@ class ProjectAssignRoleTest(TestCase):
             user=self.user_one,
         )
 
-        print(response.data)
-
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["role"], data["role"])
         self.assertEqual(response.data["user"]["id"], str(self.user_one.id))

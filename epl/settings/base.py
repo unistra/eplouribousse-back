@@ -318,6 +318,7 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
     "SIGNING_KEY": load_key("jwtRS256.key"),
     "VERIFYING_KEY": load_key("jwtRS256.key.pub"),
+    "TOKEN_OBTAIN_SERIALIZER": "epl.apps.user.serializers.TokenObtainPairSerializer",
 }
 
 
@@ -562,7 +563,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "epl.apps.user.authentication.JWTAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
