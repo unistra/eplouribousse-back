@@ -305,10 +305,30 @@ class CreateAccountSerializer(serializers.Serializer):
         try:
             with transaction.atomic():
                 user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
+
                 if self.project_id and self.role:
-                    project = Project.objects.get(id=self.project_id)
-                    assigned_by = User.objects.get(id=self.assigned_by_id)
+                    try:
+                        project = Project.objects.get(id=self.project_id)
+                    except Project.DoesNotExist:
+                        raise serializers.ValidationError(
+                            _("The project associated with this invitation no longer exists.")
+                        )
+
+                    assigned_by = None
+                    try:
+                        if not self.assigned_by_id:
+                            raise User.DoesNotExist
+                        assigned_by = User.objects.get(id=self.assigned_by_id)
+
+                    except User.DoesNotExist:
+                        assigned_by = User.objects.filter(
+                            project_roles__project=project, project_roles__role=Role.PROJECT_CREATOR
+                        ).first()
+
+                    if not assigned_by:
+                        raise serializers.ValidationError(_("No project creator found to assign the role. "))
                     user_role = project.user_roles.create(user=user, role=self.role, assigned_by=assigned_by)
+
                     if self.library_id:
                         library = project.libraries.get(pk=self.library_id)
                         user_role.library = library

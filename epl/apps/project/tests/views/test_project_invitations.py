@@ -1,4 +1,97 @@
+from django_tenants.urlresolvers import reverse
+from django_tenants.utils import tenant_context
+
+# Assurez-vous que ces importations sont correctes pour votre structure de projet
+from epl.apps.project.models import Role, UserRole
+from epl.apps.project.tests.factories.project import ProjectFactory
+from epl.apps.project.tests.factories.user import UserFactory
+from epl.apps.user.models import User
+from epl.apps.user.views import _get_invite_signer
 from epl.tests import TestCase
+
+
+class TestUserAccountCreationAfterInvite(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            # Create a project creator and a project
+            self.project_creator = UserFactory()
+            self.project = ProjectFactory()
+            UserRole.objects.create(
+                user=self.project_creator,
+                project=self.project,
+                role=Role.PROJECT_CREATOR,
+                assigned_by=self.project_creator,
+            )
+
+            # Create a project admin invite token
+            self.signer = _get_invite_signer()
+            self.new_user_email = "fallback_user@example.com"
+            self.token = self.signer.sign_object(
+                {
+                    "email": self.new_user_email,
+                    "project_id": str(self.project.id),
+                    "role": Role.PROJECT_ADMIN,
+                    "assigned_by_id": str(self.project_creator.id),
+                }
+            )
+
+    def test_account_creation_with_invitation_success(self):
+        response = self.post(
+            reverse("create_account"),
+            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+        )
+
+        self.response_created(response)
+
+        self.assertTrue(User.objects.filter(email=self.new_user_email).exists())
+        new_user = User.objects.get(email=self.new_user_email)
+        user_role = UserRole.objects.get(user=new_user, project=self.project)
+        self.assertEqual(user_role.role, Role.PROJECT_ADMIN)
+        self.assertEqual(user_role.assigned_by, self.project_creator)
+
+    def test_account_creation_with_invitation_fails_with_invalid_token(self):
+        invalid_token = "invalid_token"  # noqa S105
+        response = self.post(
+            reverse("create_account"),
+            {"token": invalid_token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+        )
+        self.response_bad_request(response)
+
+    def test_account_creation_with_invitation_uses_fallback_assigner_when_inviter_is_missing(self):
+        # Delete the original project creator
+        self.project_creator.delete()
+
+        # Create a new project creator for fallback
+        new_project_creator = UserFactory()
+        UserRole.objects.create(
+            user=new_project_creator, project=self.project, role=Role.PROJECT_CREATOR, assigned_by=new_project_creator
+        )
+
+        # Create the account using the invite token
+        response = self.post(
+            reverse("create_account"),
+            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+        )
+
+        # Assertions
+        self.response_created(response)
+
+        self.assertTrue(User.objects.filter(email=self.new_user_email).exists())
+        new_user = User.objects.get(email=self.new_user_email)
+        user_role = UserRole.objects.get(user=new_user, project=self.project)
+        self.assertEqual(user_role.role, Role.PROJECT_ADMIN)
+        self.assertEqual(user_role.assigned_by, new_project_creator)
+
+    def test_account_creation_with_invitation_uses_fallback_assigner_when_no_project_creator(self):
+        self.project_creator.delete()
+
+        response = self.post(
+            reverse("create_account"),
+            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+        )
+
+        self.response_bad_request(response)
 
 
 class ProjectInvitationTests(TestCase):
