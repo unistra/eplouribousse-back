@@ -105,7 +105,8 @@ def send_invite_project_admins_to_review_email(
     )
 
     send_mail(
-        subject=f"eplouribousse | {tenant_name} | _('Project '{project_name}' has been launched')",
+        subject=f"eplouribousse | {tenant_name} | "
+        + _("Project '%(project_name)s' has been launched") % {"project_name": project_name},
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
