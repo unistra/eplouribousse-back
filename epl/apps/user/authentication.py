@@ -8,7 +8,10 @@ from rest_framework_simplejwt.tokens import Token
 
 class JWTAuthentication(BaseJWTAuthentication):
     def authenticate(self, request: Request) -> tuple[AuthUser, Token] | None:
-        user, token = super().authenticate(request)
+        result = super().authenticate(request)
+        if result is None:
+            return None
+        user, token = result
         self._validate_audience(request, token)
         return user, token
 
