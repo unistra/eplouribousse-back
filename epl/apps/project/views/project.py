@@ -4,7 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from epl.apps.project.models import Project, Role, Status, UserRole
@@ -95,7 +95,7 @@ from epl.schema_serializers import UnauthorizedSerializer
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ProjectPermission]
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
