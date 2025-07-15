@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from epl.apps.project.models import Project, Role, Status, UserRole
-from epl.apps.project.permissions.project import ProjectPermission
+from epl.apps.project.permissions.project import ProjectPermissions
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
     ChangeStatusSerializer,
@@ -95,7 +95,7 @@ from epl.schema_serializers import UnauthorizedSerializer
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [ProjectPermission]
+    permission_classes = [ProjectPermissions]
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
@@ -142,7 +142,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
         },
     )
-    @action(detail=True, methods=["patch"], url_path="status", permission_classes=[ProjectPermission])
+    @action(detail=True, methods=["patch"], url_path="status")
     def update_status(self, request, pk=None):
         """
         Change the status of a project.

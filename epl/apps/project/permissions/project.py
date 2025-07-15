@@ -4,16 +4,6 @@ from epl.apps.project.models import Project, Role, Status
 from epl.apps.user.models import User
 
 
-class ProjectPermission(BasePermission):
-    def has_permission(self, request, view):
-        # todo : Implement a more specific permission check if needed
-        return bool(request.user and request.user.is_authenticated)
-
-    def has_object_permission(self, request, view, obj):
-        # todo : Implement a more specific permission check if needed
-        return bool(request.user and request.user.is_authenticated)
-
-
 class ProjectPermissions(BasePermission):
     def has_permission(self, request, view):
         match view.action:
