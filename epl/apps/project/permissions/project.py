@@ -32,37 +32,55 @@ class ProjectPermissions(BasePermission):
         return True
 
     @staticmethod
+    def compute_retrieve_permission(user: User, project: Project = None) -> bool:
+        if project.status <= Status.READY:
+            match project.status:
+                case Status.DRAFT:
+                    return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
+                case Status.REVIEW:
+                    return user.project_roles.filter(project=project, role=Role.PROJECT_ADMIN).exists()
+                case Status.READY:
+                    return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
+        else:
+            return not project.is_private
+
+    @staticmethod
+    def compute_update_permission(user: User, project: Project = None) -> bool:
+        return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
+
+    @staticmethod
+    def compute_create_permission(user: User, project: Project = None) -> bool:
+        return user.project_roles.filter(
+            project=project,
+            role__in=[
+                Role.PROJECT_ADMIN,
+                Role.PROJECT_MANAGER,
+            ],
+        ).exists()
+
+    @staticmethod
+    def compute_add_library_permission(user: User, project: Project = None) -> bool:
+        return user.project_roles.filter(
+            project=project,
+            role__in=[Role.PROJECT_ADMIN, Role.PROJECT_MANAGER, Role.PROJECT_CREATOR],
+        ).exists()
+
+    @staticmethod
+    def compute_validate_permission(user: User, project: Project = None) -> bool:
+        return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
+
+    @staticmethod
     def user_has_permission(action: str, user: User, project: Project = None) -> bool:
         match action:
-            case "retrieve":
-                if project.is_private:
-                    return True
-                else:
-                    match project.status:
-                        case Status.DRAFT:
-                            return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
-                        case Status.REVIEW:
-                            return user.project_roles.filter(project=project, role=Role.PROJECT_ADMIN).exists()
-                        case Status.READY:
-                            return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
-                        case _:
-                            return True
-            case "update" | "partial_update":
-                return user.project_roles.filter(
-                    project=project,
-                    role__in=[
-                        Role.PROJECT_ADMIN,
-                        Role.PROJECT_MANAGER,
-                    ],
-                ).exists()
             case "create":
-                return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
+                return __class__.compute_create_permission(user, project)
+            case "retrieve":
+                return __class__.compute_retrieve_permission(user, project)
+            case "update" | "partial_update":
+                return __class__.compute_update_permission(user, project)
             case "add_library":
-                return user.project_roles.filter(
-                    project=project,
-                    role__in=[Role.PROJECT_ADMIN, Role.PROJECT_MANAGER, Role.PROJECT_CREATOR],
-                ).exists()
+                __class__.compute_add_library_permission(user, project)
             case "validate":
-                return user.is_superuser
+                return __class__.compute_validate_permission(user, project)
             case _:
                 return False
