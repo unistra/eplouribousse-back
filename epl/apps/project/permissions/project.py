@@ -46,10 +46,6 @@ class ProjectPermissions(BasePermission):
 
     @staticmethod
     def compute_update_permission(user: User, project: Project = None) -> bool:
-        return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
-
-    @staticmethod
-    def compute_create_permission(user: User, project: Project = None) -> bool:
         return user.project_roles.filter(
             project=project,
             role__in=[
@@ -57,6 +53,10 @@ class ProjectPermissions(BasePermission):
                 Role.PROJECT_MANAGER,
             ],
         ).exists()
+
+    @staticmethod
+    def compute_create_permission(user: User, project: Project = None) -> bool:
+        return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
 
     @staticmethod
     def compute_add_library_permission(user: User, project: Project = None) -> bool:
@@ -67,7 +67,7 @@ class ProjectPermissions(BasePermission):
 
     @staticmethod
     def compute_validate_permission(user: User, project: Project = None) -> bool:
-        return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
+        return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
 
     @staticmethod
     def user_has_permission(action: str, user: User, project: Project = None) -> bool:
