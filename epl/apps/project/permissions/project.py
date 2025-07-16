@@ -73,14 +73,14 @@ class ProjectPermissions(BasePermission):
     def user_has_permission(action: str, user: User, project: Project = None) -> bool:
         match action:
             case "create":
-                return __class__.compute_create_permission(user, project)
+                return ProjectPermissions.compute_create_permission(user, project)
             case "retrieve":
-                return __class__.compute_retrieve_permission(user, project)
+                return ProjectPermissions.compute_retrieve_permission(user, project)
             case "update" | "partial_update":
-                return __class__.compute_update_permission(user, project)
+                return ProjectPermissions.compute_update_permission(user, project)
             case "add_library":
-                __class__.compute_add_library_permission(user, project)
+                return ProjectPermissions.compute_add_library_permission(user, project)
             case "validate":
-                return __class__.compute_validate_permission(user, project)
+                return ProjectPermissions.compute_validate_permission(user, project)
             case _:
                 return False
