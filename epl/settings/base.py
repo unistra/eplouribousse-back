@@ -196,6 +196,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "djangosaml2.middleware.SamlSessionMiddleware",
+    "epl.apps.tenant.middleware.CustomSentryTagsMiddleware",
 ]
 
 ########################
