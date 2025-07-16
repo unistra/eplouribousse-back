@@ -1,9 +1,17 @@
+from __future__ import annotations
+
+import typing
+
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
 
 from epl.models import UUIDPrimaryKeyField
+
+if typing.TYPE_CHECKING:
+    from epl.apps.user.models import User
+
 
 DEFAULT_EXCLUSION_REASONS = [
     _lazy("Participation in another project"),
@@ -20,6 +28,26 @@ class Status(models.IntegerChoices):
     INSTRUCTION_BOUND = 50, _("Instruction Bound Copies")
     INSTRUCTION_UNBOUND = 60, _("Instruction Unbound Copies")
     ARCHIVED = 100, _("Archived")
+
+
+class ProjectQuerySet(models.QuerySet):
+    def public_or_participant(self, user: User = None) -> models.QuerySet[Project]:
+        if not user:
+            return self.public()
+
+        if user.is_superuser or user.is_project_creator:
+            return self.all()
+
+        return self.public() | self.participating(user)
+
+    def participating(self, user: User = None) -> models.QuerySet[Project]:
+        if not user:
+            return self.none()
+
+        return self.filter(user_roles__user=user)
+
+    def public(self) -> models.QuerySet[Project]:
+        return self.filter(is_private=False)
 
 
 class Project(models.Model):
@@ -42,6 +70,8 @@ class Project(models.Model):
         "remove_exclusion_reason",
         "status",
     ]
+
+    objects = ProjectQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("Project")
