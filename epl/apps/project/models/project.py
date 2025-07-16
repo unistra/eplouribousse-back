@@ -3,7 +3,6 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext_lazy as _lazy
 
-from epl.apps.project.models import Library
 from epl.models import UUIDPrimaryKeyField
 
 DEFAULT_EXCLUSION_REASONS = [
@@ -27,7 +26,7 @@ class Project(models.Model):
     id = UUIDPrimaryKeyField()
     name = models.CharField(_("Name"), max_length=255)
     description = models.TextField(_("Description"), blank=True)
-    libraries = models.ManyToManyField(Library)
+    libraries = models.ManyToManyField("Library", through="ProjectLibrary")
     is_private = models.BooleanField(_("Is private"), default=False)
     active_after = models.DateTimeField(_("Active after"), default=now)
     status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.DRAFT)
@@ -57,6 +56,19 @@ class Project(models.Model):
     @property
     def exclusion_reasons(self):
         return self.settings.get("exclusion_reasons", [])
+
+
+class ProjectLibrary(models.Model):
+    project = models.ForeignKey("Project", on_delete=models.CASCADE)
+    library = models.ForeignKey("Library", on_delete=models.CASCADE)
+    is_alternative_storage_site = models.BooleanField(_("Is alternative storage site"), default=False)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["project", "library"], name="unique_project_library")]
+
+    def __str__(self):
+        alternative_storage_site = _("Alternative storage site")
+        return f"{self.project.name} - {self.library.name} {alternative_storage_site if self.is_alternative_storage_site else ''}"
 
 
 class Role(models.TextChoices):
