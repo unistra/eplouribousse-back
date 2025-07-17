@@ -306,6 +306,7 @@ class CreateAccountSerializer(serializers.Serializer):
             with transaction.atomic():
                 user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
 
+                # If there is a project_id and a role, we assign the user to the project with the specified role.
                 if self.project_id and self.role:
                     try:
                         project = Project.objects.get(id=self.project_id)
@@ -313,26 +314,33 @@ class CreateAccountSerializer(serializers.Serializer):
                         raise serializers.ValidationError(
                             _("The project associated with this invitation no longer exists.")
                         )
-
+                    # We check if user that assigned the role still exists, for better clarity in the error message.
                     assigned_by = None
-                    try:
-                        if not self.assigned_by_id:
-                            raise User.DoesNotExist
-                        assigned_by = User.objects.get(id=self.assigned_by_id)
-
-                    except User.DoesNotExist:
-                        assigned_by = User.objects.filter(
-                            project_roles__project=project, project_roles__role=Role.PROJECT_CREATOR
-                        ).first()
-
-                    if not assigned_by:
-                        raise serializers.ValidationError(_("No project creator found to assign the role. "))
-                    user_role = project.user_roles.create(user=user, role=self.role, assigned_by=assigned_by)
+                    if self.assigned_by_id:
+                        try:
+                            assigned_by = User.objects.get(id=self.assigned_by_id)
+                        except User.DoesNotExist:
+                            raise serializers.ValidationError(
+                                _("Invitation expired. The user who sent the invitation no longer exists.")
+                            )
+                    user_role_data = {
+                        "user": user,
+                        "role": self.role,
+                        "assigned_by": assigned_by,
+                    }
 
                     if self.library_id:
-                        library = project.libraries.get(pk=self.library_id)
-                        user_role.library = library
-                        user_role.save()
+                        try:
+                            library = project.libraries.get(pk=self.library_id)
+                            user_role_data["library"] = library
+                        except ObjectDoesNotExist:
+                            raise serializers.ValidationError(
+                                _("The library associated with this invitation no longer exists.")
+                            )
+
+                    project.user_roles.create(**user_role_data)
+
+                    # Post-creation actions:
                     # If the user has a project_admin role, he is notified that he must review the project's settings.
                     if self.role == Role.PROJECT_ADMIN:
                         invite_project_admins_to_review(project, self.context["request"])

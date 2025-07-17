@@ -1,7 +1,10 @@
+import uuid
+from unittest.mock import patch
+
+from django.core.exceptions import ValidationError
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 
-# Assurez-vous que ces importations sont correctes pour votre structure de projet
 from epl.apps.project.models import Role, UserRole
 from epl.apps.project.tests.factories.project import ProjectFactory
 from epl.apps.project.tests.factories.user import UserFactory
@@ -50,6 +53,14 @@ class TestUserAccountCreationAfterInvite(TestCase):
         self.assertEqual(user_role.role, Role.PROJECT_ADMIN)
         self.assertEqual(user_role.assigned_by, self.project_creator)
 
+    def test_password_mismatch(self):
+        response = self.post(
+            reverse("create_account"),
+            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "DifferentPassword123!"},
+        )
+        self.response_bad_request(response)
+        self.assertIn("Password and confirm password do not match", str(response.content))
+
     def test_account_creation_with_invitation_fails_with_invalid_token(self):
         invalid_token = "invalid_token"  # noqa S105
         response = self.post(
@@ -58,42 +69,132 @@ class TestUserAccountCreationAfterInvite(TestCase):
         )
         self.response_bad_request(response)
 
-    def test_account_creation_with_invitation_uses_fallback_assigner_when_inviter_is_missing(self):
-        # Delete the original project creator
-        self.project_creator.delete()
+    def test_account_creation_with_expired_token(self):
+        with patch("epl.apps.user.views.INVITE_TOKEN_MAX_AGE", 0):
+            response = self.post(
+                reverse("create_account"),
+                {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            )
+        self.response_bad_request(response)
+        self.assertIn("Invite token expired", str(response.content))
 
-        # Create a new project creator for fallback
-        new_project_creator = UserFactory()
-        UserRole.objects.create(
-            user=new_project_creator, project=self.project, role=Role.PROJECT_CREATOR, assigned_by=new_project_creator
+    def test_account_creation_fails_with_weak_password(self):
+        with patch("django.contrib.auth.password_validation.validate_password") as mock_validate:
+            mock_validate.side_effect = ValidationError("The password is too weak.")
+            response = self.post(
+                reverse("create_account"),
+                {"token": self.token, "password": "weak", "confirm_password": "weak"},  # noqa S105
+            )
+        self.response_bad_request(response)
+        self.assertIn("The password is too weak", str(response.content))
+
+    def test_account_creation_fails_with_project_not_found(self):
+        token_with_invalid_project = self.signer.sign_object(
+            {
+                "email": self.new_user_email,
+                "project_id": str(uuid.uuid4()),  # Non-existent project
+                "role": Role.PROJECT_ADMIN,
+                "assigned_by_id": str(self.project_creator.id),
+            }
         )
-
-        # Create the account using the invite token
         response = self.post(
             reverse("create_account"),
-            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": token_with_invalid_project,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+            },
+        )
+        self.response_bad_request(response)
+        self.assertIn("The project associated with this invitation no longer exists", str(response.content))
+
+    def test_account_creation_fails_with_assigner_not_found(self):
+        token_with_invalid_assigner = self.signer.sign_object(
+            {
+                "email": self.new_user_email,
+                "project_id": str(self.project.id),
+                "role": Role.PROJECT_ADMIN,
+                "assigned_by_id": str(uuid.uuid4()),  # Non-existent assigner
+            }
+        )
+        response = self.post(
+            reverse("create_account"),
+            {
+                "token": token_with_invalid_assigner,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+            },
+        )
+        self.response_bad_request(response)
+        self.assertIn("Invitation expired. The user who sent the invitation no longer exists", str(response.content))
+
+    def test_account_creation_success_without_library(self):
+        token_without_library = self.signer.sign_object(
+            {
+                "email": self.new_user_email,
+                "project_id": str(self.project.id),
+                "role": Role.PROJECT_ADMIN,
+                "assigned_by_id": str(self.project_creator.id),
+            }
         )
 
-        # Assertions
+        response = self.post(
+            reverse("create_account"),
+            {
+                "token": token_without_library,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+            },
+        )
+
         self.response_created(response)
 
         self.assertTrue(User.objects.filter(email=self.new_user_email).exists())
         new_user = User.objects.get(email=self.new_user_email)
         user_role = UserRole.objects.get(user=new_user, project=self.project)
         self.assertEqual(user_role.role, Role.PROJECT_ADMIN)
-        self.assertEqual(user_role.assigned_by, new_project_creator)
+        self.assertEqual(user_role.assigned_by, self.project_creator)
 
-    def test_account_creation_with_invitation_uses_fallback_assigner_when_no_project_creator(self):
-        self.project_creator.delete()
+    def test_account_creation_fails_without_email_in_token(self):
+        token_without_email = self.signer.sign_object(
+            {
+                # No email specified
+                "project_id": str(self.project.id),
+                "role": Role.PROJECT_ADMIN,
+                "assigned_by_id": str(self.project_creator.id),
+            }
+        )
 
         response = self.post(
             reverse("create_account"),
-            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {"token": token_without_email, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+        )
+        self.response_bad_request(response)
+
+    def test_account_creation_fails_with_library_not_found(self):
+        token_with_invalid_library = self.signer.sign_object(
+            {
+                "email": self.new_user_email,
+                "project_id": str(self.project.id),
+                "role": Role.PROJECT_ADMIN,
+                "assigned_by_id": str(self.project_creator.id),
+                "library_id": str(uuid.uuid4()),  # Non-existent library
+            }
+        )
+
+        response = self.post(
+            reverse("create_account"),
+            {
+                "token": token_with_invalid_library,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+            },
         )
 
         self.response_bad_request(response)
 
 
+# def test_account_creation_fails_when_no_email_in_project_invitation(self):
 class ProjectInvitationTests(TestCase):
     ...
     # def setUp(self):
