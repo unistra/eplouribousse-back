@@ -27,14 +27,26 @@ class TestUserAccountCreationAfterInvite(TestCase):
                 assigned_by=self.project_creator,
             )
 
-            # Create a project admin invite token
+            # Add an invitation for a new project admin user
+            self.invitation_data = {
+                "email": "new_project_admin@example.com",
+                "role": Role.PROJECT_ADMIN,
+                "library_id": None,
+            }
+
+            # Add the invitation to the project
+            self.project.invitations.append(self.invitation_data)
+            self.project.save()
+
+            # Create the token from the invitation data
             self.signer = _get_invite_signer()
-            self.new_user_email = "fallback_user@example.com"
+            self.new_user_email = self.invitation_data["email"]
             self.token = self.signer.sign_object(
                 {
-                    "email": self.new_user_email,
+                    "email": self.invitation_data["email"],
                     "project_id": str(self.project.id),
-                    "role": Role.PROJECT_ADMIN,
+                    "role": self.invitation_data["role"],
+                    "library_id": self.invitation_data["library_id"],
                     "assigned_by_id": str(self.project_creator.id),
                 }
             )
@@ -47,11 +59,16 @@ class TestUserAccountCreationAfterInvite(TestCase):
 
         self.response_created(response)
 
+        # Verify user creation
         self.assertTrue(User.objects.filter(email=self.new_user_email).exists())
         new_user = User.objects.get(email=self.new_user_email)
         user_role = UserRole.objects.get(user=new_user, project=self.project)
         self.assertEqual(user_role.role, Role.PROJECT_ADMIN)
         self.assertEqual(user_role.assigned_by, self.project_creator)
+
+        # Verify invitation was removed
+        self.project.refresh_from_db()
+        self.assertEqual(len(self.project.invitations), 0)
 
     def test_password_mismatch(self):
         response = self.post(
@@ -193,8 +210,29 @@ class TestUserAccountCreationAfterInvite(TestCase):
 
         self.response_bad_request(response)
 
+    def test_account_creation_fails_when_no_email_in_project_invitation(self):
+        token_with_non_invited_email = self.signer.sign_object(
+            {
+                "email": "not_invited@example.com",
+                "project_id": str(self.project.id),
+                "role": Role.PROJECT_ADMIN,
+                "assigned_by_id": str(self.project_creator.id),
+            }
+        )
 
-# def test_account_creation_fails_when_no_email_in_project_invitation(self):
+        response = self.post(
+            reverse("create_account"),
+            {
+                "token": token_with_non_invited_email,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+            },
+        )
+
+        self.response_bad_request(response)
+        self.assertIn("This email is not invited to join this project", str(response.content))
+
+
 class ProjectInvitationTests(TestCase):
     ...
     # def setUp(self):

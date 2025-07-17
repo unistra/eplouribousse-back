@@ -314,6 +314,7 @@ class CreateAccountSerializer(serializers.Serializer):
                         raise serializers.ValidationError(
                             _("The project associated with this invitation no longer exists.")
                         )
+
                     # We check if user that assigned the role still exists, for better clarity in the error message.
                     assigned_by = None
                     if self.assigned_by_id:
@@ -328,6 +329,11 @@ class CreateAccountSerializer(serializers.Serializer):
                         "role": self.role,
                         "assigned_by": assigned_by,
                     }
+
+                    # Check if the email is in the project's invitations
+                    invited_emails = [invitation.get("email") for invitation in (project.invitations or [])]
+                    if self.email not in invited_emails:
+                        raise serializers.ValidationError(_("This email is not invited to join this project."))
 
                     if self.library_id:
                         try:
