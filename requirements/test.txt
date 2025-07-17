@@ -13,7 +13,7 @@ attrs==25.3.0 ; python_version == "3.12" \
 certifi==2025.6.15 ; python_version == "3.12" \
     --hash=sha256:2e0c7ce7cb5d8f8634ca55d2ba7e6ec2689a2fd6537d8dec1296a477a4910057 \
     --hash=sha256:d747aa5a8b9bbbb1bb8c22bb13e22bd1f18e9796defa16bab421f7f7a317323b
-cffi==1.17.1 ; platform_python_implementation != "PyPy" and python_version == "3.12" \
+cffi==1.17.1 ; python_version == "3.12" and platform_python_implementation != "PyPy" \
     --hash=sha256:045d61c734659cc045141be4bae381a41d89b741f795af1dd018bfb532fd0df8 \
     --hash=sha256:0984a4925a435b1da406122d4d7968dd861c1385afe3b45ba82b750f229811e2 \
     --hash=sha256:0e2b1fac190ae3ebfe37b979cc1ce69c81f4e4fe5746bb401dca63a9062cdaf1 \
@@ -251,6 +251,9 @@ djangorestframework==3.16.0 ; python_version == "3.12" \
 djangosaml2==1.10.1 ; python_version == "3.12" \
     --hash=sha256:62843e005b6731947f60cd46dc3aefae008e393cccb55ce1fb4c91b43acd60eb \
     --hash=sha256:f4eaa857fa76492b37d7520a8a201866e617f713702cab2e9ffeae1b133fd1b1
+drf-nested-routers==0.94.2 ; python_version == "3.12" \
+    --hash=sha256:74dbdceeae2a32f8668ba0df8e3eeabeb9b1c64d2621d914901ae653e4e3bcff \
+    --hash=sha256:aa70923b716dc47cd93b8129b06be6c15706b405cf5f718f59cb8eed01de59cc
 drf-spectacular==0.28.0 ; python_version == "3.12" \
     --hash=sha256:2c778a47a40ab2f5078a7c42e82baba07397bb35b074ae4680721b2805943061 \
     --hash=sha256:856e7edf1056e49a4245e87a61e8da4baff46c83dbc25be1da2df77f354c7cb4
@@ -287,7 +290,7 @@ matplotlib-inline==0.1.7 ; python_version == "3.12" \
 parso==0.8.4 ; python_version == "3.12" \
     --hash=sha256:a418670a20291dacd2dddc80c377c5c3791378ee1e8d12bffc35420643d43f18 \
     --hash=sha256:eb3a7b58240fb99099a345571deecc0f9540ea5f4dd2fe14c2a99d6b281ab92d
-pexpect==4.9.0 ; sys_platform != "win32" and sys_platform != "emscripten" and python_version == "3.12" \
+pexpect==4.9.0 ; python_version == "3.12" and sys_platform != "win32" and sys_platform != "emscripten" \
     --hash=sha256:7236d1e080e4936be2dc3e326cec0af72acf9212a7e1d060210e70a47e253523 \
     --hash=sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f
 prompt-toolkit==3.0.51 ; python_version == "3.12" \
@@ -306,6 +309,7 @@ psycopg2-binary==2.9.10 ; python_version == "3.12" \
     --hash=sha256:245159e7ab20a71d989da00f280ca57da7641fa2cdcf71749c193cea540a74f7 \
     --hash=sha256:26540d4a9a4e2b096f1ff9cce51253d0504dca5a85872c7f7be23be5a53eb18d \
     --hash=sha256:270934a475a0e4b6925b5f804e3809dd5f90f8613621d062848dd82f9cd62007 \
+    --hash=sha256:27422aa5f11fbcd9b18da48373eb67081243662f9b46e6fd07c3eb46e4535142 \
     --hash=sha256:2ad26b467a405c798aaa1458ba09d7e2b6e5f96b1ce0ac15d82fd9f95dc38a92 \
     --hash=sha256:2b3d2491d4d78b6b14f76881905c7a8a8abcf974aad4a8a0b065273a0ed7a2cb \
     --hash=sha256:2ce3e21dc3437b1d960521eca599d57408a695a0d3c26797ea0f72e834c7ffe5 \
@@ -361,13 +365,13 @@ psycopg2-binary==2.9.10 ; python_version == "3.12" \
     --hash=sha256:f758ed67cab30b9a8d2833609513ce4d3bd027641673d4ebc9c067e4d208eec1 \
     --hash=sha256:f8157bed2f51db683f31306aa497311b560f2265998122abe1dce6428bd86567 \
     --hash=sha256:ffe8ed017e4ed70f68b7b371d84b7d4a790368db9203dfc2d222febd3a9c8863
-ptyprocess==0.7.0 ; sys_platform != "win32" and sys_platform != "emscripten" and python_version == "3.12" \
+ptyprocess==0.7.0 ; python_version == "3.12" and sys_platform != "win32" and sys_platform != "emscripten" \
     --hash=sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35 \
     --hash=sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220
 pure-eval==0.2.3 ; python_version == "3.12" \
     --hash=sha256:1db8e35b67b3d218d818ae653e27f06c3aa420901fa7b081ca98cbedc874e0d0 \
     --hash=sha256:5f4e983f40564c576c7c8635ae88db5956bb2229d7e9237d03b3c0b0190eaf42
-pycparser==2.22 ; platform_python_implementation != "PyPy" and python_version == "3.12" \
+pycparser==2.22 ; python_version == "3.12" and platform_python_implementation != "PyPy" \
     --hash=sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6 \
     --hash=sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc
 pydantic-core==2.33.2 ; python_version == "3.12" \
@@ -696,7 +700,7 @@ typing-extensions==4.14.0 ; python_version == "3.12" \
 typing-inspection==0.4.1 ; python_version == "3.12" \
     --hash=sha256:389055682238f53b04f7badcb49b989835495a96700ced5dab2d8feae4b26f51 \
     --hash=sha256:6ae134cc0203c33377d43188d4064e9b357dba58cff3185f22924610e70a9d28
-tzdata==2025.2 ; sys_platform == "win32" and python_version == "3.12" \
+tzdata==2025.2 ; python_version == "3.12" and sys_platform == "win32" \
     --hash=sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8 \
     --hash=sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9
 uritemplate==4.2.0 ; python_version == "3.12" \

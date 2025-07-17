@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django_tenants.test.cases import TenantTestCase
 
 from epl.apps.project.models.library import Library
-from epl.apps.project.models.project import Project, Role, Status, UserRole
+from epl.apps.project.models.project import Project, ProjectLibrary, Role, Status, UserRole
 from epl.apps.user.models import User
 
 
@@ -66,3 +66,29 @@ class UserRoleModelTest(TenantTestCase):
     def test_userrole_role_constraint(self):
         with self.assertRaises(IntegrityError):
             UserRole.objects.create(user=self.user, project=self.project, role="invalid_role")
+
+
+class ProjectLibraryModelTest(TenantTestCase):
+    def setUp(self):
+        self.library1 = Library.objects.create(name="Lib1", alias="L1", code="001")
+        self.library2 = Library.objects.create(name="Lib2", alias="L2", code="002")
+        self.project = Project.objects.create(name="Project1")
+        self.project2 = Project.objects.create(name="Project2")
+
+    def test_str(self):
+        pl = ProjectLibrary.objects.create(
+            project=self.project, library=self.library1, is_alternative_storage_site=True
+        )
+        expected = f"{self.project.name} - {self.library1.name} {_('Alternative storage site')}"
+        self.assertEqual(str(pl), expected)
+
+        pl2 = ProjectLibrary.objects.create(
+            project=self.project, library=self.library2, is_alternative_storage_site=False
+        )
+        expected2 = f"{self.project.name} - {self.library2.name} "
+        self.assertEqual(str(pl2), expected2)
+
+    def test_unique_constraint(self):
+        ProjectLibrary.objects.create(project=self.project, library=self.library1, is_alternative_storage_site=False)
+        with self.assertRaises(IntegrityError):
+            ProjectLibrary.objects.create(project=self.project, library=self.library1, is_alternative_storage_site=True)

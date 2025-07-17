@@ -13,7 +13,6 @@ class Library(models.Model):
     name = models.CharField(_("Name"), max_length=255, unique=True)
     alias = models.CharField(_("Alias"), max_length=255)
     code = models.CharField(_("Code or identification"), max_length=255, unique=True)
-    is_alternate_site = models.BooleanField(_("Is alternate site"), default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -120,6 +120,7 @@ class ImportSerializer(serializers.Serializer):
             library = Library.objects.get(pk=value)
         except Library.DoesNotExist:
             raise serializers.ValidationError(_("Library with ID %(id)s does not exist.") % {"id": value})
+
         return library
 
     def validate_project(self, value):
@@ -128,6 +129,14 @@ class ImportSerializer(serializers.Serializer):
         except Project.DoesNotExist:
             raise serializers.ValidationError(_("Project with ID %(id)s does not exist.") % {"id": value})
         return project
+
+    def validate(self, attrs):
+        project = attrs.get("project")
+        library = attrs.get("library")
+        if project.projectlibrary_set.filter(library=library, is_alternative_storage_site=True).exists():
+            raise serializers.ValidationError(_("An alternative storage site can't receive a collection"))
+
+        return attrs
 
 
 class PositionSerializer(serializers.ModelSerializer):

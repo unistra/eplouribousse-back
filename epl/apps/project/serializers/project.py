@@ -2,9 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from epl.apps.project.models import Collection, Project, Role, Status, UserRole
-from epl.apps.project.models.library import Library
-from epl.apps.project.serializers.library import LibrarySerializer
+from epl.apps.project.models import Collection, Library, Project, ProjectLibrary, Role, Status, UserRole
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
 from epl.services.project.notifications import (
@@ -116,9 +114,30 @@ class InvitationSerializer(serializers.Serializer):
         project.save()
 
 
+class ProjectLibraryDetailSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source="library.id")
+    name = serializers.CharField(source="library.name")
+    alias = serializers.CharField(source="library.alias")
+    code = serializers.CharField(source="library.code")
+    created_at = serializers.DateTimeField(source="library.created_at")
+    updated_at = serializers.DateTimeField(source="library.updated_at")
+
+    class Meta:
+        model = ProjectLibrary
+        fields = [
+            "id",
+            "name",
+            "alias",
+            "code",
+            "created_at",
+            "updated_at",
+            "is_alternative_storage_site",
+        ]
+
+
 class ProjectDetailSerializer(serializers.ModelSerializer):
     roles = NestedUserRoleSerializer(many=True, read_only=True, source="user_roles")
-    libraries = LibrarySerializer(many=True)
+    libraries = ProjectLibraryDetailSerializer(many=True, source="projectlibrary_set", read_only=True)
     invitations = InvitationSerializer(many=True)
 
     class Meta:
