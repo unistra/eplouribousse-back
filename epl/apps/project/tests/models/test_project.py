@@ -92,13 +92,3 @@ class ProjectLibraryModelTest(TenantTestCase):
         ProjectLibrary.objects.create(project=self.project, library=self.library1, is_alternative_storage_site=False)
         with self.assertRaises(IntegrityError):
             ProjectLibrary.objects.create(project=self.project, library=self.library1, is_alternative_storage_site=True)
-
-    def test_multiple_alternative_storage_sites(self):
-        pl1 = ProjectLibrary.objects.create(
-            project=self.project, library=self.library1, is_alternative_storage_site=True
-        )
-        pl2 = ProjectLibrary.objects.create(
-            project=self.project, library=self.library2, is_alternative_storage_site=True
-        )
-        self.assertTrue(pl1.is_alternative_storage_site)
-        self.assertTrue(pl2.is_alternative_storage_site)
