@@ -32,7 +32,7 @@ class Status(models.IntegerChoices):
 
 class ProjectQuerySet(models.QuerySet):
     def public_or_participant(self, user: User = None) -> models.QuerySet[Project]:
-        if not user:
+        if not user or not user.is_authenticated:
             return self.public()
 
         if user.is_superuser or user.is_project_creator:
@@ -41,13 +41,14 @@ class ProjectQuerySet(models.QuerySet):
         return self.public() | self.participating(user)
 
     def participating(self, user: User = None) -> models.QuerySet[Project]:
-        if not user:
+        if not user or not user.is_authenticated:
             return self.none()
 
+        # todo is this enough (launched ? reviewer ? etc)?
         return self.filter(user_roles__user=user)
 
     def public(self) -> models.QuerySet[Project]:
-        return self.filter(is_private=False)
+        return self.filter(is_private=False, status__gte=Status.POSITIONING, active_after__lte=now())
 
 
 class Project(models.Model):

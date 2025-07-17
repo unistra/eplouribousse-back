@@ -71,6 +71,8 @@ class ProjectPermissions(BasePermission):
 
     @staticmethod
     def user_has_permission(action: str, user: User, project: Project = None) -> bool:
+        if not user.is_authenticated:
+            return False
         match action:
             case "create":
                 return ProjectPermissions.compute_create_permission(user, project)

@@ -100,9 +100,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        if self.action == "list" and self.request.user.is_authenticated and self.request.GET.get("user_id"):
-            project_ids = UserRole.objects.filter(user=self.request.user).values_list("project_id", flat=True)
-            return queryset.filter(id__in=project_ids)
+        if self.action == "list":
+            return Project.objects.public_or_participant(user=self.request.user)
         return queryset
 
     def get_serializer_class(self):

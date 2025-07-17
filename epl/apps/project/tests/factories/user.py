@@ -18,3 +18,14 @@ class UserFactory(factory.django.DjangoModelFactory):
         manager = cls._get_manager(model_class)
         user = manager.create_user(*args, **kwargs)
         return user
+
+
+class ProjectCreatorFactory(UserFactory):
+    """
+    Factory for creating a user with the PROJECT_CREATOR role.
+    """
+
+    @factory.post_generation
+    def project_creator(self, create, extracted, **kwargs):
+        if create:
+            self.set_is_project_creator(True, assigned_by=self)
