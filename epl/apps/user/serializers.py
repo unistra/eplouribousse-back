@@ -272,7 +272,7 @@ class InviteTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class CreateAccountSerializer(serializers.Serializer):
+class CreateAccountFromTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
     confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
@@ -314,18 +314,57 @@ class CreateAccountSerializer(serializers.Serializer):
         try:
             with transaction.atomic():
                 user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
-                assigned_by = User.objects.filter(id=self.assigned_by_id).first()
 
+                # If there is a project_id and a role, we assign the user to the project with the specified role.
                 if self.project_id and self.role:
-                    project = Project.objects.get(id=self.project_id)
-                    user_role = project.user_roles.create(user=user, role=self.role, assigned_by=assigned_by)
+                    try:
+                        project = Project.objects.get(id=self.project_id)
+                    except Project.DoesNotExist:
+                        raise serializers.ValidationError(
+                            _("The project associated with this invitation no longer exists.")
+                        )
+
+                    # We check if user that assigned the role still exists, for better clarity in the error message.
+                    assigned_by = None
+                    if self.assigned_by_id:
+                        try:
+                            assigned_by = User.objects.get(id=self.assigned_by_id)
+                        except User.DoesNotExist:
+                            raise serializers.ValidationError(
+                                _("Invitation expired. The user who sent the invitation no longer exists.")
+                            )
+                    user_role_data = {
+                        "user": user,
+                        "role": self.role,
+                        "assigned_by": assigned_by,
+                    }
+
+                    # Check if the email is in the project's invitations
+                    invited_emails = [invitation.get("email") for invitation in (project.invitations or [])]
+                    if self.email not in invited_emails:
+                        raise serializers.ValidationError(_("This email is not invited to join this project."))
+
                     if self.library_id:
-                        library = project.libraries.get(pk=self.library_id)
-                        user_role.library = library
-                        user_role.save()
+                        try:
+                            library = project.libraries.get(pk=self.library_id)
+                            user_role_data["library"] = library
+                        except ObjectDoesNotExist:
+                            raise serializers.ValidationError(
+                                _("The library associated with this invitation no longer exists.")
+                            )
+
+                    project.user_roles.create(**user_role_data)
+
+                    # Post-creation actions:
                     # If the user has a project_admin role, he is notified that he must review the project's settings.
                     if self.role == Role.PROJECT_ADMIN:
                         invite_project_admins_to_review(project, self.context["request"])
+                    # If the user has an invitation pending in project.invitations, it is removed.
+                    if self.email in [invitation.get("email") for invitation in project.invitations]:
+                        project.invitations = [
+                            invitation for invitation in project.invitations if invitation.get("email") != self.email
+                        ]
+                        project.save()
             return user
         except (IntegrityError, ObjectDoesNotExist) as e:
             raise serializers.ValidationError(str(e))
