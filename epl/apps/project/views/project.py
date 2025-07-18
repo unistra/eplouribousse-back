@@ -2,11 +2,12 @@ from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from epl.apps.project.filters.project import ProjectFilter
 from epl.apps.project.models import Project, Role, Status, UserRole
 from epl.apps.project.permissions.project import ProjectPermissions
 from epl.apps.project.serializers.project import (
@@ -97,6 +98,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [ProjectPermissions]
     pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ProjectFilter]
+    search_fields = ["name"]
+    ordering_fields = ["name", "is_private", "active_after", "status"]
 
     def get_queryset(self):
         queryset = super().get_queryset()

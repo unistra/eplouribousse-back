@@ -119,3 +119,12 @@ class ProjectListTest(TestCase):
         response = self.get(reverse("project-list"), user=user)
         self.response_ok(response)
         self.assertEqual(response.data["count"], 0)
+
+    def test_archived_projects_are_excluded_by_default(self):
+        public_project = PublicProjectFactory(status=Status.POSITIONING)
+        _archived_project = PublicProjectFactory(status=Status.ARCHIVED)
+
+        response = self.get(reverse("project-list"), user=None)
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], str(public_project.id))

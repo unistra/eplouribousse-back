@@ -44,8 +44,8 @@ class ProjectQuerySet(models.QuerySet):
         if not user or not user.is_authenticated:
             return self.none()
 
-        # Si le project n'est pas lancé, seuls admin, manager peuvent le voir
-        # Pour les autres roles, il faut que le projet soit lancé
+        # Si le project n'est pas lancé, seuls les admin, manager peuvent le voir
+        # Pour les autres roles, il faut que le projet soit lancé.
         return self.filter(
             models.Q(user_roles__user=user, user_roles__role__in=[Role.PROJECT_ADMIN, Role.PROJECT_MANAGER])
             | models.Q(
@@ -56,6 +56,12 @@ class ProjectQuerySet(models.QuerySet):
             )
         )
 
+    def participant(self, user: User) -> models.QuerySet[Project]:
+        """
+        Returns projects where the user has a role.
+        """
+        return self.filter(user_roles__user=user)
+
     def public(self) -> models.QuerySet[Project]:
         return self.filter(is_private=False, status__gte=Status.POSITIONING, active_after__lte=now())
 
@@ -64,6 +70,9 @@ class ProjectQuerySet(models.QuerySet):
 
     def archived(self):
         return self.filter(status__gte=Status.ARCHIVED)
+
+    def status(self, status: int) -> models.QuerySet[Project]:
+        return self.filter(status=status)
 
 
 class Project(models.Model):
