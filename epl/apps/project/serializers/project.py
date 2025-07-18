@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from epl.apps.project.models import Collection, Library, Project, Role, Status, UserRole
+from epl.apps.project.models import Collection, Library, Project, ProjectLibrary, Role, Status, UserRole
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
