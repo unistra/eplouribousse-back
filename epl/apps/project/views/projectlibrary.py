@@ -15,7 +15,7 @@ project_library_patch_inline_serializer = inline_serializer(
 class ProjectLibraryViewSet(viewsets.ModelViewSet):
     @extend_schema(
         tags=["project"],
-        summary=_("Inform if a library is an alternative storage location"),
+        summary=_("Specify if the library is an alternative storage location"),
         request=project_library_patch_inline_serializer,
         responses={
             status.HTTP_200_OK: project_library_patch_inline_serializer,
