@@ -17,7 +17,7 @@ class ActionLog(models.Model):
     action_message = models.CharField(max_length=255)
     action_time = models.DateTimeField(auto_now=True, db_index=True)
     actor = models.CharField(max_length=255)
-    ip = models.GenericIPAddressField(protocol="both", unpack_ipv4=True)
+    ip = models.GenericIPAddressField(protocol="both", unpack_ipv4=True, null=True, blank=True)
 
     content_object = GenericForeignKey("content_type", "object_id")
     object_id = models.UUIDField()

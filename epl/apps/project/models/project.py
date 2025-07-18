@@ -1,9 +1,17 @@
+from __future__ import annotations
+
+import typing
+
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
 
 from epl.models import UUIDPrimaryKeyField
+
+if typing.TYPE_CHECKING:
+    from epl.apps.user.models import User
+
 
 DEFAULT_EXCLUSION_REASONS = [
     _lazy("Participation in another project"),
@@ -22,6 +30,50 @@ class Status(models.IntegerChoices):
     ARCHIVED = 100, _("Archived")
 
 
+class ProjectQuerySet(models.QuerySet):
+    def public_or_participant(self, user: User = None) -> models.QuerySet[Project]:
+        if not user or not user.is_authenticated:
+            return self.public()
+
+        if user.is_superuser or user.is_project_creator:
+            return self.all()
+
+        return self.public() | self.participating(user)
+
+    def participating(self, user: User = None) -> models.QuerySet[Project]:
+        if not user or not user.is_authenticated:
+            return self.none()
+
+        # Si le project n'est pas lancé, seuls les admin, manager peuvent le voir
+        # Pour les autres roles, il faut que le projet soit lancé.
+        return self.filter(
+            models.Q(user_roles__user=user, user_roles__role__in=[Role.PROJECT_ADMIN, Role.PROJECT_MANAGER])
+            | models.Q(
+                user_roles__user=user,
+                user_roles__role__in=[Role.INSTRUCTOR, Role.CONTROLLER, Role.GUEST],
+                status__gte=Status.POSITIONING,
+                active_after__lte=now(),
+            )
+        )
+
+    def participant(self, user: User) -> models.QuerySet[Project]:
+        """
+        Returns projects where the user has a role.
+        """
+        return self.filter(user_roles__user=user)
+
+    def public(self) -> models.QuerySet[Project]:
+        return self.filter(is_private=False, status__gte=Status.POSITIONING, active_after__lte=now())
+
+    def exclude_archived(self, exclude: bool = True) -> models.QuerySet[Project]:
+        if exclude:
+            return self.filter(status__lt=Status.ARCHIVED)
+        return self
+
+    def status(self, status: int) -> models.QuerySet[Project]:
+        return self.filter(status=status)
+
+
 class Project(models.Model):
     id = UUIDPrimaryKeyField()
     name = models.CharField(_("Name"), max_length=255)
@@ -34,6 +86,16 @@ class Project(models.Model):
     invitations = models.JSONField(_("Invitations"), default=list, blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
+
+    _extended_permissions = [
+        "add_library",
+        "update_status",
+        "exclusion_reason",
+        "remove_exclusion_reason",
+        "status",
+    ]
+
+    objects = ProjectQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("Project")

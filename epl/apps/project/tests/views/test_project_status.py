@@ -5,7 +5,7 @@ from django_tenants.utils import tenant_context
 
 from epl.apps.project.models import Project, Role, Status, UserRole
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import UserFactory
+from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserFactory
 from epl.apps.user.models import User
 from epl.apps.user.views import INVITE_TOKEN_SALT
 from epl.tests import TestCase
@@ -36,7 +36,7 @@ class UpdateProjectStatusTest(TestCase):
         self.assertEqual(project.status, Status.READY)
 
     def test_update_project_status_invalid(self):
-        user = UserFactory()
+        user = ProjectCreatorFactory(first_name="Annabelle")
         project: Project = ProjectFactory(status=Status.DRAFT)
         response = self.patch(
             reverse("project-update-status", kwargs={"pk": project.id}),

@@ -2,16 +2,18 @@ from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from epl.apps.project.filters.project import ProjectFilter
 from epl.apps.project.models import Project, Role, Status, UserRole
-from epl.apps.project.permissions.project import ProjectPermission
+from epl.apps.project.permissions.project import ProjectPermissions
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
     ChangeStatusSerializer,
+    CreateProjectSerializer,
     ExclusionReasonSerializer,
     InvitationSerializer,
     ProjectDetailSerializer,
@@ -30,8 +32,9 @@ from epl.schema_serializers import UnauthorizedSerializer
     create=extend_schema(  # Swagger doesn't let me send the request when under format application/x-www-form-urlencoded ??
         tags=["project"],
         summary=_("Create a new project"),
+        request=CreateProjectSerializer,
         responses={
-            status.HTTP_201_CREATED: ProjectDetailSerializer,
+            status.HTTP_201_CREATED: CreateProjectSerializer,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
@@ -95,19 +98,23 @@ from epl.schema_serializers import UnauthorizedSerializer
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ProjectPermissions]
     pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ProjectFilter]
+    search_fields = ["name"]
+    ordering_fields = ["name", "is_private", "active_after", "status"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        if self.action == "list" and self.request.user.is_authenticated and self.request.GET.get("user_id"):
-            project_ids = UserRole.objects.filter(user=self.request.user).values_list("project_id", flat=True)
-            return queryset.filter(id__in=project_ids)
+        if self.action == "list":
+            queryset = Project.objects.public_or_participant(user=self.request.user)
         return queryset
 
     def get_serializer_class(self):
         if self.action == "retrieve":
             return ProjectDetailSerializer
+        if self.action == "create":
+            return CreateProjectSerializer
         return super().get_serializer_class()
 
     @extend_schema(
@@ -142,7 +149,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
         },
     )
-    @action(detail=True, methods=["patch"], url_path="status", permission_classes=[ProjectPermission])
+    @action(detail=True, methods=["patch"], url_path="status")
     def update_status(self, request, pk=None):
         """
         Change the status of a project.
