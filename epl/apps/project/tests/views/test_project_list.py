@@ -3,8 +3,10 @@ from datetime import timedelta
 from django.utils.timezone import now
 from django_tenants.urlresolvers import reverse
 
-from epl.apps.project.models import Role, Status, UserRole
+from epl.apps.project.models import Library, Project, Role, Status, UserRole
+from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import (
+    LaunchedProjectFactory,
     PositioningProjectFactory,
     PrivateProjectFactory,
     ProjectFactory,
@@ -125,6 +127,47 @@ class ProjectListTest(TestCase):
         _archived_project = PublicProjectFactory(status=Status.ARCHIVED)
 
         response = self.get(reverse("project-list"), user=None)
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], str(public_project.id))
+
+
+class ProjectListFilterTest(TestCase):
+    def test_status_filter(self):
+        user = ProjectCreatorFactory()
+        public_project = PublicProjectFactory(status=Status.POSITIONING)
+        _draft_project = PublicProjectFactory(status=Status.DRAFT)
+        _archived_project = PublicProjectFactory(status=Status.ARCHIVED)
+
+        response = self.get(f"{reverse('project-list')}?status={Status.POSITIONING}", user=user)
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], str(public_project.id))
+
+    def test_filter_participating_in_project(self):
+        user = UserFactory()
+        _public_project = PublicProjectFactory()
+        guest_project = PublicProjectFactory()
+        private_project = LaunchedProjectFactory()
+        UserRole.objects.create(user=user, project=guest_project, role=Role.GUEST, assigned_by=user)
+        UserRole.objects.create(user=user, project=private_project, role=Role.INSTRUCTOR, assigned_by=user)
+
+        response = self.get(f"{reverse('project-list')}?participant=true", user=user)
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 2)
+        self.assertListEqual(
+            sorted([project["id"] for project in response.data["results"]]),
+            sorted([str(guest_project.id), str(private_project.id)]),
+        )
+
+    def test_library_is_in_project_filter(self):
+        user = UserFactory()
+        public_project: Project = PublicProjectFactory()
+        _other_project: Project = PublicProjectFactory()
+        library: Library = LibraryFactory()
+        public_project.libraries.add(library)
+
+        response = self.get(f"{reverse('project-list')}?library={library.id}", user=user)
         self.response_ok(response)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(public_project.id))

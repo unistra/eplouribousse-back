@@ -65,11 +65,10 @@ class ProjectQuerySet(models.QuerySet):
     def public(self) -> models.QuerySet[Project]:
         return self.filter(is_private=False, status__gte=Status.POSITIONING, active_after__lte=now())
 
-    def not_archived(self):
-        return self.filter(status__lt=Status.ARCHIVED)
-
-    def archived(self):
-        return self.filter(status__gte=Status.ARCHIVED)
+    def exclude_archived(self, exclude: bool = True) -> models.QuerySet[Project]:
+        if exclude:
+            return self.filter(status__lt=Status.ARCHIVED)
+        return self
 
     def status(self, status: int) -> models.QuerySet[Project]:
         return self.filter(status=status)

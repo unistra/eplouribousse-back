@@ -5,41 +5,33 @@ from epl.apps.project.filters import QueryParamMixin
 
 
 class ProjectFilter(QueryParamMixin, filters.BaseFilterBackend):
-    archived_param = "archived"
-    archived_param_description = _("Whether to include archived projects")
     status_param = "status"
     status_param_description = _("Filter projects by status")
-    private_param = "private"
-    private_param_description = _("Whether to include private projects")
     participating_param = "participant"
     participating_param_description = _("Filter projects the user has a role in")
     library_param = "library"
     library_param_description = _("Filter projects including a specific library")
+    show_archived_param = "show_archived"
+    show_archived_param_description = _("Include archived projects in the results")
 
     def filter_queryset(self, request, queryset, view):
-        if self.get_bool(request, self.archived_param, False):
-            queryset = queryset.archived()
-        if status := self.get_int(request, self.status_param, None) is not None:
+        status = self.get_int(request, self.status_param, None)
+        if status is not None:
             queryset = queryset.status(status)
-        if self.get_bool(request, self.private_param, False):
-            queryset = queryset.private()
         if self.get_bool(request, self.participating_param, False) and hasattr(request, "user"):
             queryset = queryset.participant(request.user)
         if library_id := self.get_uuid(request, self.library_param, None):
-            queryset = queryset.filter(projectlibrary_set__id=library_id)
+            queryset = queryset.filter(libraries__id=library_id)
+        if self.get_bool(request, self.show_archived_param, False):
+            # We explicitly don't exclude archived projects
+            queryset = queryset.exclude_archived(exclude=False)
+        else:
+            # By default, archived projects are excluded
+            queryset = queryset.exclude_archived(exclude=True)
         return queryset
 
     def get_schema_operation_parameters(self, view):
         return [
-            {
-                "name": self.archived_param,
-                "required": False,
-                "in": "query",
-                "description": str(self.archived_param_description),
-                "schema": {
-                    "type": "boolean",
-                },
-            },
             {
                 "name": self.status_param,
                 "required": False,
@@ -47,15 +39,6 @@ class ProjectFilter(QueryParamMixin, filters.BaseFilterBackend):
                 "description": str(self.status_param_description),
                 "schema": {
                     "type": "integer",
-                },
-            },
-            {
-                "name": self.private_param,
-                "required": False,
-                "in": "query",
-                "description": str(self.private_param_description),
-                "schema": {
-                    "type": "boolean",
                 },
             },
             {
@@ -76,6 +59,16 @@ class ProjectFilter(QueryParamMixin, filters.BaseFilterBackend):
                     "type": "string",
                     "format": "uuid",
                     "pattern": r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                },
+            },
+            {
+                "name": self.show_archived_param,
+                "required": False,
+                "in": "query",
+                "description": str(self.show_archived_param_description),
+                "schema": {
+                    "type": "boolean",
+                    "default": False,
                 },
             },
         ]

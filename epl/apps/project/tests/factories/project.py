@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import factory
 from django.utils.timezone import now
 
@@ -30,6 +32,13 @@ class PublicProjectFactory(ProjectFactory):
 class PositioningProjectFactory(ProjectFactory):
     status = Status.POSITIONING
     active_after = now()
+
+    class Meta:
+        model = "project.Project"
+
+
+class LaunchedProjectFactory(PublicProjectFactory):
+    active_after = now() - timedelta(days=1)
 
     class Meta:
         model = "project.Project"

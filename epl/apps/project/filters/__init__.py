@@ -9,7 +9,7 @@ class QueryParamMixin:
         """
         Helper method to get a boolean value from query parameters.
         """
-        value = request.query_params.get(param_name, None).lower()
+        value = request.query_params.get(param_name, "").lower()
         if value in self.TRUE_VALUES:
             return True
         if value in self.FALSE_VALUES:
