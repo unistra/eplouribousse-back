@@ -11,6 +11,13 @@ class ProjectFactory(factory.django.DjangoModelFactory):
         model = "project.Project"
 
 
+class PrivateProjectFactory(ProjectFactory):
+    is_private = True
+
+    class Meta:
+        model = "project.Project"
+
+
 class PublicProjectFactory(ProjectFactory):
     is_private = False
     status = Status.POSITIONING

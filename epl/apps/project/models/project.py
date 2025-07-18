@@ -44,11 +44,26 @@ class ProjectQuerySet(models.QuerySet):
         if not user or not user.is_authenticated:
             return self.none()
 
-        # todo is this enough (launched ? reviewer ? etc)?
-        return self.filter(user_roles__user=user)
+        # Si le project n'est pas lancé, seuls admin, manager peuvent le voir
+        # Pour les autres roles, il faut que le projet soit lancé
+        return self.filter(
+            models.Q(user_roles__user=user, user_roles__role__in=[Role.PROJECT_ADMIN, Role.PROJECT_MANAGER])
+            | models.Q(
+                user_roles__user=user,
+                user_roles__role__in=[Role.INSTRUCTOR, Role.CONTROLLER, Role.GUEST],
+                status__gte=Status.POSITIONING,
+                active_after__lte=now(),
+            )
+        )
 
     def public(self) -> models.QuerySet[Project]:
         return self.filter(is_private=False, status__gte=Status.POSITIONING, active_after__lte=now())
+
+    def not_archived(self):
+        return self.filter(status__lt=Status.ARCHIVED)
+
+    def archived(self):
+        return self.filter(status__gte=Status.ARCHIVED)
 
 
 class Project(models.Model):
