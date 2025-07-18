@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from epl.apps.project.models import ActionLog
 from epl.apps.user.models import User
 from epl.apps.user.serializers import (
-    CreateAccountSerializer,
+    CreateAccountFromTokenSerializer,
     EmailSerializer,
     InviteTokenSerializer,
     PasswordChangeSerializer,
@@ -357,7 +357,7 @@ def invite_handshake(request: Request) -> Response:
     tags=["user"],
     summary=_("Create a new user account"),
     description=_("Creates a new user account based on an invitation token"),
-    request=CreateAccountSerializer,
+    request=CreateAccountFromTokenSerializer,
     responses={
         status.HTTP_201_CREATED: inline_serializer(
             name="AccountCreatedResponse",
@@ -368,7 +368,9 @@ def invite_handshake(request: Request) -> Response:
 )
 @api_view(["POST"])
 def create_account(request: Request) -> Response:
-    serializer = CreateAccountSerializer(data=request.data, context=_get_context_for_invite_and_create_account(request))
+    serializer = CreateAccountFromTokenSerializer(
+        data=request.data, context=_get_context_for_invite_and_create_account(request)
+    )
     serializer.is_valid(raise_exception=True)
     serializer.save()
 

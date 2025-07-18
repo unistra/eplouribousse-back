@@ -263,7 +263,7 @@ class InviteTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class CreateAccountSerializer(serializers.Serializer):
+class CreateAccountFromTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
     confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
