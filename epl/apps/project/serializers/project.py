@@ -23,6 +23,7 @@ class ProjectSerializer(AclSerializerMixin, serializers.ModelSerializer):
 
 class CreateProjectSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
+    settings = serializers.JSONField(read_only=True)
 
     class Meta:
         model = Project
@@ -30,6 +31,7 @@ class CreateProjectSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "settings",
             "created_at",
             "updated_at",
         ]

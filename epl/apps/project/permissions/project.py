@@ -1,3 +1,4 @@
+from django.db import models
 from rest_framework.permissions import BasePermission
 
 from epl.apps.project.models import Project, Role, Status
@@ -59,15 +60,19 @@ class ProjectPermissions(BasePermission):
         return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
 
     @staticmethod
-    def compute_add_library_permission(user: User, project: Project = None) -> bool:
-        return user.project_roles.filter(
-            project=project,
-            role__in=[Role.PROJECT_ADMIN, Role.PROJECT_MANAGER, Role.PROJECT_CREATOR],
-        ).exists()
-
-    @staticmethod
     def compute_validate_permission(user: User, project: Project = None) -> bool:
         return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
+
+    def compute_update_status_permission(user: User, project: Project = None) -> bool:
+        match project.status:
+            case Status.DRAFT:
+                return user.is_project_creator
+            case Status.REVIEW:
+                return user.project_roles.filter(project=project, role=Role.PROJECT_ADMIN).exists()
+            case Status.READY | Status.POSITIONING | Status.INSTRUCTION_BOUND | Status.INSTRUCTION_UNBOUND:
+                return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
+            case _:
+                return False
 
     @staticmethod
     def user_has_permission(action: str, user: User, project: Project = None) -> bool:
@@ -80,9 +85,13 @@ class ProjectPermissions(BasePermission):
                 return ProjectPermissions.compute_retrieve_permission(user, project)
             case "update" | "partial_update":
                 return ProjectPermissions.compute_update_permission(user, project)
-            case "add_library":
-                return ProjectPermissions.compute_add_library_permission(user, project)
             case "validate":
                 return ProjectPermissions.compute_validate_permission(user, project)
+            case "update_status":
+                return True
+            case "exclusion_reason" | "remove_exclusion_reason" | "add_library":
+                return user.project_roles.filter(
+                    models.Q(project=project, role=Role.PROJECT_ADMIN) | models.Q(role=Role.PROJECT_CREATOR)
+                ).exists()
             case _:
                 return False

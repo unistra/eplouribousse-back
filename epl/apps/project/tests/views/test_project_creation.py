@@ -3,9 +3,9 @@ from urllib.parse import urlencode
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 
+from epl.apps.project.models import Role
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import UserFactory
-from epl.apps.user.models import User
+from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserFactory
 from epl.tests import TestCase
 
 
@@ -14,7 +14,7 @@ class ProjectCreationTest(TestCase):
     def setUp(self):
         super().setUp()
         with tenant_context(self.tenant):
-            self.user = User.objects.create_user(email="test_user@eplouribousse.fr")
+            self.user = ProjectCreatorFactory()
 
     def test_create_project_success(self):
         data = {
@@ -44,8 +44,18 @@ class ExclusionReasonsTest(TestCase):
     def setUp(self):
         super().setUp()
         with tenant_context(self.tenant):
-            self.user = UserFactory(email="<EMAIL>")
+            self.user = ProjectCreatorFactory()
             self.project = ProjectFactory(name="Test Project")
+
+    def test_project_admin_can_add_exclusion_reason(self):
+        with tenant_context(self.tenant):
+            admin = UserFactory()
+            admin.project_roles.create(project=self.project, role=Role.PROJECT_ADMIN, assigned_by=self.user)
+
+        data = {"exclusion_reason": "New exclusion reason"}
+        url = reverse("project-exclusion-reason", kwargs={"pk": self.project.pk})
+        response = self.post(url, data=data, content_type="application/json", user=self.user)
+        self.response_created(response)
 
     def test_add_exclusion_reason_success(self):
         """Test successful addition of a new exclusion reason"""

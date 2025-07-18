@@ -8,7 +8,7 @@ from epl.apps.project.models.library import Library
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import UserFactory
+from epl.apps.project.tests.factories.user import ProjectCreatorFactory
 from epl.apps.user.models import User
 from epl.tests import TestCase
 
@@ -40,7 +40,7 @@ class ProjectLibraryViewsTest(TestCase):
         super().setUp()
         with tenant_context(self.tenant):
             # Create a user
-            self.user = UserFactory()
+            self.user = ProjectCreatorFactory()
             self.library = LibraryFactory()
             self.project = ProjectFactory()
             self.project.libraries.add(self.library)
