@@ -13,6 +13,7 @@ from epl.apps.project.permissions.project import ProjectPermissions
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
     ChangeStatusSerializer,
+    CreateProjectSerializer,
     ExclusionReasonSerializer,
     InvitationSerializer,
     ProjectDetailSerializer,
@@ -31,8 +32,9 @@ from epl.schema_serializers import UnauthorizedSerializer
     create=extend_schema(  # Swagger doesn't let me send the request when under format application/x-www-form-urlencoded ??
         tags=["project"],
         summary=_("Create a new project"),
+        request=CreateProjectSerializer,
         responses={
-            status.HTTP_201_CREATED: ProjectDetailSerializer,
+            status.HTTP_201_CREATED: CreateProjectSerializer,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
@@ -105,12 +107,14 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "list":
-            return Project.objects.public_or_participant(user=self.request.user)
+            queryset = Project.objects.public_or_participant(user=self.request.user)
         return queryset
 
     def get_serializer_class(self):
         if self.action == "retrieve":
             return ProjectDetailSerializer
+        if self.action == "create":
+            return CreateProjectSerializer
         return super().get_serializer_class()
 
     @extend_schema(

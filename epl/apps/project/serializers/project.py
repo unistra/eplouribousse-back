@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from epl.apps.project.models import Collection, Library, Project, ProjectLibrary, Role, Status, UserRole
+from epl.apps.project.models import ActionLog, Collection, Library, Project, ProjectLibrary, Role, Status, UserRole
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
@@ -19,6 +19,26 @@ class ProjectSerializer(AclSerializerMixin, serializers.ModelSerializer):
         model = Project
         fields = ["id", "name", "description", "status", "settings", "created_at", "updated_at", "acl"]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class CreateProjectSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = Project
+        fields = [
+            "id",
+            "name",
+            "description",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def save(self):
+        project = super().save()
+        ActionLog.log(f"Project <{project.name}> created", self.context["request"].user, obj=project)
+        return project
 
 
 class ProjectUserSerializer(serializers.ModelSerializer):
