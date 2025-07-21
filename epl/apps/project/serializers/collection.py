@@ -7,8 +7,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from epl.apps.project.models import Library, Project
-from epl.apps.project.models.collection import Collection
+from epl.apps.project.models import Collection, Library, Project, Resource
 from epl.libs.csv_import import handle_import
 
 logger = logging.getLogger(__name__)
@@ -30,6 +29,8 @@ class CollectionSerializer(serializers.ModelSerializer):
         help_text=_("Project to which the collection belongs"),
         required=True,
     )
+    code = serializers.CharField(read_only=True, source="resource.code")
+    title = serializers.CharField(read_only=True, source="resource.title")
 
     class Meta:
         model = Collection
@@ -79,7 +80,7 @@ class ImportSerializer(serializers.Serializer):
         if not self.csv_reader:
             self.csv_reader = csv.DictReader(
                 io.StringIO(csv_file.read().decode("utf-8-sig")),
-                delimiter="\t",
+                delimiter=";",
             )
 
         return self.csv_reader
@@ -88,21 +89,40 @@ class ImportSerializer(serializers.Serializer):
     def save(self):
         csv_file = self.validated_data["csv_file"]
         csv_reader = self.get_file_reader(csv_file)
-        loaded_collections = {}
 
         user = self.context.get("request").user
         library = self.validated_data.get("library")
         project = self.validated_data.get("project")
+        resource_ids_to_replace = {}  # To track resources that were already in the database
 
-        collections, errors = handle_import(csv_reader, library.id, project.id, user.id)
+        collections, resources, codes, errors = handle_import(csv_reader, library.id, project.id, user.id)
 
         if errors:
             raise serializers.ValidationError({"csv_file": [{"row": row, "errors": errs} for row, errs in errors]})
         else:
-            Collection.objects.bulk_create({Collection(**col.model_dump()) for col in collections})
+            # Resource may already be imported for a project, we need to check
+            for resource in resources:
+                resource_in_database, _created = Resource.objects.get_or_create(
+                    project_id=project.id, code=resource.code, defaults={"id": resource.id, "title": resource.title}
+                )
+                if not _created:
+                    # If the resource already existed, we need to reuse the existing resource ID when creating collections
+                    resource_ids_to_replace[resource.id] = resource_in_database.id
 
-        for collection in collections:
-            loaded_collections[collection.code] = loaded_collections.get(collection.code, 0) + 1
+            for collection in collections:
+                Collection.objects.create(
+                    issn=collection.issn,
+                    call_number=collection.call_number,
+                    hold_statement=collection.hold_statement,
+                    missing=collection.missing,
+                    # replace with existing resource ID if it existed, else use the new one
+                    resource_id=resource_ids_to_replace.get(collection.resource_id) or collection.resource_id,
+                    created_by_id=collection.created_by_id,
+                    project_id=collection.project_id,
+                    library_id=collection.library_id,
+                )
+
+        loaded_collections = {_code: _data["count"] for _code, _data in codes.items()}
 
         return Counter(loaded_collections.values())
 

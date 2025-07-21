@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils.timezone import now
 from django_tenants.urlresolvers import reverse
 
-from epl.apps.project.models import Library, Project, Role, Status, UserRole
+from epl.apps.project.models import Library, Project, ProjectStatus, Role, UserRole
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import (
     LaunchedProjectFactory,
@@ -33,7 +33,7 @@ class ProjectListTest(TestCase):
     def test_anonymous_user_cannot_view_project_if_not_launched(self):
         # the project is private and not launched
         _private_project = ProjectFactory(
-            is_private=False, status=Status.POSITIONING, active_after=now() + timedelta(days=1)
+            is_private=False, status=ProjectStatus.LAUNCHED, active_after=now() + timedelta(days=1)
         )
 
         response = self.get(reverse("project-list"), user=None)
@@ -76,7 +76,7 @@ class ProjectListTest(TestCase):
         user = UserFactory()
         # the project is private and not launched
         private_project = ProjectFactory(
-            is_private=True, status=Status.POSITIONING, active_after=now() + timedelta(days=1)
+            is_private=True, status=ProjectStatus.LAUNCHED, active_after=now() + timedelta(days=1)
         )
         UserRole.objects.create(user=user, project=private_project, role=Role.INSTRUCTOR, assigned_by=user)
 
@@ -88,7 +88,7 @@ class ProjectListTest(TestCase):
         user = UserFactory()
         # the project is private and not launched
         private_project = ProjectFactory(
-            is_private=True, status=Status.POSITIONING, active_after=now() + timedelta(days=1)
+            is_private=True, status=ProjectStatus.LAUNCHED, active_after=now() + timedelta(days=1)
         )
         UserRole.objects.create(user=user, project=private_project, role=Role.CONTROLLER, assigned_by=user)
 
@@ -114,7 +114,7 @@ class ProjectListTest(TestCase):
         user = UserFactory()
         # the project is private and not launched
         private_project = ProjectFactory(
-            is_private=True, status=Status.POSITIONING, active_after=now() + timedelta(days=1)
+            is_private=True, status=ProjectStatus.LAUNCHED, active_after=now() + timedelta(days=1)
         )
         UserRole.objects.create(user=user, project=private_project, role=Role.GUEST, assigned_by=user)
 
@@ -123,8 +123,8 @@ class ProjectListTest(TestCase):
         self.assertEqual(response.data["count"], 0)
 
     def test_archived_projects_are_excluded_by_default(self):
-        public_project = PublicProjectFactory(status=Status.POSITIONING)
-        _archived_project = PublicProjectFactory(status=Status.ARCHIVED)
+        public_project = PublicProjectFactory(status=ProjectStatus.LAUNCHED)
+        _archived_project = PublicProjectFactory(status=ProjectStatus.ARCHIVED)
 
         response = self.get(reverse("project-list"), user=None)
         self.response_ok(response)
@@ -135,11 +135,11 @@ class ProjectListTest(TestCase):
 class ProjectListFilterTest(TestCase):
     def test_status_filter(self):
         user = ProjectCreatorFactory()
-        public_project = PublicProjectFactory(status=Status.POSITIONING)
-        _draft_project = PublicProjectFactory(status=Status.DRAFT)
-        _archived_project = PublicProjectFactory(status=Status.ARCHIVED)
+        public_project = PublicProjectFactory(status=ProjectStatus.LAUNCHED)
+        _draft_project = PublicProjectFactory(status=ProjectStatus.DRAFT)
+        _archived_project = PublicProjectFactory(status=ProjectStatus.ARCHIVED)
 
-        response = self.get(f"{reverse('project-list')}?status={Status.POSITIONING}", user=user)
+        response = self.get(f"{reverse('project-list')}?status={ProjectStatus.LAUNCHED}", user=user)
         self.response_ok(response)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(public_project.id))

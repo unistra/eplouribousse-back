@@ -1,10 +1,10 @@
 import random
-import string
 
 import factory
 
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
+from epl.apps.project.tests.factories.resource import ResourceFactory
 from epl.apps.project.tests.factories.user import UserFactory
 
 
@@ -12,8 +12,7 @@ class CollectionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = "project.Collection"
 
-    title = factory.Faker("sentence", nb_words=6)
-    code = factory.LazyAttribute(lambda _: "".join(random.choices(string.ascii_letters + string.digits, k=10)))  # noqa: S311
+    resource = factory.SubFactory(ResourceFactory)
     library = factory.SubFactory(LibraryFactory)
     project = factory.SubFactory(ProjectFactory)
     issn = factory.LazyAttribute(lambda _: CollectionFactory.generate_valid_issn())

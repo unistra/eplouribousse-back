@@ -1,14 +1,55 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from epl.apps.project.models.choices import ResourceStatus
 from epl.models import UUIDPrimaryKeyField
 from epl.validators import IssnValidator
 
 
+def default_instuction_turns():
+    return {
+        "bound_copies": {
+            "turns": [],
+        },
+        "unbound_copies": {
+            "turns": [],
+        },
+    }
+
+
+class Arbitration(models.IntegerChoices):
+    ZERO = 0, _("Arbitration Type 0")
+    ONE = 1, _("Arbitration Type 1")
+    NONE = 2, _("No arbitration")
+
+
+class Resource(models.Model):
+    id = UUIDPrimaryKeyField()
+    code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
+    title = models.CharField(_("Title"), max_length=510, db_index=True)
+    project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="resources")
+    status = models.IntegerField(_("Status"), choices=ResourceStatus.choices, default=ResourceStatus.POSITIONING)
+    instruction_turns = models.JSONField(_("Instruction turns"), default=default_instuction_turns, blank=True)
+    arbitration = models.IntegerField(
+        _("Arbitration"), choices=Arbitration.choices, default=Arbitration.NONE, db_index=True
+    )
+    created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Resource")
+        verbose_name_plural = _("Resources")
+        ordering = ["code", "project"]
+        constraints = [
+            models.UniqueConstraint(fields=["code", "project"], name="unique_resource_code_per_project"),
+        ]
+
+    def __str__(self):
+        return f"{self.code} - {self.project_id}"
+
+
 class Collection(models.Model):
     id = UUIDPrimaryKeyField()
-    title = models.CharField(_("Title"), max_length=510, db_index=True)
-    code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
+    resource = models.ForeignKey("Resource", on_delete=models.CASCADE, related_name="collections")  # RCR
     library = models.ForeignKey("Library", on_delete=models.CASCADE, related_name="collections")  # RCR
     project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="collections")
     issn = models.CharField(_("ISSN"), max_length=9, blank=True, validators=[IssnValidator()])
@@ -36,14 +77,20 @@ class Collection(models.Model):
     positioning_comment = models.TextField(
         "Positioning comment", blank=True, help_text=_("Instructor's comment on the collection positioning")
     )
+    is_result_collection = models.BooleanField(
+        _("Is the result collection"),
+        default=False,
+        db_index=True,
+        help_text=_("The collection is the result of a deduplication process"),
+    )
 
     class Meta:
         verbose_name = _("Collection")
         verbose_name_plural = _("Collections")
-        ordering = ["title"]
+        ordering = ["resource__title"]
 
     def __str__(self):
-        return f"{self.code} - {self.title}"
+        return f"{self.title}"
 
     def save(self, *args, **kwargs):
         if self.position is not None and self.position != 0:

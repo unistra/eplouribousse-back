@@ -3,7 +3,7 @@ from datetime import timedelta
 import factory
 from django.utils.timezone import now
 
-from epl.apps.project.models import Status
+from epl.apps.project.models import ProjectStatus
 
 
 class ProjectFactory(factory.django.DjangoModelFactory):
@@ -22,7 +22,7 @@ class PrivateProjectFactory(ProjectFactory):
 
 class PublicProjectFactory(ProjectFactory):
     is_private = False
-    status = Status.POSITIONING
+    status = ProjectStatus.LAUNCHED
     active_after = now()
 
     class Meta:
@@ -30,7 +30,7 @@ class PublicProjectFactory(ProjectFactory):
 
 
 class PositioningProjectFactory(ProjectFactory):
-    status = Status.POSITIONING
+    status = ProjectStatus.LAUNCHED
     active_after = now()
 
     class Meta:

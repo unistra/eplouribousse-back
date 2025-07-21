@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from epl.apps.project.filters.project import ProjectFilter
-from epl.apps.project.models import Project, Role, Status, UserRole
+from epl.apps.project.models import Project, ProjectStatus, Role, UserRole
 from epl.apps.project.permissions.project import ProjectPermissions
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
@@ -176,7 +176,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         """
         List all available project statuses.
         """
-        statuses = [{"status": _s[0], "label": _s[1]} for _s in Status.choices]
+        statuses = [{"status": _s[0], "label": _s[1]} for _s in ProjectStatus.choices]
         serializer = StatusListSerializer(statuses, many=True)
         return Response(serializer.data)
 

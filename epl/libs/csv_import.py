@@ -1,5 +1,6 @@
 import json
-from typing import Annotated, Any
+import uuid
+from typing import Annotated, Any, TypedDict
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -8,12 +9,11 @@ from epl.validators import IssnValidator
 
 
 class CollectionModel(BaseModel):
-    title: Annotated[str, Field(alias="Titre", min_length=1, max_length=510)]
-    code: Annotated[str, Field(alias="PPN", min_length=1, max_length=25)]
     issn: Annotated[str, Field(alias="Issn", max_length=9)] = ""
     call_number: Annotated[str, Field(alias="Cote")] = ""
     hold_statement: Annotated[str, Field(alias="Etat de collection")] = ""
     missing: Annotated[str, Field(alias="Lacunes")] = ""
+    resource_id: UUID
     created_by_id: UUID
     project_id: UUID
     library_id: UUID
@@ -37,20 +37,61 @@ class CollectionModel(BaseModel):
         return value
 
 
+class ResourceModel(BaseModel):
+    id: UUID
+    title: Annotated[str, Field(max_length=510, min_length=1)]
+    code: Annotated[str, Field(alias="PPN", min_length=1, max_length=25)]
+    project_id: UUID
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def strip_whitespace(cls, value: str) -> str:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+
+class CodesT(TypedDict):
+    id: UUID
+    count: int
+
+
 def handle_import(
     csv_reader, library_id: UUID, project_id: UUID, created_by: UUID
-) -> tuple[list[CollectionModel], list[tuple[int, Any]]]:
+) -> tuple[list[CollectionModel], list[ResourceModel], dict[str, CodesT], list[tuple[int, Any]]]:
     collections = []
+    resources = []
     errors = []
     row_number = 1  # Start counting rows from 2 as the first row is the header
 
+    codes: dict[str, CodesT] = {}  # To track resource codes
+
     for row in csv_reader:
         row_number += 1
+        ppn = row.pop("PPN").strip()
+        titre = row.pop("Titre").strip()
+        if not codes.get(ppn):
+            try:
+                resource = ResourceModel(id=uuid.uuid4(), PPN=ppn, title=titre, project_id=project_id)
+                codes[ppn] = {"id": resource.id, "count": 1}
+                resources.append(resource)
+            except ValidationError as e:
+                errors.append((row_number, json.loads(e.json())))
+                continue
+        else:
+            codes[ppn]["count"] += 1
+
         try:
             collections.append(
-                CollectionModel(**row, created_by_id=created_by, project_id=project_id, library_id=library_id)
+                CollectionModel(
+                    **row,
+                    resource_id=codes.get(ppn)["id"],
+                    created_by_id=created_by,
+                    project_id=project_id,
+                    library_id=library_id,
+                )
             )
         except ValidationError as e:
             errors.append((row_number, json.loads(e.json())))
 
-    return collections, errors
+    return collections, resources, codes, errors

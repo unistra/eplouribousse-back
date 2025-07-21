@@ -45,7 +45,7 @@ from epl.schema_serializers import UnauthorizedSerializer
     ),
 )
 class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, GenericViewSet):
-    queryset = Collection.objects.all()
+    queryset = Collection.objects.select_related("resource").all()
     serializer_class = CollectionSerializer
     permission_classes = [CollectionPermission]
     pagination_class = PageNumberPagination

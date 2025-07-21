@@ -2,7 +2,16 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from epl.apps.project.models import ActionLog, Collection, Library, Project, ProjectLibrary, Role, Status, UserRole
+from epl.apps.project.models import (
+    ActionLog,
+    Collection,
+    Library,
+    Project,
+    ProjectLibrary,
+    ProjectStatus,
+    Role,
+    UserRole,
+)
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
@@ -187,7 +196,7 @@ class ProjectDetailSerializer(AclSerializerMixin, serializers.ModelSerializer):
 
 
 class ChangeStatusSerializer(serializers.ModelSerializer):
-    status = serializers.ChoiceField(choices=Status.choices, help_text=_("Project status"))
+    status = serializers.ChoiceField(choices=ProjectStatus.choices, help_text=_("Project status"))
 
     class Meta:
         model = Project
@@ -206,20 +215,17 @@ class ChangeStatusSerializer(serializers.ModelSerializer):
         project.save(update_fields=["status"])
 
         match old_status, new_status:
-            case Status.DRAFT, Status.REVIEW:
+            case ProjectStatus.DRAFT, ProjectStatus.REVIEW:
                 # A) Send invitation emails to new users
                 invite_unregistered_users_to_epl(project, self.context["request"])
                 # B) Send notification to project admins (already registered) to review the project.
                 # Admins that are not registered atm, will receive this notification when they create their account.
                 invite_project_admins_to_review(project, self.context["request"])
-            case Status.REVIEW, Status.READY:
+            case ProjectStatus.REVIEW, ProjectStatus.READY:
                 # todo : send notification to project manager : he can publish the project
                 pass
-            case Status.READY, Status.POSITIONING:
+            case ProjectStatus.READY, ProjectStatus.LAUNCHED:
                 # todo : notification to instructors : they can start positioning
-                pass
-            case Status.POSITIONING, Status.INSTRUCTION_BOUND:
-                # todo : send notification to instructors : they can start instruction bound copies
                 pass
         return project
 

@@ -1,7 +1,7 @@
 from django.db import models
 from rest_framework.permissions import BasePermission
 
-from epl.apps.project.models import Project, Role, Status
+from epl.apps.project.models import Project, ProjectStatus, Role
 from epl.apps.user.models import User
 
 
@@ -36,9 +36,9 @@ class ProjectPermissions(BasePermission):
     def compute_retrieve_permission(user: User, project: Project = None) -> bool:
         if user.is_superuser or user.is_project_creator:
             return True
-        if project.status <= Status.REVIEW:
+        if project.status <= ProjectStatus.REVIEW:
             return user.is_project_admin(project=project)
-        if project.status <= Status.READY:
+        if project.status <= ProjectStatus.READY:
             return user.is_project_manager(project=project)
 
         return not project.is_private
@@ -61,11 +61,11 @@ class ProjectPermissions(BasePermission):
             return True
 
         if user.is_project_creator:
-            return project.status >= Status.DRAFT
+            return project.status >= ProjectStatus.DRAFT
         if user.is_project_admin(project=project):
-            return project.status >= Status.REVIEW
+            return project.status >= ProjectStatus.REVIEW
         if user.is_project_manager(project=project):
-            return project.status >= Status.READY
+            return project.status >= ProjectStatus.READY
 
         return False
 
@@ -83,7 +83,7 @@ class ProjectPermissions(BasePermission):
             case "validate":
                 return ProjectPermissions.compute_validate_permission(user, project)
             case "update_status":
-                return ProjectPermissions.compute_update_status_permission(user, project)
+                return True
             case "exclusion_reason" | "remove_exclusion_reason" | "add_library":
                 return user.project_roles.filter(
                     models.Q(project=project, role=Role.PROJECT_ADMIN) | models.Q(role=Role.PROJECT_CREATOR)

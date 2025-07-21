@@ -3,7 +3,7 @@ from django.core.signing import TimestampSigner
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 
-from epl.apps.project.models import Project, Role, Status, UserRole
+from epl.apps.project.models import Project, ProjectStatus, Role, UserRole
 from epl.apps.project.tests.factories.project import ProjectFactory
 from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserFactory
 from epl.apps.user.models import User
@@ -17,27 +17,27 @@ class ProjectStatusListTest(TestCase):
         self.response_ok(response)
         self.assertListEqual(
             [_s["status"] for _s in response.data],
-            [_s[0] for _s in Status.choices],
+            [_s[0] for _s in ProjectStatus.choices],
         )
 
 
 class UpdateProjectStatusTest(TestCase):
     def test_update_project_status(self):
         user = ProjectCreatorFactory()
-        project: Project = ProjectFactory(status=Status.DRAFT)
+        project: Project = ProjectFactory(status=ProjectStatus.DRAFT)
         response = self.patch(
             reverse("project-update-status", kwargs={"pk": project.id}),
-            data={"status": Status.READY},
+            data={"status": ProjectStatus.READY},
             content_type="application/json",
             user=user,
         )
         self.response_ok(response)
         project.refresh_from_db()
-        self.assertEqual(project.status, Status.READY)
+        self.assertEqual(project.status, ProjectStatus.READY)
 
     def test_update_project_status_invalid(self):
         user = ProjectCreatorFactory(first_name="Annabelle")
-        project: Project = ProjectFactory(status=Status.DRAFT)
+        project: Project = ProjectFactory(status=ProjectStatus.DRAFT)
         response = self.patch(
             reverse("project-update-status", kwargs={"pk": project.id}),
             data={"status": 300},
@@ -57,7 +57,7 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
             self.project = ProjectFactory(
                 name="Test Project",
                 description="This is a test project.",
-                status=Status.DRAFT,
+                status=ProjectStatus.DRAFT,
                 invitations=[{"email": "new_project_admin@test.com", "role": Role.PROJECT_ADMIN}],
             )
 
@@ -66,17 +66,17 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
 
     def test_set_status_to_review_success(self):
         url = reverse("project-update-status", kwargs={"pk": self.project.id})
-        data = {"status": Status.REVIEW}
+        data = {"status": ProjectStatus.REVIEW}
 
         response = self.patch(url, data=data, content_type="application/json", user=self.project_creator)
 
         self.response_ok(response)
         self.project.refresh_from_db()
-        self.assertEqual(self.project.status, Status.REVIEW)
+        self.assertEqual(self.project.status, ProjectStatus.REVIEW)
 
     def test_set_status_to_review_sends_invitations(self):
         url = reverse("project-update-status", kwargs={"pk": self.project.id})
-        data = {"status": Status.REVIEW}
+        data = {"status": ProjectStatus.REVIEW}
 
         response = self.patch(url, data=data, content_type="application/json", user=self.project_creator)
 

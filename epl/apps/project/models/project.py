@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
 
+from epl.apps.project.models import ProjectStatus
 from epl.models import UUIDPrimaryKeyField
 
 if typing.TYPE_CHECKING:
@@ -18,16 +19,6 @@ DEFAULT_EXCLUSION_REASONS = [
     _lazy("Incorrect assignment"),
     _lazy("Other"),
 ]
-
-
-class Status(models.IntegerChoices):
-    DRAFT = 10, _("Draft")
-    REVIEW = 20, _("Review")
-    READY = 30, _("Ready")
-    POSITIONING = 40, _("Positioning")
-    INSTRUCTION_BOUND = 50, _("Instruction Bound Copies")
-    INSTRUCTION_UNBOUND = 60, _("Instruction Unbound Copies")
-    ARCHIVED = 100, _("Archived")
 
 
 class ProjectQuerySet(models.QuerySet):
@@ -51,7 +42,7 @@ class ProjectQuerySet(models.QuerySet):
             | models.Q(
                 user_roles__user=user,
                 user_roles__role__in=[Role.INSTRUCTOR, Role.CONTROLLER, Role.GUEST],
-                status__gte=Status.POSITIONING,
+                status__gte=ProjectStatus.LAUNCHED,
                 active_after__lte=now(),
             )
         )
@@ -63,11 +54,11 @@ class ProjectQuerySet(models.QuerySet):
         return self.filter(user_roles__user=user)
 
     def public(self) -> models.QuerySet[Project]:
-        return self.filter(is_private=False, status__gte=Status.POSITIONING, active_after__lte=now())
+        return self.filter(is_private=False, status__gte=ProjectStatus.LAUNCHED, active_after__lte=now())
 
     def exclude_archived(self, exclude: bool = True) -> models.QuerySet[Project]:
         if exclude:
-            return self.filter(status__lt=Status.ARCHIVED)
+            return self.filter(status__lt=ProjectStatus.ARCHIVED)
         return self
 
     def status(self, status: int) -> models.QuerySet[Project]:
@@ -81,7 +72,7 @@ class Project(models.Model):
     libraries = models.ManyToManyField("Library", through="ProjectLibrary")
     is_private = models.BooleanField(_("Is private"), default=False)
     active_after = models.DateTimeField(_("Active after"), default=now)
-    status = models.IntegerField(_("Status"), choices=Status.choices, default=Status.DRAFT)
+    status = models.IntegerField(_("Status"), choices=ProjectStatus.choices, default=ProjectStatus.DRAFT)
     settings = models.JSONField(_("Settings"), default=dict)
     invitations = models.JSONField(_("Invitations"), default=list, blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
@@ -103,7 +94,7 @@ class Project(models.Model):
         ordering = ["name"]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(status__in=[choice[0] for choice in Status.choices]),
+                check=models.Q(status__in=[choice[0] for choice in ProjectStatus.choices]),
                 name="%(app_label)s_%(class)s_status_valid",
             ),
         ]
