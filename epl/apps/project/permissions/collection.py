@@ -34,7 +34,7 @@ class CollectionPermission(permissions.BasePermission):
             case "import_csv":
                 return bool(user and user.is_authenticated and user.is_project_creator)
             case "update" | "partial_update" | "position" | "exclude" | "comment_positioning":
-                return bool(user and user.is_authenticated and user.is_instructor_for(obj.project, obj.library))
+                return bool(user and user.is_authenticated and user.is_instructor(obj.project, obj.library))
             case "destroy":
                 return bool(user and user.is_authenticated and user.is_project_creator)
             case "create":
