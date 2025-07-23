@@ -23,7 +23,7 @@ class ProjectStatusListTest(TestCase):
 
 class UpdateProjectStatusTest(TestCase):
     def test_update_project_status(self):
-        user = UserFactory()
+        user = ProjectCreatorFactory()
         project: Project = ProjectFactory(status=Status.DRAFT)
         response = self.patch(
             reverse("project-update-status", kwargs={"pk": project.id}),
