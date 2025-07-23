@@ -60,14 +60,12 @@ class ProjectPermissions(BasePermission):
         if user.is_superuser:
             return True
 
-        if project.status >= Status.DRAFT:
-            return user.is_project_creator
-        if project.status >= Status.REVIEW:
-            return user.is_project_admin(project=project)
-        if project.status >= Status.READY:
-            return user.is_project_manager(project=project)
-        if project.status > Status.READY:
-            return user.is_instructor(project=project) or user.is_controller(project=project)
+        if user.is_project_creator:
+            return project.status >= Status.DRAFT
+        if user.is_project_admin(project=project):
+            return project.status >= Status.REVIEW
+        if user.is_project_manager(project=project):
+            return project.status >= Status.READY
 
         return False
 
