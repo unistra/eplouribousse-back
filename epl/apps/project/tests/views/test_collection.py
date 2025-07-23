@@ -12,7 +12,7 @@ from epl.apps.project.models import Collection, Role
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import UserFactory, UserWithRoleFactory
+from epl.apps.project.tests.factories.user import UserWithRoleFactory
 from epl.tests import TestCase
 
 FIXTURES_BASE_PATH = (
@@ -37,11 +37,12 @@ class CollectionDeletePermissionTest(TestCase):
             (Role.PROJECT_MANAGER, False, 403),
             (Role.CONTROLLER, False, 403),
             (Role.GUEST, False, 403),
+            (None, False, 403),  # Anonymous user
         ]
     )
     def test_delete_collection_permissions(self, role, should_succeed, expected_status):
         """Test les permissions de suppression pour chaque rôle"""
-        user = self.user_factory.create_with_role(role)
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
         response = self.delete(reverse("collection-detail", kwargs={"pk": self.collection.id}), user=user)
         self.assertEqual(response.status_code, expected_status)
 
@@ -51,15 +52,6 @@ class CollectionDeletePermissionTest(TestCase):
         else:
             self.assertTrue(collection_exists, f"Collection should still exist for {role}")
 
-    def test_guest_cant_delete_collection(self):
-        """Test que les invités ne peuvent pas supprimer une collection"""
-        guest = self.user_factory.create_guest()
-        response = self.delete(reverse("collection-detail", kwargs={"pk": self.collection.id}), user=guest)
-        self.response_forbidden(response)
-        self.assertTrue(
-            Collection.objects.filter(id=self.collection.id).exists(), "Collection should still exist for guest"
-        )
-
 
 class CollectionViewSetTest(TestCase):
     def setUp(self):
@@ -67,70 +59,68 @@ class CollectionViewSetTest(TestCase):
         with tenant_context(self.tenant):
             self.project = ProjectFactory.create()
             self.library = LibraryFactory.create()
-            self.collection = CollectionFactory(project=self.project, library=self.library)
 
-            self.project_creator = UserFactory.create()
-            self.project_creator.project_roles.create(project=self.project, role="project_creator")
+            self.project_admin = UserWithRoleFactory(
+                role=Role.PROJECT_ADMIN, project=self.project, library=self.library
+            )
 
-            self.project_admin = UserFactory.create()
-            self.project_admin.project_roles.create(project=self.project, role="project_admin")
-
-            # self.user = UserFactory.create()
-            self.user_factory = UserWithRoleFactory(project=self.project, library=self.library)
             # Create a user with no particular rights but authenticated
-            self.guest = self.user_factory.create_guest()
-            # plutôt avoir self.guest = UserWithRole(role=Role.GUEST)
+            self.guest = UserWithRoleFactory(role=Role.GUEST)
 
             # Create a user with project creator role
-            self.project_creator = UserFactory.create()
+            self.project_creator = UserWithRoleFactory(role=Role.PROJECT_CREATOR)
 
-            # self.project = Project.objects.create(name="test_project", description="Test project for collections")
-            # self.library = Library.objects.create(name="test_library", alias="TL", code="12345")
-
-    def test_list_collections_success(self):
-        response = self.get(reverse("collection-list"), user=self.guest)
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, True, 200),
+            (Role.INSTRUCTOR, True, 200),
+            (Role.PROJECT_ADMIN, True, 200),
+            (Role.PROJECT_MANAGER, True, 200),
+            (Role.CONTROLLER, True, 200),
+            (Role.GUEST, True, 200),
+            (None, True, 200),  # Anonymous user
+        ]
+    )
+    def test_list_collections_success(self, role, should_succeed, expected_status):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
+        response = self.get(reverse("collection-list"), user=user)
+        self.assertEqual(response.status_code, expected_status)
         self.response_ok(response)
 
-    def test_import_csv_success(self):
-        valid_csv_file_path = FIXTURES_BASE_PATH / "valid_collection.csv"
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, True, 200),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_ADMIN, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 401),  # Anonymous user
+        ]
+    )
+    def test_import_csv_permissions(self, role, should_succeed, expected_status):
+        if role is None:
+            user = None
+        else:
+            user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
 
+        valid_csv_file_path = FIXTURES_BASE_PATH / "valid_collection.csv"
         with valid_csv_file_path.open("rb") as csv_file:
             uploaded_file = SimpleUploadedFile(
                 name="valid_collection.csv", content=csv_file.read(), content_type="text/csv"
             )
-
             data = {
                 "csv_file": uploaded_file,
                 "library": self.library.id,
                 "project": self.project.id,
             }
+            response = self.post(reverse("collection-import_csv"), data=data, user=user, format="multipart")
 
-            response = self.post(reverse("collection-import_csv"), data=data, user=self.guest, format="multipart")
-
-            self.response_ok(response)
-            self.assertEqual(response.status_code, 200)
-            self.response_ok(response)
-
+        self.assertEqual(response.status_code, expected_status)
+        if should_succeed:
             self.assertTrue(Collection.objects.filter(library=self.library, project=self.project).exists())
-
-    def test_guest_cannot_import_csv(self):
-        valid_csv_file_path = FIXTURES_BASE_PATH / "valid_collection.csv"
-
-        with valid_csv_file_path.open("rb") as csv_file:
-            uploaded_file = SimpleUploadedFile(
-                name="valid_collection.csv", content=csv_file.read(), content_type="text/csv"
-            )
-
-            data = {
-                "csv_file": uploaded_file,
-                "library": self.library.id,
-                "project": self.project.id,
-            }
-
-            response = self.post(reverse("collection-import_csv"), data=data, user=self.guest, format="multipart")
-
-            self.response_forbidden(response)
-            self.assertEqual(response.status_code, 403)
+        else:
+            self.assertFalse(Collection.objects.filter(library=self.library, project=self.project).exists())
 
     # Validation tests for the import CSV endpoint
     def test_missing_csv_file_validation(self):
@@ -286,19 +276,6 @@ class CollectionViewSetTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Collection.objects.filter(library=self.library, project=self.project).exists())
-
-    # Réécrire ces tests pour que tous les rôles soient testés #todo
-    def test_delete_collection_success_project_creator(self):
-        response = self.delete(
-            reverse("collection-detail", kwargs={"pk": self.collection.id}), user=self.project_creator
-        )
-        self.response_no_content(response)
-        self.assertFalse(Collection.objects.filter(id=self.collection.id).exists())
-
-    def test_delete_collection_forbidden_for_project_admin(self):
-        response = self.delete(reverse("collection-detail", kwargs={"pk": self.collection.id}), user=self.project_admin)
-        self.response_forbidden(response)
-        self.assertTrue(Collection.objects.filter(id=self.collection.id).exists())
 
 
 class CollectionListViewTest(TestCase):
