@@ -35,7 +35,9 @@ class CollectionPermission(permissions.BasePermission):
                 return bool(user and user.is_authenticated and user.is_project_creator)
             case "partial_update" | "position" | "exclude" | "comment_positioning":
                 return bool(user and user.is_authenticated and user.is_instructor_for(obj.project, obj.library))
-            case "create" | "update" | "partial_update" | "destroy":
+            case "destroy":
+                return bool(user and user.is_authenticated and user.is_project_creator)
+            case "create" | "update" | "partial_update":
                 return False
 
         return False

@@ -32,8 +32,19 @@ from epl.schema_serializers import UnauthorizedSerializer
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
     ),
+    destroy=extend_schema(
+        tags=["collection"],
+        summary=_("Delete a collection"),
+        description=_("Delete a collection permanently. This action requires project creator permissions."),
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_403_FORBIDDEN: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    ),
 )
-class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
+class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
     permission_classes = [CollectionPermission]
@@ -92,10 +103,11 @@ class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
         url_name="import_csv",
         parser_classes=[parsers.MultiPartParser],
     )
-    def import_csv(self, request, *args, **kwargs):
+    def import_csv(self, request):
         """
         Import collections for a library and a project from a CSV file.
         """
+        self.check_object_permissions(request, None)
         serializer = ImportSerializer(data=request.data, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
         imported_collections: dict[int, int] = serializer.save()
@@ -187,7 +199,7 @@ class CollectionViewSet(mixins.ListModelMixin, GenericViewSet):
                 pattern="^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             ),
         ],
-    )
+    ),
 )
 class ResourceViewSet(mixins.ListModelMixin, GenericViewSet):
     queryset = Collection.objects.none()
