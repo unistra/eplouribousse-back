@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import IntegrityError, models
 from django.utils.translation import gettext_lazy as _
 
-from epl.apps.project.models import Role, UserRole
+from epl.apps.project.models import Library, Project, Role, UserRole
 from epl.models import UUIDPrimaryKeyField
 
 T = TypeVar("T")
@@ -57,6 +57,21 @@ class User(AbstractUser):
     @property
     def is_project_creator(self) -> bool:
         return UserRole.objects.filter(user=self, role=Role.PROJECT_CREATOR).exists()
+
+    def is_project_admin(self, project: Project) -> bool:
+        return UserRole.objects.filter(user=self, project=project, role=Role.PROJECT_ADMIN).exists()
+
+    def is_project_manager(self, project: Project) -> bool:
+        return UserRole.objects.filter(user=self, project=project, role=Role.PROJECT_MANAGER).exists()
+
+    def is_instructor(self, project: Project, library: Library = None) -> bool:
+        queryset = UserRole.objects.filter(user=self, project=project, role=Role.INSTRUCTOR)
+        if library is not None:
+            queryset = queryset.filter(library=library)
+        return queryset.exists()
+
+    def is_controller(self, project: Project) -> bool:
+        return UserRole.objects.filter(user=self, project=project, role=Role.CONTROLLER).exists()
 
     def set_is_project_creator(self, value: bool, assigned_by: Self) -> None:
         if value:

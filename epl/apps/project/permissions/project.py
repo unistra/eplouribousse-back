@@ -34,45 +34,42 @@ class ProjectPermissions(BasePermission):
 
     @staticmethod
     def compute_retrieve_permission(user: User, project: Project = None) -> bool:
+        if user.is_superuser or user.is_project_creator:
+            return True
+        if project.status <= Status.REVIEW:
+            return user.is_project_admin(project=project)
         if project.status <= Status.READY:
-            match project.status:
-                case Status.DRAFT:
-                    return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
-                case Status.REVIEW:
-                    return user.project_roles.filter(project=project, role=Role.PROJECT_ADMIN).exists()
-                case Status.READY:
-                    return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
-        else:
-            return not project.is_private
+            return user.is_project_manager(project=project)
+
+        return not project.is_private
 
     @staticmethod
-    def compute_update_permission(user: User, project: Project = None) -> bool:
-        return user.project_roles.filter(
-            project=project,
-            role__in=[
-                Role.PROJECT_ADMIN,
-                Role.PROJECT_MANAGER,
-            ],
-        ).exists()
+    def compute_update_permission(user: User) -> bool:
+        return user.is_superuser or user.is_project_creator
 
     @staticmethod
-    def compute_create_permission(user: User, project: Project = None) -> bool:
-        return user.project_roles.filter(project=project, role=Role.PROJECT_CREATOR).exists()
+    def compute_create_permission(user: User) -> bool:
+        return user.is_superuser or user.is_project_creator
 
     @staticmethod
     def compute_validate_permission(user: User, project: Project = None) -> bool:
         return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
 
+    @staticmethod
     def compute_update_status_permission(user: User, project: Project = None) -> bool:
-        match project.status:
-            case Status.DRAFT:
-                return user.is_project_creator
-            case Status.REVIEW:
-                return user.project_roles.filter(project=project, role=Role.PROJECT_ADMIN).exists()
-            case Status.READY | Status.POSITIONING | Status.INSTRUCTION_BOUND | Status.INSTRUCTION_UNBOUND:
-                return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
-            case _:
-                return False
+        if user.is_superuser:
+            return True
+
+        if project.status >= Status.DRAFT:
+            return user.is_project_creator
+        if project.status >= Status.REVIEW:
+            return user.is_project_admin(project=project)
+        if project.status >= Status.READY:
+            return user.is_project_manager(project=project)
+        if project.status > Status.READY:
+            return user.is_instructor(project=project) or user.is_controller(project=project)
+
+        return False
 
     @staticmethod
     def user_has_permission(action: str, user: User, project: Project = None) -> bool:
@@ -80,15 +77,15 @@ class ProjectPermissions(BasePermission):
             return False
         match action:
             case "create":
-                return ProjectPermissions.compute_create_permission(user, project)
+                return ProjectPermissions.compute_create_permission(user)
             case "retrieve":
                 return ProjectPermissions.compute_retrieve_permission(user, project)
             case "update" | "partial_update":
-                return ProjectPermissions.compute_update_permission(user, project)
+                return ProjectPermissions.compute_update_permission(user)
             case "validate":
                 return ProjectPermissions.compute_validate_permission(user, project)
             case "update_status":
-                return True
+                return ProjectPermissions.compute_update_status_permission(user, project)
             case "exclusion_reason" | "remove_exclusion_reason" | "add_library":
                 return user.project_roles.filter(
                     models.Q(project=project, role=Role.PROJECT_ADMIN) | models.Q(role=Role.PROJECT_CREATOR)
