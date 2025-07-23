@@ -127,7 +127,7 @@ class IsInstructorForTest(TestCase):
             library=self.library1,
             assigned_by=self.assigner,
         )
-        self.assertTrue(self.user.is_instructor_for(self.project1, self.library1))
+        self.assertTrue(self.user.is_instructor(self.project1, self.library1))
 
     def test_user_is_not_instructor_for_different_project(self):
         UserRole.objects.create(
@@ -137,7 +137,7 @@ class IsInstructorForTest(TestCase):
             library=self.library1,
             assigned_by=self.assigner,
         )
-        self.assertFalse(self.user.is_instructor_for(self.project2, self.library1))
+        self.assertFalse(self.user.is_instructor(self.project2, self.library1))
 
     def test_user_is_not_instructor_for_different_library(self):
         UserRole.objects.create(
@@ -147,7 +147,7 @@ class IsInstructorForTest(TestCase):
             library=self.library1,
             assigned_by=self.assigner,
         )
-        self.assertFalse(self.user.is_instructor_for(self.project1, self.library2))
+        self.assertFalse(self.user.is_instructor(self.project1, self.library2))
 
     def test_user_is_not_instructor_with_different_role(self):
         UserRole.objects.create(
@@ -157,4 +157,4 @@ class IsInstructorForTest(TestCase):
             library=self.library1,
             assigned_by=self.assigner,
         )
-        self.assertFalse(self.user.is_instructor_for(self.project1, self.library1))
+        self.assertFalse(self.user.is_instructor(self.project1, self.library1))
