@@ -26,8 +26,8 @@ class ProjectSerializer(AclSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "status", "settings", "created_at", "updated_at", "acl"]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        fields = ["id", "name", "description", "status", "is_active", "settings", "created_at", "updated_at", "acl"]
+        read_only_fields = ["id", "is_active", "created_at", "updated_at"]
 
 
 class CreateProjectSerializer(serializers.ModelSerializer):
@@ -184,6 +184,7 @@ class ProjectDetailSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "is_private",
             "active_after",
             "status",
+            "is_active",
             "settings",
             "invitations",
             "roles",

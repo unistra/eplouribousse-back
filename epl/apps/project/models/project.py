@@ -64,6 +64,11 @@ class ProjectQuerySet(models.QuerySet):
     def status(self, status: int) -> models.QuerySet[Project]:
         return self.filter(status=status)
 
+    def active(self):
+        return self.filter(
+            status__gte=ProjectStatus.LAUNCHED, status__lt=ProjectStatus.ARCHIVED, active_after__lte=now()
+        )
+
 
 class Project(models.Model):
     id = UUIDPrimaryKeyField()
@@ -109,6 +114,10 @@ class Project(models.Model):
     @property
     def exclusion_reasons(self):
         return self.settings.get("exclusion_reasons", [])
+
+    @property
+    def is_active(self) -> bool:
+        return (ProjectStatus.LAUNCHED <= self.status < ProjectStatus.ARCHIVED) and self.active_after <= now()
 
 
 class ProjectLibrary(models.Model):
