@@ -1,7 +1,9 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from epl.apps.project.models.choices import ResourceStatus
+from epl.apps.project.models.comment import Comment
 from epl.models import UUIDPrimaryKeyField
 from epl.validators import IssnValidator
 
@@ -34,6 +36,7 @@ class Resource(models.Model):
         _("Arbitration"), choices=Arbitration.choices, default=Arbitration.NONE, db_index=True
     )
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
+    comments = GenericRelation(Comment)
 
     _extended_permissions = [
         "list_statuses",
@@ -86,15 +89,13 @@ class Collection(models.Model):
         blank=True,
         help_text=_("Reason for excluding the collection from deduplication"),
     )
-    positioning_comment = models.TextField(
-        "Positioning comment", blank=True, help_text=_("Instructor's comment on the collection positioning")
-    )
     is_result_collection = models.BooleanField(
         _("Is the result collection"),
         default=False,
         db_index=True,
         help_text=_("The collection is the result of a deduplication process"),
     )
+    comments = GenericRelation(Comment)
 
     class Meta:
         verbose_name = _("Collection")
@@ -102,7 +103,7 @@ class Collection(models.Model):
         ordering = ["resource__title"]
 
     def __str__(self):
-        return f"{self.title}"
+        return f"{self.id}"
 
     def save(self, *args, **kwargs):
         if self.position is not None and self.position != 0:
