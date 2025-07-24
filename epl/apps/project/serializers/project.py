@@ -227,8 +227,28 @@ class ChangeStatusSerializer(serializers.ModelSerializer):
             case ProjectStatus.REVIEW, ProjectStatus.READY:
                 # todo : send notification to project manager : he can publish the project
                 pass
-            case ProjectStatus.READY, ProjectStatus.LAUNCHED:
-                notify_project_launched(project, self.context["request"], self.context["is_starting_now"])
+        return project
+
+
+class LaunchProjectSerializer(serializers.Serializer):
+    active_after = serializers.DateTimeField(required=False)
+
+    def save(self):
+        project = self.context["project"]
+        active_after = self.validated_data.get("active_after")
+
+        if active_after and active_after > timezone.now():
+            project.active_after = active_after
+            is_starting_now = False
+        else:
+            project.active_after = timezone.now()
+            is_starting_now = True
+
+        project.status = ProjectStatus.LAUNCHED
+        notify_project_launched(project, self.context["request"], is_starting_now)
+
+        project.save()
+
         return project
 
 
@@ -358,35 +378,3 @@ class ExclusionReasonSerializer(serializers.Serializer):
 
             project.settings["exclusion_reasons"].remove(exclusion_reason)
             project.save(update_fields=["settings"])
-
-
-class LaunchProjectSerializer(serializers.Serializer):
-    active_after = serializers.DateTimeField(required=False)
-    status = serializers.ChoiceField(ProjectStatus)
-
-    def validate_active_after(self, value):
-        if value <= timezone.now():
-            raise serializers.ValidationError(_("The date must be later than now."))
-        return value
-
-    def save(self):
-        project = self.context["project"]
-        active_after = self.validated_data.get("active_after")
-        status = self.validated_data.get("status")
-
-        if active_after and active_after > timezone.now():
-            project.active_after = active_after
-            is_starting_now = False
-        else:
-            project.active_after = timezone.now()
-            is_starting_now = True
-
-        serializer = ChangeStatusSerializer(
-            instance=project,
-            data={"status": status},
-            context={"request": self.context["request"], "is_starting_now": is_starting_now},
-        )
-        serializer.is_valid(raise_exception=True)
-
-        serializer.save()
-        project.save()
