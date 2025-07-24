@@ -11,8 +11,6 @@ class CollectionFilter(filters.BaseFilterBackend):
     project_param_description = _("Project ID to which the collection belongs")
     library_param = "library"
     library_param_description = _("Library ID to which the collection belongs")
-    against_param = "against"
-    against_param_description = _("ID of the library to compare against")
 
     def filter_queryset(self, request, queryset, view):
         if project_id := request.query_params.get(self.project_param, None):
@@ -39,17 +37,6 @@ class CollectionFilter(filters.BaseFilterBackend):
                 "required": False,
                 "in": "query",
                 "description": str(self.library_param_description),
-                "schema": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                },
-            },
-            {
-                "name": self.against_param,
-                "required": False,
-                "in": "query",
-                "description": str(self.against_param_description),
                 "schema": {
                     "type": "string",
                     "format": "uuid",
