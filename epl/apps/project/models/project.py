@@ -66,7 +66,9 @@ class ProjectQuerySet(models.QuerySet):
 
     def active(self):
         return self.filter(
-            status__gte=ProjectStatus.LAUNCHED, status__lt=ProjectStatus.ARCHIVED, active_after__lte=now()
+            status__gte=ProjectStatus.LAUNCHED,
+            status__lt=ProjectStatus.ARCHIVED,
+            active_after__lte=now(),
         )
 
 

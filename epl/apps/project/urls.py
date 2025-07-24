@@ -1,9 +1,10 @@
 from rest_framework_nested.routers import NestedSimpleRouter, SimpleRouter
 
-from epl.apps.project.views.collection import CollectionViewSet, ResourceViewSet
+from epl.apps.project.views.collection import CollectionViewSet
 from epl.apps.project.views.library import LibraryViewset
 from epl.apps.project.views.project import ProjectViewSet
 from epl.apps.project.views.projectlibrary import ProjectLibraryViewSet
+from epl.apps.project.views.resource import ResourceViewSet
 
 router = SimpleRouter()
 router.register(r"projects", ProjectViewSet, basename="project")

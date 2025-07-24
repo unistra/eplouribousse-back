@@ -46,6 +46,14 @@ class Resource(models.Model):
     def __str__(self):
         return f"{self.code} - {self.project_id}"
 
+    @property
+    def next_turn(self) -> str:
+        if self.status == ResourceStatus.INSTRUCTION_BOUND:
+            return self.instruction_turns.get("bound_copies", {}).get("turns", [])[0]
+        elif self.status == ResourceStatus.INSTRUCTION_UNBOUND:
+            return self.instruction_turns.get("unbound_copies", {}).get("turns", [])[0]
+        return ""
+
 
 class Collection(models.Model):
     id = UUIDPrimaryKeyField()
