@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized

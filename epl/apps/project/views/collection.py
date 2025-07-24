@@ -12,7 +12,6 @@ from epl.apps.project.serializers.collection import (
     CollectionSerializer,
     ExclusionSerializer,
     ImportSerializer,
-    PositioningCommentSerializer,
     PositionSerializer,
 )
 from epl.libs.pagination import PageNumberPagination
@@ -153,23 +152,3 @@ class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, Generic
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(ExclusionSerializer(collection).data, status=status.HTTP_200_OK)
-
-    @extend_schema(
-        tags=["collection"],
-        summary="Set or update the positioning comment",
-        description="Set or update the instructor's comment on the collection positioning.",
-        request=PositioningCommentSerializer,
-        responses=PositioningCommentSerializer,
-    )
-    @action(
-        detail=True,
-        methods=["patch"],
-        url_path="comment-positioning",
-        serializer_class=PositioningCommentSerializer,
-    )
-    def comment_positioning(self, request, pk=None):
-        collection = self.get_object()
-        serializer = self.get_serializer(collection, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(PositioningCommentSerializer(collection).data, status=status.HTTP_200_OK)
