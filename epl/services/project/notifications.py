@@ -1,6 +1,10 @@
 from epl.apps.project.models import Project, Role
 from epl.apps.user.models import User
-from epl.services.user.email import send_invite_project_admins_to_review_email, send_invite_to_epl_email
+from epl.services.user.email import (
+    send_invite_project_admins_to_review_email,
+    send_invite_to_epl_email,
+    send_project_launched_email,
+)
 
 
 def invite_unregistered_users_to_epl(project: Project, request):
@@ -58,3 +62,16 @@ def invite_project_admins_to_review(project: Project, request):
             tenant_name=tenant_name,
             project_creator_email=project_creator_email,
         )
+
+
+def notify_project_launched(project: Project, request, is_starting_now: bool):
+    project_users = User.objects.filter(
+        project_roles__project=project,
+    ).distinct()
+
+    send_project_launched_email(
+        request=request,
+        project=project,
+        project_users=[user.email for user in project_users],
+        is_starting_now=is_starting_now,
+    )

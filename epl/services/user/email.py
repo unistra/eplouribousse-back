@@ -8,6 +8,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from rest_framework.request import Request
 
+from epl.apps.project.models import Project
 from epl.apps.user.models import User
 from epl.services.tenant import get_front_domain
 
@@ -109,6 +110,37 @@ def send_invite_project_admins_to_review_email(
         + _("Project '%(project_name)s' has been launched") % {"project_name": project_name},
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
+        fail_silently=False,
+        message=email_content,
+    )
+
+
+def send_project_launched_email(
+    request: Request, project: Project, project_users: list[str], is_starting_now: bool
+) -> None:
+    front_domain = get_front_domain(request)
+    project_url = f"{front_domain}/projects/{project.id}"
+
+    active_date = project.active_after
+
+    email_content = render_to_string(
+        "emails/project_launched.txt",
+        {
+            "project_name": project.name,
+            "launcher_name": request.user,
+            "project_active_date": _("now")
+            if is_starting_now
+            else f"{active_date.strftime('%Y-%m-%d')} {_('at')} {active_date.strftime('%H:%M')}",
+            "project_url": project_url,
+            "email_support": settings.EMAIL_SUPPORT,
+            "is_starting_now": is_starting_now,
+        },
+    )
+
+    send_mail(
+        subject=f"eplouribousse | {request.tenant.name} | {_('launching project')} {project.name}",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=project_users,
         fail_silently=False,
         message=email_content,
     )
