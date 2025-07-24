@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -18,6 +19,7 @@ from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
     invite_project_admins_to_review,
     invite_unregistered_users_to_epl,
+    notify_project_launched,
 )
 
 
@@ -226,8 +228,7 @@ class ChangeStatusSerializer(serializers.ModelSerializer):
                 # todo : send notification to project manager : he can publish the project
                 pass
             case ProjectStatus.READY, ProjectStatus.LAUNCHED:
-                # todo : notification to instructors : they can start positioning
-                pass
+                notify_project_launched(project, self.context["request"], self.context["is_starting_now"])
         return project
 
 
@@ -357,3 +358,35 @@ class ExclusionReasonSerializer(serializers.Serializer):
 
             project.settings["exclusion_reasons"].remove(exclusion_reason)
             project.save(update_fields=["settings"])
+
+
+class LaunchProjectSerializer(serializers.Serializer):
+    active_after = serializers.DateTimeField(required=False)
+    status = serializers.ChoiceField(ProjectStatus)
+
+    def validate_active_after(self, value):
+        if value <= timezone.now():
+            raise serializers.ValidationError(_("The date must be later than now."))
+        return value
+
+    def save(self):
+        project = self.context["project"]
+        active_after = self.validated_data.get("active_after")
+        status = self.validated_data.get("status")
+
+        if active_after and active_after > timezone.now():
+            project.active_after = active_after
+            is_starting_now = False
+        else:
+            project.active_after = timezone.now()
+            is_starting_now = True
+
+        serializer = ChangeStatusSerializer(
+            instance=project,
+            data={"status": status},
+            context={"request": self.context["request"], "is_starting_now": is_starting_now},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+        project.save()

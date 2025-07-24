@@ -16,6 +16,7 @@ from epl.apps.project.serializers.project import (
     CreateProjectSerializer,
     ExclusionReasonSerializer,
     InvitationSerializer,
+    LaunchProjectSerializer,
     ProjectDetailSerializer,
     ProjectLibrarySerializer,
     ProjectSerializer,
@@ -384,3 +385,23 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(
+        tags=["project"],
+        summary="Launch the project now or later",
+        description="Allows you to set an active_after to the project, and change his status to launched",
+        request=LaunchProjectSerializer,
+        responses={
+            status.HTTP_200_OK: LaunchProjectSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(detail=True, methods=["patch"], url_path="launch")
+    def launch(self, request, pk=None):
+        project = self.get_object()
+        serializer = LaunchProjectSerializer(data=request.data, context={"project": project, "request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
