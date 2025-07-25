@@ -29,7 +29,7 @@ class ProjectLaunchTest(TestCase):
 
     @parameterized.expand(
         [
-            (Role.PROJECT_CREATOR, True, 200),
+            (Role.PROJECT_CREATOR, False, 403),
             (Role.PROJECT_ADMIN, False, 403),
             (Role.PROJECT_MANAGER, True, 200),
             (Role.INSTRUCTOR, False, 403),

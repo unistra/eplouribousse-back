@@ -90,6 +90,6 @@ class ProjectPermissions(BasePermission):
                     models.Q(project=project, role=Role.PROJECT_ADMIN) | models.Q(role=Role.PROJECT_CREATOR)
                 ).exists()
             case "launch":
-                return user.is_superuser or user.is_project_creator or user.is_project_manager(project=project)
+                return user.is_superuser or user.is_project_manager(project=project)
             case _:
                 return False
