@@ -91,6 +91,7 @@ class Project(models.Model):
         "exclusion_reason",
         "remove_exclusion_reason",
         "status",
+        "launch",
     ]
 
     objects = ProjectQuerySet.as_manager()
