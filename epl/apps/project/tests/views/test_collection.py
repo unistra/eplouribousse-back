@@ -60,13 +60,6 @@ class CollectionViewSetTest(TestCase):
             self.project = ProjectFactory.create()
             self.library = LibraryFactory.create()
 
-            self.project_admin = UserWithRoleFactory(
-                role=Role.PROJECT_ADMIN, project=self.project, library=self.library
-            )
-
-            # Create a user with no particular rights but authenticated
-            self.guest = UserWithRoleFactory(role=Role.GUEST)
-
             # Create a user with project creator role
             self.project_creator = UserWithRoleFactory(role=Role.PROJECT_CREATOR)
 
