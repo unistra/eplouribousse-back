@@ -13,6 +13,8 @@ project_library_patch_inline_serializer = inline_serializer(
 
 
 class ProjectLibraryViewSet(viewsets.ModelViewSet):
+    http_method_names = ["patch"]
+
     @extend_schema(
         tags=["project"],
         summary=_("Specify if the library is an alternative storage location"),
