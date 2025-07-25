@@ -26,6 +26,7 @@ class ProjectPermissions(BasePermission):
             "exclusion_reason",
             "remove_exclusion_reason",
             "status",
+            "launch",
         ]:
             return self.user_has_permission(view.action, request.user, obj)
         if view.action == "validate":
@@ -88,5 +89,7 @@ class ProjectPermissions(BasePermission):
                 return user.project_roles.filter(
                     models.Q(project=project, role=Role.PROJECT_ADMIN) | models.Q(role=Role.PROJECT_CREATOR)
                 ).exists()
+            case "launch":
+                return user.is_superuser or user.is_project_manager(project=project)
             case _:
                 return False
