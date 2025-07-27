@@ -17,6 +17,7 @@ class ResourcePermission(BasePermission):
             "retrieve",
             "update",
             "partial_update",
+            "list_statuses",
         ]:
             return self.user_has_permission(view.action, request.user, obj)
 
@@ -28,7 +29,7 @@ class ResourcePermission(BasePermission):
             case "create":
                 # Resources only created through import
                 return False
-            case "retrieve":
+            case "retrieve" | "list_statuses":
                 # Anybody can view a resource
                 return True
             case "update" | "partial_update":

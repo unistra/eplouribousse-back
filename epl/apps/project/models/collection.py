@@ -35,6 +35,10 @@ class Resource(models.Model):
     )
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
 
+    _extended_permissions = [
+        "list_statuses",
+    ]
+
     class Meta:
         verbose_name = _("Resource")
         verbose_name_plural = _("Resources")

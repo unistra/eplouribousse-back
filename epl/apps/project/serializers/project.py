@@ -252,11 +252,6 @@ class LaunchProjectSerializer(serializers.Serializer):
         return project
 
 
-class StatusListSerializer(serializers.Serializer):
-    status = serializers.IntegerField(help_text=_("Project status"))
-    label = serializers.CharField(help_text=_("Label"))
-
-
 class AssignRoleSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=Role.choices)
     user_id = serializers.UUIDField(help_text=_("User id"))

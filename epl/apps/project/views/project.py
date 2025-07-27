@@ -22,9 +22,9 @@ from epl.apps.project.serializers.project import (
     ProjectLibrarySerializer,
     ProjectSerializer,
     ProjectUserSerializer,
-    StatusListSerializer,
     UserRoleSerializer,
 )
+from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.user.models import User
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer
