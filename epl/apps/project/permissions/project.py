@@ -9,9 +9,7 @@ class ProjectPermissions(BasePermission):
     def has_permission(self, request, view):
         match view.action:
             case "create":
-                return bool(
-                    request.user.is_authenticated & (request.user.is_superuser | request.user.is_project_creator)
-                )
+                return bool(request.user.is_authenticated and request.user.is_project_creator)
             case _:
                 return True
 
@@ -49,10 +47,6 @@ class ProjectPermissions(BasePermission):
         return user.is_superuser or user.is_project_creator
 
     @staticmethod
-    def compute_create_permission(user: User) -> bool:
-        return user.is_superuser or user.is_project_creator
-
-    @staticmethod
     def compute_validate_permission(user: User, project: Project = None) -> bool:
         return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
 
@@ -75,8 +69,6 @@ class ProjectPermissions(BasePermission):
         if not user.is_authenticated:
             return False
         match action:
-            case "create":
-                return ProjectPermissions.compute_create_permission(user)
             case "retrieve":
                 return ProjectPermissions.compute_retrieve_permission(user, project)
             case "update" | "partial_update":
