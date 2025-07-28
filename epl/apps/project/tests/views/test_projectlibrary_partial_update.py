@@ -1,25 +1,44 @@
 from django_tenants.urlresolvers import reverse
+from django_tenants.utils import tenant_context
+from parameterized import parameterized
 
-from epl.apps.project.models import Library, Project, ProjectLibrary
-from epl.apps.user.models import User
+from epl.apps.project.models import ProjectLibrary, Role
+from epl.apps.project.tests.factories.library import LibraryFactory
+from epl.apps.project.tests.factories.project import ProjectFactory
+from epl.apps.project.tests.factories.user import UserWithRoleFactory
 from epl.tests import TestCase
 
 
-class ProjectLibraryPartialUpdateTest(TestCase):
-    def test_partial_update_is_alternative_storage_site(self):
-        user = User.objects.create_user(email="user@eplouribousse.fr")
-        project = Project.objects.create(name="Projet Test")
-        library = Library.objects.create(name="LibTest", alias="LT", code="123")
-        project_library = ProjectLibrary.objects.create(
-            project=project, library=library, is_alternative_storage_site=False
-        )
+class ProjectLibraryPatchPermissionTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project = ProjectFactory()
+            self.library = LibraryFactory()
+            self.project_library = ProjectLibrary.objects.create(
+                project=self.project, library=self.library, is_alternative_storage_site=False
+            )
 
-        url = reverse("projects-library-detail", kwargs={"project_pk": project.id, "pk": library.id})
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, True, 200),
+            (Role.PROJECT_ADMIN, True, 200),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+        ]
+    )
+    def test_patch_project_library_permissions(self, role, should_succeed, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
+        url = reverse("projects-library-detail", kwargs={"project_pk": self.project.id, "pk": self.library.id})
+        print(f"URL: {url}")
         response = self.patch(
             url, data={"is_alternative_storage_site": True}, content_type="application/json", user=user
         )
-
-        project_library.refresh_from_db()
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["is_alternative_storage_site"], True)
-        self.assertTrue(project_library.is_alternative_storage_site)
+        self.assertEqual(response.status_code, expected_status_code)
+        self.project_library.refresh_from_db()
+        if should_succeed:
+            self.assertTrue(response.data["is_alternative_storage_site"])
+        else:
+            self.assertFalse(self.project_library.is_alternative_storage_site)
