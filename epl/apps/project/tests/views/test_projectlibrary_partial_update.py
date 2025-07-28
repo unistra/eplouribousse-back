@@ -27,6 +27,7 @@ class ProjectLibraryPatchPermissionTest(TestCase):
             (Role.PROJECT_MANAGER, False, 403),
             (Role.CONTROLLER, False, 403),
             (Role.GUEST, False, 403),
+            (None, False, 403),  # Anonymous user
         ]
     )
     def test_patch_project_library_permissions(self, role, should_succeed, expected_status_code):
