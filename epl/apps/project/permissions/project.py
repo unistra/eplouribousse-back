@@ -56,6 +56,10 @@ class ProjectPermissions(BasePermission):
         return not project.is_private
 
     @staticmethod
+    def compute_update_permission(user: User) -> bool:
+        return user.is_superuser or user.is_project_creator
+
+    @staticmethod
     def compute_validate_permission(user: User, project: Project = None) -> bool:
         return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
 
