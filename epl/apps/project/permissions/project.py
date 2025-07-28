@@ -33,18 +33,27 @@ class ProjectPermissions(BasePermission):
 
     @staticmethod
     def compute_retrieve_permission(user: User, project: Project = None) -> bool:
-        if user.is_superuser or user.is_project_creator:
-            return True
-        if project.status <= ProjectStatus.REVIEW:
-            return user.is_project_admin(project=project)
-        if project.status <= ProjectStatus.READY:
-            return user.is_project_manager(project=project)
+        permission_checks = [
+            (ProjectStatus.DRAFT, lambda: user.is_project_creator),
+            (ProjectStatus.REVIEW, lambda: user.is_project_admin(project=project)),
+            (ProjectStatus.READY, lambda: user.is_project_manager(project=project)),
+            (
+                ProjectStatus.LAUNCHED,
+                lambda: user.is_controller(project=project)
+                or user.is_instructor(project=project)
+                or user.is_guest(project=project),
+            ),
+        ]
+
+        for status, check in permission_checks:
+            if project.status >= status and check():
+                return True
 
         return not project.is_private
 
     @staticmethod
     def compute_update_permission(user: User) -> bool:
-        return user.is_superuser or user.is_project_creator
+        return user.is_project_creator
 
     @staticmethod
     def compute_validate_permission(user: User, project: Project = None) -> bool:
@@ -82,6 +91,6 @@ class ProjectPermissions(BasePermission):
                     models.Q(project=project, role=Role.PROJECT_ADMIN) | models.Q(role=Role.PROJECT_CREATOR)
                 ).exists()
             case "launch":
-                return user.is_superuser or user.is_project_manager(project=project)
+                return user.is_project_manager(project=project)
             case _:
                 return False
