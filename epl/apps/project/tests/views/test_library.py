@@ -45,6 +45,32 @@ class LibraryViewsTest(TestCase):
         self.assertEqual(response_retrieve.status_code, expected_status_code)
         self.assertEqual(response_retrieve.data["id"], str(self.library1.id))
 
+    @parameterized.expand(
+        [
+            (Role.TENANT_SUPER_USER, True, 201),
+            (Role.PROJECT_CREATOR, True, 201),
+            (Role.PROJECT_ADMIN, True, 201),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 401),
+        ]
+    )
+    def test_create_library(self, role, should_succeed, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1) if role else None
+        data = {
+            "name": "New library",
+            "alias": "NLB",
+            "code": "1234567890",
+        }
+        response = self.post(reverse("library-list"), data=data, user=user)
+        self.assertEqual(response.status_code, expected_status_code)
+        if should_succeed:
+            self.assertEqual(response.data["name"], data["name"])
+        else:
+            self.assertNotIn("name", response.data)
+
 
 class ProjectLibraryViewsTest(TestCase):
     def setUp(self):

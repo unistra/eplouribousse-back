@@ -10,8 +10,12 @@ class LibraryPermission(BasePermission):
             case "list" | "retrieve":
                 return True
             case "create":
-                return bool(request.user and self.user_has_permission(view.action, request.user))
-        return bool(request.user and request.user.is_authenticated)
+                return request.user.is_authenticated and (
+                    request.user.is_superuser
+                    or request.user.is_project_creator
+                    or request.user.is_project_admin(project=None, search_for_any=True)
+                )
+        return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
