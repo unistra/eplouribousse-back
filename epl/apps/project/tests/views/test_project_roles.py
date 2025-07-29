@@ -247,3 +247,65 @@ class ProjectAssignRoleTest(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(UserRole.objects.filter(user=self.user, project=self.project_one).count(), 2)
+
+
+class ProjectRemoveRoleTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = UserFactory()
+        self.project_creator = ProjectCreatorFactory()
+
+        self.library_one = LibraryFactory()
+        self.library_two = LibraryFactory()
+
+        self.project_one = ProjectFactory()
+        self.project_two = ProjectFactory()
+
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, True, 204),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_ADMIN, True, 204),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 403),
+        ]
+    )
+    def test_remove_role_to_user_in_project(self, role, should_succeed, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project_one, library=self.library_one)
+        UserRole.objects.create(
+            user=self.user,
+            project=self.project_one,
+            role=Role.INSTRUCTOR,
+            library=self.library_one,
+        )
+        data = {
+            "role": Role.INSTRUCTOR,
+            "user_id": self.user.id,
+            "library_id": self.library_one.id,
+        }
+        url = reverse("project-assign-roles", kwargs={"pk": self.project_one.id})
+        params = f"?role={data['role']}&user_id={data['user_id']}&library_id={data['library_id']}"
+        response = self.delete(url + params, user=user)
+
+        self.assertEqual(response.status_code, expected_status_code)
+
+        if should_succeed:
+            self.assertIsNone(
+                UserRole.objects.filter(
+                    user_id=data["user_id"],
+                    role=data["role"],
+                    library_id=data["library_id"],
+                    project=self.project_one,
+                ).first()
+            )
+        else:
+            self.assertIsNotNone(
+                UserRole.objects.filter(
+                    user_id=data["user_id"],
+                    role=data["role"],
+                    library_id=data["library_id"],
+                    project=self.project_one,
+                ).first()
+            )
