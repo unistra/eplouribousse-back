@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from epl.apps.project.filters.project import ProjectFilter
 from epl.apps.project.models import ActionLog, Project, ProjectStatus, Role, UserRole
 from epl.apps.project.permissions.project import ProjectPermissions
+from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
     ChangeStatusSerializer,
@@ -24,7 +25,6 @@ from epl.apps.project.serializers.project import (
     ProjectUserSerializer,
     UserRoleSerializer,
 )
-from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.user.models import User
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer
