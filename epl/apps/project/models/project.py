@@ -87,6 +87,7 @@ class Project(models.Model):
 
     _extended_permissions = [
         "add_library",
+        "remove_library",
         "update_status",
         "exclusion_reason",
         "remove_exclusion_reason",
