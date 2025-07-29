@@ -59,17 +59,15 @@ class ProjectPermissions(BasePermission):
 
     @staticmethod
     def compute_update_status_permission(user: User, project: Project = None) -> bool:
-        if user.is_superuser:
-            return True
-
-        if user.is_project_creator:
-            return project.status >= ProjectStatus.DRAFT
-        if user.is_project_admin(project=project):
-            return project.status >= ProjectStatus.REVIEW
-        if user.is_project_manager(project=project):
-            return project.status >= ProjectStatus.READY
-
-        return False
+        match project.status:
+            case ProjectStatus.DRAFT:
+                return user.is_project_creator
+            case ProjectStatus.REVIEW:
+                return user.is_project_admin(project=project)
+            case ProjectStatus.READY:
+                return user.is_project_manager(project=project)
+            case _:
+                return False
 
     @staticmethod
     def user_has_permission(action: str, user: User, project: Project = None) -> bool:
@@ -83,7 +81,7 @@ class ProjectPermissions(BasePermission):
             case "validate":
                 return ProjectPermissions.compute_validate_permission(user, project)
             case "update_status":
-                return True
+                return ProjectPermissions.compute_update_status_permission(user, project)
             case (
                 "exclusion_reason"
                 | "remove_exclusion_reason"

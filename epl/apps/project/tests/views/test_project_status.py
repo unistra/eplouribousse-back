@@ -2,10 +2,12 @@ from django.core import mail
 from django.core.signing import TimestampSigner
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
+from parameterized import parameterized
 
 from epl.apps.project.models import Project, ProjectStatus, Role, UserRole
+from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserFactory
+from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserFactory, UserWithRoleFactory
 from epl.apps.user.models import User
 from epl.apps.user.views import INVITE_TOKEN_SALT
 from epl.tests import TestCase
@@ -22,18 +24,48 @@ class ProjectStatusListTest(TestCase):
 
 
 class UpdateProjectStatusTest(TestCase):
-    def test_update_project_status(self):
-        user = ProjectCreatorFactory()
-        project: Project = ProjectFactory(status=ProjectStatus.DRAFT)
+    STATUS_TRANSITIONS = {
+        (ProjectStatus.DRAFT, ProjectStatus.REVIEW): Role.PROJECT_CREATOR,
+        (ProjectStatus.REVIEW, ProjectStatus.READY): Role.PROJECT_ADMIN,
+        (ProjectStatus.READY, ProjectStatus.LAUNCHED): Role.PROJECT_MANAGER,
+    }
+
+    @parameterized.expand(
+        [
+            # Generates all possible combinations of status transitions and roles,
+            # then checks if the tested role is allowed to perform the transition (should_succeed)
+            # and the expected response code (200 if allowed, 403 otherwise).
+            (target, initial, role, role == allowed_role, 200 if role == allowed_role else 403)
+            for (initial, target), allowed_role in STATUS_TRANSITIONS.items()
+            for role in [
+                Role.PROJECT_CREATOR,
+                Role.INSTRUCTOR,
+                Role.PROJECT_ADMIN,
+                Role.PROJECT_MANAGER,
+                Role.CONTROLLER,
+                Role.GUEST,
+                None,
+            ]
+        ]
+    )
+    def test_update_status(self, target_status, initial_status, role, should_succeed, expected_status_code):
+        """
+        Test les transitions de statut avec différents rôles utilisateur.
+        """
+        project = ProjectFactory(status=initial_status)
+        library = LibraryFactory()
+        user = UserWithRoleFactory(role=role, project=project, library=library)
+
         response = self.patch(
             reverse("project-update-status", kwargs={"pk": project.id}),
-            data={"status": ProjectStatus.READY},
+            data={"status": target_status},
             content_type="application/json",
             user=user,
         )
-        self.response_ok(response)
+
+        self.assertEqual(response.status_code, expected_status_code)
         project.refresh_from_db()
-        self.assertEqual(project.status, ProjectStatus.READY)
+        self.assertEqual(project.status, target_status if should_succeed else initial_status)
 
     def test_update_project_status_invalid(self):
         user = ProjectCreatorFactory(first_name="Annabelle")
