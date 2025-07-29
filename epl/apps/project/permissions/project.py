@@ -90,7 +90,9 @@ class ProjectPermissions(BasePermission):
             case "update_status":
                 return True
             case (
-                "exclusion_reason"
+                "add_invitation"
+                | "remove_invitation"
+                | "exclusion_reason"
                 | "remove_exclusion_reason"
                 | "add_library"
                 | "remove_library"
