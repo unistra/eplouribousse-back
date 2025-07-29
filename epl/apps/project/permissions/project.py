@@ -1,4 +1,3 @@
-from django.db import models
 from rest_framework.permissions import BasePermission
 
 from epl.apps.project.models import Project, ProjectStatus, Role
@@ -91,22 +90,6 @@ class ProjectPermissions(BasePermission):
             case "update_status":
                 return True
             case "exclusion_reason" | "remove_exclusion_reason" | "add_library" | "remove_library" | "add_invitation" | "remove_invitation" :
-                return user.is_project_admin(project=project) or user.is_project_creator
-            case (
-                "exclusion_reason" | "remove_exclusion_reason" | "add_library" | "add_invitation" | "remove_invitation"
-            ):
-                return user.project_roles.filter(
-                    models.Q(project=project, role=Role.PROJECT_ADMIN) | models.Q(role=Role.PROJECT_CREATOR)
-                ).exists()
-                return ProjectPermissions.compute_update_status_permission(user, project)
-            case (
-                "exclusion_reason"
-                | "remove_exclusion_reason"
-                | "add_library"
-                | "remove_library"
-                | "assign_roles"
-                | "remove_roles"
-            ):
                 return user.is_project_admin(project=project) or user.is_project_creator
             case "launch":
                 return user.is_project_manager(project=project)

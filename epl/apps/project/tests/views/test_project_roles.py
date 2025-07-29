@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django_tenants.urlresolvers import reverse
 from parameterized import parameterized
 
@@ -156,7 +158,6 @@ class ProjectAssignRoleTest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("role", response.data)
 
-    #
     def test_assign_duplicate_role(self):
         data = {
             "role": Role.INSTRUCTOR,
@@ -247,7 +248,6 @@ class ProjectAssignRoleTest(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(UserRole.objects.filter(user=self.user, project=self.project_one).count(), 2)
-
 
 class ProjectRemoveRoleTest(TestCase):
     def setUp(self):
