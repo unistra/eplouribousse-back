@@ -7,7 +7,7 @@ from parameterized import parameterized
 from epl.apps.project.models import Role
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserFactory, UserWithRoleFactory
+from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserWithRoleFactory
 from epl.tests import TestCase
 
 
@@ -63,28 +63,32 @@ class ExclusionReasonsTest(TestCase):
         with tenant_context(self.tenant):
             self.user = ProjectCreatorFactory()
             self.project = ProjectFactory(name="Test Project")
+            self.library = LibraryFactory(name="Test Library")
 
-    def test_project_admin_can_add_exclusion_reason(self):
+    # Adding exclusion reasons - tests /api/projects/{id}/exclusion-reason/
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, True, 201),
+            (Role.PROJECT_ADMIN, True, 201),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 403),
+        ]
+    )
+    def test_add_exclusion_reason_permissions(self, role, should_succeed, expected_status):
         with tenant_context(self.tenant):
-            admin = UserFactory()
-            admin.project_roles.create(project=self.project, role=Role.PROJECT_ADMIN, assigned_by=self.user)
-
+            user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
         data = {"exclusion_reason": "New exclusion reason"}
         url = reverse("project-exclusion-reason", kwargs={"pk": self.project.pk})
-        response = self.post(url, data=data, content_type="application/json", user=self.user)
-        self.response_created(response)
-
-    def test_add_exclusion_reason_success(self):
-        """Test successful addition of a new exclusion reason"""
-        data = {"exclusion_reason": "New exclusion reason"}
-
-        url = reverse("project-exclusion-reason", kwargs={"pk": self.project.pk})
-        response = self.post(url, data=data, content_type="application/json", user=self.user)
-
-        self.response_created(response)
-        self.project.refresh_from_db()
-        self.assertIn("New exclusion reason", self.project.settings["exclusion_reasons"])
-        self.assertEqual(len(self.project.settings["exclusion_reasons"]), 4)
+        response = self.post(url, data=data, content_type="application/json", user=user)
+        self.assertEqual(response.status_code, expected_status)
+        if should_succeed:
+            self.response_created(response)
+            self.project.refresh_from_db()
+            self.assertIn("New exclusion reason", self.project.settings["exclusion_reasons"])
+            self.assertEqual(len(self.project.settings["exclusion_reasons"]), 4)
 
     def test_add_exclusion_reason_duplicate(self):
         """Adding a duplicate exclusion reason should not raise an error"""
@@ -116,17 +120,30 @@ class ExclusionReasonsTest(TestCase):
         self.response_bad_request(response)
         self.assertIn("exclusion_reason", response.data)
 
-    def test_remove_exclusion_reason_success(self):
+    # Removing exclusion reasons - tests /api/projects/{id}/exclusion-reason/
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, True, 204),
+            (Role.PROJECT_ADMIN, True, 204),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 403),
+        ]
+    )
+    def test_remove_exclusion_reason_permissions(self, role, should_succeed, expected_status):
+        with tenant_context(self.tenant):
+            user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
         data = {"exclusion_reason": "Other"}
-
         url = f"{reverse('project-exclusion-reason', kwargs={'pk': self.project.pk})}?{urlencode(data)}"
-        data = {"exclusion_reason": "Other"}
-        response = self.delete(url, data=data, user=self.user)
-
-        self.response_no_content(response)
-        self.project.refresh_from_db()
-        self.assertNotIn("Other", self.project.settings["exclusion_reasons"])
-        self.assertEqual(len(self.project.settings["exclusion_reasons"]), 2)
+        response = self.delete(url, user=user)
+        self.assertEqual(response.status_code, expected_status)
+        if should_succeed:
+            self.response_no_content(response)
+            self.project.refresh_from_db()
+            self.assertNotIn("Other", self.project.settings["exclusion_reasons"])
+            self.assertEqual(len(self.project.settings["exclusion_reasons"]), 2)
 
     def test_remove_exclusion_reason_not_found(self):
         data = {"exclusion_reason": "Non-existent reason"}
