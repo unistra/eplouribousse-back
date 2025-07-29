@@ -26,6 +26,8 @@ class ProjectPermissions(BasePermission):
             "exclusion_reason",
             "remove_exclusion_reason",
             "status",
+            "add_invitation",
+            "remove_invitation",
             "launch",
         ]:
             return self.user_has_permission(view.action, request.user, obj)
@@ -81,6 +83,13 @@ class ProjectPermissions(BasePermission):
             case "validate":
                 return ProjectPermissions.compute_validate_permission(user, project)
             case "update_status":
+                return True
+            case (
+                "exclusion_reason" | "remove_exclusion_reason" | "add_library" | "add_invitation" | "remove_invitation"
+            ):
+                return user.project_roles.filter(
+                    models.Q(project=project, role=Role.PROJECT_ADMIN) | models.Q(role=Role.PROJECT_CREATOR)
+                ).exists()
                 return ProjectPermissions.compute_update_status_permission(user, project)
             case (
                 "exclusion_reason"
