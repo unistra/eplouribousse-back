@@ -33,7 +33,6 @@ class ProjectLibraryPatchPermissionTest(TestCase):
     def test_patch_project_library_permissions(self, role, should_succeed, expected_status_code):
         user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
         url = reverse("projects-library-detail", kwargs={"project_pk": self.project.id, "pk": self.library.id})
-        print(f"URL: {url}")
         response = self.patch(
             url, data={"is_alternative_storage_site": True}, content_type="application/json", user=user
         )
