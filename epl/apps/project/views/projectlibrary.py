@@ -5,6 +5,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from epl.apps.project.models import ProjectLibrary
+from epl.apps.project.permissions.projectlibrary import ProjectLibraryPermissions
 from epl.schema_serializers import UnauthorizedSerializer
 
 project_library_patch_inline_serializer = inline_serializer(
@@ -13,6 +14,8 @@ project_library_patch_inline_serializer = inline_serializer(
 
 
 class ProjectLibraryViewSet(viewsets.ModelViewSet):
+    permission_classes = [ProjectLibraryPermissions]
+
     @extend_schema(
         tags=["project"],
         summary=_("Specify if the library is an alternative storage location"),
@@ -26,6 +29,7 @@ class ProjectLibraryViewSet(viewsets.ModelViewSet):
     )
     def partial_update(self, request, project_pk=None, pk=None):
         project_library = get_object_or_404(ProjectLibrary.objects.all(), project_id=project_pk, library_id=pk)
+        self.check_object_permissions(self.request, project_library)
         project_library.is_alternative_storage_site = bool(request.data.get("is_alternative_storage_site"))
         project_library.save(update_fields=["is_alternative_storage_site"])
         return Response(
