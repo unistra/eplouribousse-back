@@ -88,6 +88,8 @@ class ProjectPermissions(BasePermission):
                 return ProjectPermissions.compute_validate_permission(user, project)
             case "update_status":
                 return True
+            case "exclusion_reason" | "remove_exclusion_reason" | "add_library" | "add_invitation" | "remove_invitation":
+                return user.is_project_admin(project=project) or user.is_project_creator
             case (
                 "exclusion_reason" | "remove_exclusion_reason" | "add_library" | "add_invitation" | "remove_invitation"
             ):
