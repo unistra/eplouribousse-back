@@ -2,14 +2,14 @@ import uuid
 
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
+from parameterized import parameterized
 
 from epl.apps.project.models import Role, UserRole
 from epl.apps.project.models.library import Library
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import ProjectCreatorFactory
-from epl.apps.user.models import User
+from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserWithRoleFactory
 from epl.tests import TestCase
 
 
@@ -18,21 +18,32 @@ class LibraryViewsTest(TestCase):
         super().setUp()
 
         with tenant_context(self.tenant):
-            # Create a user
-            self.user = User.objects.create_user(username="user", email="user@eplouribouse.fr")
-            self.library = Library.objects.create(
-                name="Bibliothèque Nationale de Test",
-                alias="BNT",
-                code="67000",
-            )
+            self.library1 = LibraryFactory()
+            self.library2 = LibraryFactory()
 
-    def test_get_library_list(self):
-        url = reverse("library-list")
+            self.project = ProjectFactory()
 
-        response = self.get(url, user=self.user)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data.get("results")), 1)
-        self.assertEqual(response.data["results"][0]["name"], self.library.name)
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, 200),
+            (Role.INSTRUCTOR, 200),
+            (Role.PROJECT_ADMIN, 200),
+            (Role.PROJECT_MANAGER, 200),
+            (Role.CONTROLLER, 200),
+            (Role.GUEST, 200),
+            (None, 200),
+        ]
+    )
+    def test_list_and_retrieve_library_permissions(self, role, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1)
+        response_list = self.get(reverse("library-list"), user=user)
+
+        self.assertEqual(response_list.status_code, expected_status_code)
+        self.assertEqual(len(response_list.data["results"]), 2)
+
+        response_retrieve = self.get(reverse("library-detail", kwargs={"pk": self.library1.id}), user=user)
+        self.assertEqual(response_retrieve.status_code, expected_status_code)
+        self.assertEqual(response_retrieve.data["id"], str(self.library1.id))
 
 
 class ProjectLibraryViewsTest(TestCase):

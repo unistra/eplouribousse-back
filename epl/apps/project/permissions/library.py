@@ -7,7 +7,9 @@ from epl.apps.user.models import User
 class LibraryPermission(BasePermission):
     def has_permission(self, request, view):
         match view.action:
-            case "create" | "list":
+            case "list" | "retrieve":
+                return True
+            case "create":
                 return bool(request.user and self.user_has_permission(view.action, request.user))
         return bool(request.user and request.user.is_authenticated)
 
@@ -24,6 +26,4 @@ class LibraryPermission(BasePermission):
         match action:
             case "create" | "update" | "partial_update" | "destroy":
                 return user.is_authenticated and user.is_project_creator
-            case "list" | "retrieve":
-                return user.is_authenticated
         return False
