@@ -78,7 +78,6 @@ class CollectionViewSetTest(TestCase):
         user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
         response = self.get(reverse("collection-list"), user=user)
         self.assertEqual(response.status_code, expected_status)
-        self.response_ok(response)
 
     @parameterized.expand(
         [
