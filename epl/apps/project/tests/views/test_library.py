@@ -71,6 +71,38 @@ class LibraryViewsTest(TestCase):
         else:
             self.assertNotIn("name", response.data)
 
+    @parameterized.expand(
+        [
+            (Role.TENANT_SUPER_USER, True, 200),
+            (Role.PROJECT_CREATOR, True, 200),
+            (Role.PROJECT_ADMIN, True, 200),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 401),
+        ]
+    )
+    def test_partial_update_library(self, role, should_succeed, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1) if role else None
+        data = {
+            "name": "New library",
+            "alias": "NLB",
+            "code": "1234567890",
+        }
+        response = self.patch(
+            reverse("library-detail", kwargs={"pk": self.library1.id}),
+            data=data,
+            user=user,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, expected_status_code)
+        if should_succeed:
+            self.assertEqual(response.data["name"], data["name"])
+            self.assertEqual(response.data["alias"], data["alias"])
+        else:
+            self.assertNotIn("name", response.data)
+
 
 class ProjectLibraryViewsTest(TestCase):
     def setUp(self):
