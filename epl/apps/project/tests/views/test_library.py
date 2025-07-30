@@ -103,6 +103,38 @@ class LibraryViewsTest(TestCase):
         else:
             self.assertNotIn("name", response.data)
 
+    @parameterized.expand(
+        [
+            (Role.TENANT_SUPER_USER, True, 204),
+            (Role.PROJECT_CREATOR, True, 204),
+            (Role.PROJECT_ADMIN, True, 204),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 401),
+        ]
+    )
+    def test_destroy_library(self, role, should_succeed, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1) if role else None
+        data = {
+            "name": "New library",
+            "alias": "NLB",
+            "code": "1234567890",
+        }
+        response = self.delete(
+            reverse("library-detail", kwargs={"pk": self.library1.id}),
+            data=data,
+            user=user,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, expected_status_code)
+
+        if should_succeed:
+            self.assertEqual(Library.objects.count(), 1)
+        else:
+            self.assertEqual(Library.objects.count(), 2)
+
 
 class ProjectLibraryViewsTest(TestCase):
     def setUp(self):

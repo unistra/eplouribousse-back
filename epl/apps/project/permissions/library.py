@@ -23,6 +23,7 @@ class LibraryPermission(BasePermission):
         if view.action in [
             "update",
             "partial_update",
+            "destroy",
         ]:
             return self.user_has_permission(view.action, request.user, obj)
         return False
@@ -30,7 +31,7 @@ class LibraryPermission(BasePermission):
     @staticmethod
     def user_has_permission(action: str, user: User, obj: Library = None) -> bool:
         match action:
-            case "update" | "partial_update":
+            case "update" | "partial_update" | "destroy":
                 return (
                     user.is_superuser
                     or user.is_project_creator
