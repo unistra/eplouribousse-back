@@ -31,8 +31,9 @@ class CollectionDeletePermissionTest(TestCase):
 
     @parameterized.expand(
         [
-            (Role.PROJECT_CREATOR, True, 204),  # Peut supprimer
-            (Role.INSTRUCTOR, False, 403),  # Ne peut pas supprimer
+            (Role.TENANT_SUPER_USER, False, 403),
+            (Role.PROJECT_CREATOR, True, 204),
+            (Role.INSTRUCTOR, False, 403),
             (Role.PROJECT_ADMIN, False, 403),
             (Role.PROJECT_MANAGER, False, 403),
             (Role.CONTROLLER, False, 403),
@@ -65,6 +66,7 @@ class CollectionViewSetTest(TestCase):
 
     @parameterized.expand(
         [
+            (Role.TENANT_SUPER_USER, True, 200),
             (Role.PROJECT_CREATOR, True, 200),
             (Role.INSTRUCTOR, True, 200),
             (Role.PROJECT_ADMIN, True, 200),
@@ -81,6 +83,7 @@ class CollectionViewSetTest(TestCase):
 
     @parameterized.expand(
         [
+            (Role.TENANT_SUPER_USER, False, 403),
             (Role.PROJECT_CREATOR, True, 200),
             (Role.INSTRUCTOR, False, 403),
             (Role.PROJECT_ADMIN, False, 403),

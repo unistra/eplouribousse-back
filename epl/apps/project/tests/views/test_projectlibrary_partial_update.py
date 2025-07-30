@@ -21,6 +21,7 @@ class ProjectLibraryPatchPermissionTest(TestCase):
 
     @parameterized.expand(
         [
+            (Role.TENANT_SUPER_USER, False, 403),
             (Role.PROJECT_CREATOR, True, 200),
             (Role.PROJECT_ADMIN, True, 200),
             (Role.INSTRUCTOR, False, 403),
