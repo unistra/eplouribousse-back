@@ -23,17 +23,17 @@ class TestInviteView(TestCase):
 
     @parameterized.expand(
         [
-            (Role.TENANT_SUPER_USER, True, 200),
-            (Role.PROJECT_CREATOR, False, 403),
-            (Role.INSTRUCTOR, False, 403),
-            (Role.PROJECT_ADMIN, False, 403),
-            (Role.PROJECT_MANAGER, False, 403),
-            (Role.CONTROLLER, False, 403),
-            (Role.GUEST, False, 403),
-            (None, False, 403),
+            (Role.TENANT_SUPER_USER, 200),
+            (Role.PROJECT_CREATOR, 403),
+            (Role.INSTRUCTOR, 403),
+            (Role.PROJECT_ADMIN, 403),
+            (Role.PROJECT_MANAGER, 403),
+            (Role.CONTROLLER, 403),
+            (Role.GUEST, 403),
+            (None, 403),
         ]
     )
-    def test_invite_permissions(self, role, should_succeed, expected_status):
+    def test_invite_permissions(self, role, expected_status):
         user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
         response = self.post(reverse("invite"), {"email": "new_user@example.com"}, user=user)
         self.assertEqual(response.status_code, expected_status)
