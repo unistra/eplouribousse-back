@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from epl.apps.project.models import Collection, Library, Project, Resource
+from epl.apps.project.models.comment import Comment
 from epl.libs.csv_import import handle_import
 
 logger = logging.getLogger(__name__)
@@ -178,13 +179,12 @@ class ExclusionSerializer(serializers.ModelSerializer):
 
 
 class PositioningCommentSerializer(serializers.ModelSerializer):
-    positioning_comment = serializers.CharField(
-        max_length=255,
-        required=False,
-        allow_blank=True,
-        help_text=_("Instructor's comment on the collection positioning"),
-    )
-
     class Meta:
-        model = Collection
-        fields = ["positioning_comment"]
+        model = Comment
+        fields = ["id", "content", "author", "created_at"]
+        read_only_fields = ["id", "subject", "author", "created_at"]
+
+    def create(self, validated_data):
+        validated_data["subject"] = _("Positioning comment")  # Set a default subject for the comment
+        validated_data["author"] = self.context["request"].user  # Set the author to the current user
+        return super().create(validated_data)
