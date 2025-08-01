@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from epl.apps.project.models import Resource
+from epl.apps.project.serializers.collection import CollectionPositioningSerializer
 from epl.apps.user.models import User
 
 
@@ -32,3 +33,8 @@ class ResourceSerializer(serializers.ModelSerializer):
         if not user or not user.is_authenticated or not library_id:
             return False
         return user.is_instructor(obj.project, library_id)
+
+
+class ResourceWithCollectionsSerializer(serializers.Serializer):
+    resource = ResourceSerializer()
+    collections = CollectionPositioningSerializer(many=True)

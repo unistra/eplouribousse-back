@@ -188,3 +188,31 @@ class PositioningCommentSerializer(serializers.ModelSerializer):
         validated_data["subject"] = _("Positioning comment")  # Set a default subject for the comment
         validated_data["author"] = self.context["request"].user  # Set the author to the current user
         return super().create(validated_data)
+
+
+class CollectionPositioningSerializer(serializers.ModelSerializer):
+    """
+    Used to serialize the collection's positioning information.
+    Is used in the ResourceSerializer as nested serializer.
+    """
+
+    comment_positioning = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Collection
+        fields = [
+            "id",
+            "library",
+            "call_number",
+            "hold_statement",
+            "position",
+            "is_excluded",
+            "exclusion_reason",
+            "comment_positioning",
+        ]
+
+    def get_comment_positioning(self, obj):
+        comment = obj.comments.filter(subject=_("Positioning comment")).order_by("-created_at").first()
+        if comment:
+            return PositioningCommentSerializer(comment).data
+        return None
