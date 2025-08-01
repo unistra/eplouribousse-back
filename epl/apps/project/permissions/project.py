@@ -98,8 +98,6 @@ class ProjectPermissions(BasePermission):
                 | "remove_library"
                 | "assign_roles"
                 | "remove_roles"
-                | "add_invitation"
-                | "remove_invitation"
             ):
                 return user.is_project_admin(project=project) or user.is_project_creator
             case "launch":
