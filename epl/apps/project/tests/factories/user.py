@@ -73,5 +73,8 @@ class UserWithRoleFactory(factory.django.DjangoModelFactory):
                     role=role,
                     assigned_by=user,
                 )
+            case Role.TENANT_SUPER_USER:
+                user.is_superuser = True
+                user.save()
 
         return user

@@ -35,6 +35,11 @@ class ProjectPermissions(BasePermission):
 
     @staticmethod
     def compute_retrieve_permission(user: User, project: Project = None) -> bool:
+        if not user.is_authenticated and project.status >= ProjectStatus.LAUNCHED and not project.is_private:
+            return True
+        elif not user.is_authenticated:
+            return False
+
         permission_checks = [
             (ProjectStatus.DRAFT, lambda: user.is_project_creator),
             (ProjectStatus.REVIEW, lambda: user.is_project_admin(project=project)),
@@ -71,7 +76,7 @@ class ProjectPermissions(BasePermission):
 
     @staticmethod
     def user_has_permission(action: str, user: User, project: Project = None) -> bool:
-        if not user.is_authenticated:
+        if not user.is_authenticated and action != "retrieve":
             return False
         match action:
             case "retrieve":

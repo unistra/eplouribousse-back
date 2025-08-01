@@ -58,7 +58,9 @@ class User(AbstractUser):
     def is_project_creator(self) -> bool:
         return UserRole.objects.filter(user=self, role=Role.PROJECT_CREATOR).exists()
 
-    def is_project_admin(self, project: Project) -> bool:
+    def is_project_admin(self, project: Project | None, search_for_any: bool = False) -> bool:
+        if search_for_any:
+            return UserRole.objects.filter(user=self, role=Role.PROJECT_ADMIN).exists()
         return UserRole.objects.filter(user=self, project=project, role=Role.PROJECT_ADMIN).exists()
 
     def is_project_manager(self, project: Project) -> bool:

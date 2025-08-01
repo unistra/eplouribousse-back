@@ -2,14 +2,14 @@ import uuid
 
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
+from parameterized import parameterized
 
 from epl.apps.project.models import Role, UserRole
 from epl.apps.project.models.library import Library
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import ProjectCreatorFactory
-from epl.apps.user.models import User
+from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserWithRoleFactory
 from epl.tests import TestCase
 
 
@@ -18,21 +18,122 @@ class LibraryViewsTest(TestCase):
         super().setUp()
 
         with tenant_context(self.tenant):
-            # Create a user
-            self.user = User.objects.create_user(username="user", email="user@eplouribouse.fr")
-            self.library = Library.objects.create(
-                name="Bibliothèque Nationale de Test",
-                alias="BNT",
-                code="67000",
-            )
+            self.library1 = LibraryFactory()
+            self.library2 = LibraryFactory()
 
-    def test_get_library_list(self):
-        url = reverse("library-list")
+            self.project = ProjectFactory()
 
-        response = self.get(url, user=self.user)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data.get("results")), 1)
-        self.assertEqual(response.data["results"][0]["name"], self.library.name)
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, 200),
+            (Role.INSTRUCTOR, 200),
+            (Role.PROJECT_ADMIN, 200),
+            (Role.PROJECT_MANAGER, 200),
+            (Role.CONTROLLER, 200),
+            (Role.GUEST, 200),
+            (None, 200),
+        ]
+    )
+    def test_list_and_retrieve_library_permissions(self, role, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1) if role is not None else None
+        response_list = self.get(reverse("library-list"), user=user)
+
+        self.assertEqual(response_list.status_code, expected_status_code)
+        self.assertEqual(len(response_list.data["results"]), 2)
+
+        response_retrieve = self.get(reverse("library-detail", kwargs={"pk": self.library1.id}), user=user)
+        self.assertEqual(response_retrieve.status_code, expected_status_code)
+        self.assertEqual(response_retrieve.data["id"], str(self.library1.id))
+
+    @parameterized.expand(
+        [
+            (Role.TENANT_SUPER_USER, True, 201),
+            (Role.PROJECT_CREATOR, True, 201),
+            (Role.PROJECT_ADMIN, True, 201),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 401),
+        ]
+    )
+    def test_create_library(self, role, should_succeed, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1) if role else None
+        data = {
+            "name": "New library",
+            "alias": "NLB",
+            "code": "1234567890",
+        }
+        response = self.post(reverse("library-list"), data=data, user=user)
+        self.assertEqual(response.status_code, expected_status_code)
+        if should_succeed:
+            self.assertEqual(response.data["name"], data["name"])
+        else:
+            self.assertNotIn("name", response.data)
+
+    @parameterized.expand(
+        [
+            (Role.TENANT_SUPER_USER, True, 200),
+            (Role.PROJECT_CREATOR, True, 200),
+            (Role.PROJECT_ADMIN, True, 200),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 401),
+        ]
+    )
+    def test_partial_update_library(self, role, should_succeed, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1) if role else None
+        data = {
+            "name": "New library",
+            "alias": "NLB",
+            "code": "1234567890",
+        }
+        response = self.patch(
+            reverse("library-detail", kwargs={"pk": self.library1.id}),
+            data=data,
+            user=user,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, expected_status_code)
+        if should_succeed:
+            self.assertEqual(response.data["name"], data["name"])
+            self.assertEqual(response.data["alias"], data["alias"])
+        else:
+            self.assertNotIn("name", response.data)
+
+    @parameterized.expand(
+        [
+            (Role.TENANT_SUPER_USER, True, 204),
+            (Role.PROJECT_CREATOR, True, 204),
+            (Role.PROJECT_ADMIN, True, 204),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 401),
+        ]
+    )
+    def test_destroy_library(self, role, should_succeed, expected_status_code):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1) if role else None
+        data = {
+            "name": "New library",
+            "alias": "NLB",
+            "code": "1234567890",
+        }
+        response = self.delete(
+            reverse("library-detail", kwargs={"pk": self.library1.id}),
+            data=data,
+            user=user,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, expected_status_code)
+
+        if should_succeed:
+            self.assertEqual(Library.objects.count(), 1)
+        else:
+            self.assertEqual(Library.objects.count(), 2)
 
 
 class ProjectLibraryViewsTest(TestCase):
