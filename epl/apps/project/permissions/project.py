@@ -20,12 +20,15 @@ class ProjectPermissions(BasePermission):
             "destroy",
             "add_library",
             "remove_library",
+            "remove_library",
             "assign_roles",
             "remove_roles",
             "update_status",
             "exclusion_reason",
             "remove_exclusion_reason",
             "status",
+            "add_invitation",
+            "remove_invitation",
             "launch",
         ]:
             return self.user_has_permission(view.action, request.user, obj)
@@ -59,6 +62,10 @@ class ProjectPermissions(BasePermission):
         return not project.is_private
 
     @staticmethod
+    def compute_update_permission(user: User) -> bool:
+        return user.is_superuser or user.is_project_creator
+
+    @staticmethod
     def compute_validate_permission(user: User, project: Project = None) -> bool:
         return user.project_roles.filter(project=project, role=Role.PROJECT_MANAGER).exists()
 
@@ -88,7 +95,9 @@ class ProjectPermissions(BasePermission):
             case "update_status":
                 return ProjectPermissions.compute_update_status_permission(user, project)
             case (
-                "exclusion_reason"
+                "add_invitation"
+                | "remove_invitation"
+                | "exclusion_reason"
                 | "remove_exclusion_reason"
                 | "add_library"
                 | "remove_library"

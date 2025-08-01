@@ -1,13 +1,16 @@
 import uuid
 from unittest.mock import patch
+from urllib.parse import urlencode
 
 from django.core.exceptions import ValidationError
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
+from parameterized import parameterized
 
 from epl.apps.project.models import Role, UserRole
+from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import UserFactory
+from epl.apps.project.tests.factories.user import UserFactory, UserWithRoleFactory
 from epl.apps.user.models import User
 from epl.apps.user.views import _get_invite_signer
 from epl.tests import TestCase
@@ -234,6 +237,83 @@ class TestUserAccountCreationAfterInvite(TestCase):
 
 
 class ProjectInvitationTests(TestCase):
+    """
+    Tests for project invitation endpoints.
+    """
+
+    def setUp(self):
+        """
+        Set up the test case.
+        """
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project = ProjectFactory()
+            self.library = LibraryFactory()
+
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, True, 201),
+            (Role.PROJECT_ADMIN, True, 201),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 403),
+        ]
+    )
+    def test_add_invitation_permissions(self, role, should_succeed, expected_status):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
+        url = reverse("project-add-invitation", kwargs={"pk": self.project.pk})
+
+        data = {
+            "email": "newuser@example.com",
+            "role": Role.GUEST,
+        }
+        response = self.post(url, data=data, user=user)
+        self.assertEqual(response.status_code, expected_status)
+
+        if should_succeed:
+            self.project.refresh_from_db()
+            self.assertEqual(len(self.project.invitations), 1)
+            self.assertEqual(self.project.invitations[0]["email"], "newuser@example.com")
+            self.assertEqual(self.project.invitations[0]["role"], Role.GUEST)
+
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, True, 204),
+            (Role.PROJECT_ADMIN, True, 204),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 403),
+        ]
+    )
+    def test_remove_invitation_permissions(self, role, should_succeed, expected_status):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
+
+        admin = UserWithRoleFactory(role=Role.PROJECT_ADMIN, project=self.project)
+        url_add = reverse("project-add-invitation", kwargs={"pk": self.project.pk})
+        data = {"email": "toremove@example.com", "role": Role.GUEST}
+        self.post(url_add, data=data, user=admin)
+
+        # Verify that the invitation was added
+        self.project.refresh_from_db()
+        self.assertEqual(len(self.project.invitations), 1)
+
+        query_string = urlencode(data)  # Prepare the query string for the deletion URL
+        url_remove = reverse("project-add-invitation", kwargs={"pk": self.project.pk}) + f"?{query_string}"
+        response = self.delete(url_remove, user=user)
+        self.assertEqual(response.status_code, expected_status)
+
+        if should_succeed:
+            self.project.refresh_from_db()
+            self.assertEqual(len(self.project.invitations), 0)
+        else:
+            self.project.refresh_from_db()
+            self.assertEqual(len(self.project.invitations), 1)
+
+    # class ProjectInvitationTests(TestCase):
     ...
     # def setUp(self):
     #     """

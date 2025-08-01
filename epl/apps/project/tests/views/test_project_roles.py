@@ -156,7 +156,6 @@ class ProjectAssignRoleTest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("role", response.data)
 
-    #
     def test_assign_duplicate_role(self):
         data = {
             "role": Role.INSTRUCTOR,

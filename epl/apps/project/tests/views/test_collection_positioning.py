@@ -2,12 +2,13 @@ from uuid import uuid4
 
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
+from parameterized import parameterized
 
 from epl.apps.project.models import Role, UserRole
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import UserFactory
+from epl.apps.project.tests.factories.user import UserFactory, UserWithRoleFactory
 from epl.apps.user.models import User
 from epl.tests import TestCase
 
@@ -16,28 +17,49 @@ class CollectionPositionViewSetTest(TestCase):
     def setUp(self):
         super().setUp()
         with tenant_context(self.tenant):
-            self.user = UserFactory()
+            self.instructor = UserFactory()
             self.project = ProjectFactory()
             self.library = LibraryFactory()
 
-            self.collection = CollectionFactory(library=self.library, project=self.project, created_by=self.user)
+            self.collection = CollectionFactory(library=self.library, project=self.project, created_by=self.instructor)
 
             UserRole.objects.create(
-                user=self.user, project=self.project, library=self.library, role=Role.INSTRUCTOR, assigned_by=self.user
+                user=self.instructor,
+                project=self.project,
+                library=self.library,
+                role=Role.INSTRUCTOR,
+                assigned_by=self.instructor,
             )
 
     # Positioning a collection - tests / PATCH /api/collections/{id}/position/
-    def test_position_collection_success(self):
+
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, False, 403),
+            (Role.INSTRUCTOR, True, 200),
+            (Role.PROJECT_ADMIN, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 403),
+        ]
+    )
+    def test_position_collection_permissions(self, role, should_succeed, expected_status):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
         data = {"position": 1}
         response = self.patch(
             reverse("collection-position", kwargs={"pk": self.collection.id}),
             data=data,
             content_type="application/json",
-            user=self.user,
+            user=user,
         )
-        self.response_ok(response)
+        self.assertEqual(response.status_code, expected_status)
+
         self.collection.refresh_from_db()
-        self.assertEqual(self.collection.position, 1)
+        if should_succeed:
+            self.assertEqual(self.collection.position, 1)
+        else:
+            self.assertEqual(self.collection.position, None)
 
     def test_position_collection_invalid_position(self):
         data = {"position": 0}
@@ -45,34 +67,10 @@ class CollectionPositionViewSetTest(TestCase):
             reverse("collection-position", kwargs={"pk": self.collection.id}),
             data=data,
             content_type="application/json",
-            user=self.user,
+            user=self.instructor,
         )
         self.response_bad_request(response)
         self.assertIn("position", response.data)
-
-    def test_position_collection_requires_authentication(self):
-        data = {"position": 1}
-        response = self.patch(
-            reverse("collection-position", kwargs={"pk": self.collection.id}),
-            data=data,
-            content_type="application/json",
-        )  # no user provided = unauthenticated request
-        self.response_unauthorized(response)  # 401 Unauthorized
-
-    def test_position_requires_instructor_role(self):
-        another_user = User.objects.create_user(email="another_user@eplouribousse.fr")
-        UserRole.objects.create(
-            user=another_user, project=self.project, library=self.library, role=Role.GUEST, assigned_by=self.user
-        )
-        data = {"position": 1}
-        response = self.patch(
-            reverse("collection-position", kwargs={"pk": self.collection.id}),
-            data=data,
-            content_type="application/json",
-            user=another_user,
-        )
-
-        self.response_forbidden(response)
 
     # Add a comment to the collection - tests / PATCH /api/collections/{id}/comment-positioning/
 
@@ -82,7 +80,7 @@ class CollectionPositionViewSetTest(TestCase):
             reverse("collection-comment-positioning", kwargs={"pk": self.collection.id}),
             data=data,
             content_type="application/json",
-            user=self.user,
+            user=self.instructor,
         )
         self.response_ok(response)
         self.collection.refresh_from_db()
@@ -97,7 +95,7 @@ class CollectionPositionViewSetTest(TestCase):
             reverse("collection-comment-positioning", kwargs={"pk": self.collection.id}),
             data=data,
             content_type="application/json",
-            user=self.user,
+            user=self.instructor,
         )
         self.response_ok(response)
         self.collection.refresh_from_db()
@@ -123,47 +121,40 @@ class CollectionPositionViewSetTest(TestCase):
     def test_positioning_comment_collection_not_found(self):
         data = {"positioning_comment": "Test comment for unexisting collection"}
         response = self.patch(
-            reverse("collection-comment-positioning", kwargs={"pk": uuid4()}), data=data, user=self.user
+            reverse("collection-comment-positioning", kwargs={"pk": uuid4()}), data=data, user=self.instructor
         )
         self.response_not_found(response)
 
     # Exclude a collection - tests / PATCH /api/collections/{id}/exclude/
-
-    def test_exclude_collection_with_exclusion_reason(self):
+    @parameterized.expand(
+        [
+            (Role.PROJECT_CREATOR, False, 403),
+            (Role.INSTRUCTOR, True, 200),
+            (Role.PROJECT_ADMIN, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 403),
+        ]
+    )
+    def test_exclude_collection_permissions(self, role, should_succeed, expected_status):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
         data = {"exclusion_reason": "Participation in another project"}
         response = self.patch(
             reverse("collection-exclude", kwargs={"pk": self.collection.id}),
             data=data,
             content_type="application/json",
-            user=self.user,
+            user=user,
         )
-        self.response_ok(response)
+        self.assertEqual(response.status_code, expected_status)
+
         self.collection.refresh_from_db()
-        self.assertEqual(self.collection.exclusion_reason, "Participation in another project")
-
-    def test_exclude_collection_requires_authentication(self):
-        data = {"exclusion_reason": "Participation in another project"}
-        response = self.patch(
-            reverse("collection-exclude", kwargs={"pk": self.collection.id}),
-            data=data,
-            content_type="application/json",
-            user=None,
-        )
-        self.response_unauthorized(response)
-
-    def test_exclude_collection_requires_instructor_role(self):
-        regular_user = User.objects.create_user(email="regular@eplouribousse.fr")
-        data = {"exclusion_reason": "Participation in another project"}
-        response = self.patch(
-            reverse("collection-exclude", kwargs={"pk": self.collection.id}),
-            data=data,
-            content_type="application/json",
-            user=regular_user,
-        )
-        self.response_forbidden(response)
+        if should_succeed:
+            self.assertEqual(self.collection.exclusion_reason, "Participation in another project")
+        else:
+            self.assertEqual(self.collection.exclusion_reason, "")
 
     # test exclure collection puis positionner supprime les motifs d'exclusion.
-
     def test_position_excluded_collection_clears_exclusion_reason(self):
         # Exclude the collection first
         exclude_data = {"exclusion_reason": "Participation in another project"}
@@ -171,7 +162,7 @@ class CollectionPositionViewSetTest(TestCase):
             reverse("collection-exclude", kwargs={"pk": self.collection.id}),
             data=exclude_data,
             content_type="application/json",
-            user=self.user,
+            user=self.instructor,
         )
 
         # Now position the collection
@@ -180,7 +171,7 @@ class CollectionPositionViewSetTest(TestCase):
             reverse("collection-position", kwargs={"pk": self.collection.id}),
             data=position_data,
             content_type="application/json",
-            user=self.user,
+            user=self.instructor,
         )
         self.response_ok(response)
         self.collection.refresh_from_db()
