@@ -88,7 +88,7 @@ class ProjectPermissions(BasePermission):
             case "validate":
                 return ProjectPermissions.compute_validate_permission(user, project)
             case "update_status":
-                return True
+                return ProjectPermissions.compute_update_status_permission(user, project)
             case (
                 "add_invitation"
                 | "remove_invitation"

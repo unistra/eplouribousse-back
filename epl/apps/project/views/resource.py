@@ -65,7 +65,14 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         description="List all possible resource statuses.",
         summary="List Resource Statuses",
     )
-    @action(detail=False, methods=["get"], url_path="status", permission_classes=[AllowAny], pagination_class=None, filter_backends=[])
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="status",
+        permission_classes=[AllowAny],
+        pagination_class=None,
+        filter_backends=[],
+    )
     def list_statuses(self, request, pk=None):
         statuses = [{"status": _s[0], "label": _s[1]} for _s in ResourceStatus.choices]
         serializer = StatusListSerializer(statuses, many=True)

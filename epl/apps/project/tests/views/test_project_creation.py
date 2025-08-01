@@ -7,7 +7,6 @@ from parameterized import parameterized
 from epl.apps.project.models import Role
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
-from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserFactory, UserWithRoleFactory
 from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserWithRoleFactory
 from epl.tests import TestCase
 
