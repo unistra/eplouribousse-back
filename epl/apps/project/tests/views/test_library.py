@@ -35,7 +35,7 @@ class LibraryViewsTest(TestCase):
         ]
     )
     def test_list_and_retrieve_library_permissions(self, role, expected_status_code):
-        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1)
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library1) if role is not None else None
         response_list = self.get(reverse("library-list"), user=user)
 
         self.assertEqual(response_list.status_code, expected_status_code)

@@ -18,9 +18,8 @@ class LibraryPermission(BasePermission):
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        if view.action == "retrieve":
-            return True
         if view.action in [
+            "retrieve",
             "update",
             "partial_update",
             "destroy",
@@ -31,6 +30,8 @@ class LibraryPermission(BasePermission):
     @staticmethod
     def user_has_permission(action: str, user: User, obj: Library = None) -> bool:
         match action:
+            case "retrieve":
+                return True
             case "update" | "partial_update" | "destroy":
                 return (
                     user.is_superuser
