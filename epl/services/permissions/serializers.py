@@ -16,10 +16,11 @@ class AclSerializerMixin(serializers.Serializer):
 
     def get_acl(self, instance):
         acl_field = self.fields["acl"]
+        custom_permission_classes = getattr(acl_field, "permission_classes", None)
         exclude = getattr(acl_field, "exclude", [])
         include = getattr(acl_field, "include", [])
         permissions = self._get_permissions(instance, include=include, exclude=exclude)
-        permission_classes = self._get_permission_classes()
+        permission_classes = self._get_permission_classes(permission_classes=custom_permission_classes)
         user = self.context["request"].user
         return {
             permission: self._check_permission(
@@ -66,10 +67,13 @@ class AclSerializerMixin(serializers.Serializer):
             return [perm for perm in permissions if perm not in exclude]
         return permissions
 
-    def _get_permission_classes(self) -> list[BasePermission]:
+    def _get_permission_classes(self, permission_classes: list[BasePermission] = None) -> list[BasePermission]:
         """
         Get the permission classes defined on the view
         """
+
+        if permission_classes:
+            return permission_classes
 
         view = self.context.get("view", None)
         if view is None or not isinstance(view, GenericAPIView):
@@ -80,6 +84,8 @@ class AclSerializerMixin(serializers.Serializer):
 
 class AclField(serializers.SerializerMethodField):
     def __init__(self, **kwargs):
+        if permission_classes := kwargs.pop("permission_classes", None):
+            self.permission_classes = permission_classes
         if exclude := kwargs.pop("exclude", None):
             self.exclude = exclude
         if include := kwargs.pop("include", None):
