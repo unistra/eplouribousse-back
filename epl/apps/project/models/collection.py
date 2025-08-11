@@ -38,9 +38,7 @@ class Resource(models.Model):
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     comments = GenericRelation(Comment)
 
-    _extended_permissions = [
-        "list_statuses",
-    ]
+    _extended_permissions = ["list_statuses", "collections"]
 
     class Meta:
         verbose_name = _("Resource")
@@ -96,6 +94,8 @@ class Collection(models.Model):
         help_text=_("The collection is the result of a deduplication process"),
     )
     comments = GenericRelation(Comment)
+
+    _extended_permissions = ["position"]
 
     class Meta:
         verbose_name = _("Collection")

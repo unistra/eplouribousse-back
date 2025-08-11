@@ -4,9 +4,11 @@ from rest_framework import serializers
 from epl.apps.project.models import Resource
 from epl.apps.project.serializers.collection import CollectionPositioningSerializer
 from epl.apps.user.models import User
+from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 
-class ResourceSerializer(serializers.ModelSerializer):
+class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
+    acl = AclField()
     count = serializers.IntegerField(read_only=True)
     call_numbers = serializers.CharField(read_only=True)
     should_instruct = serializers.SerializerMethodField(
@@ -15,16 +17,7 @@ class ResourceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Resource
-        fields = [
-            "id",
-            "title",
-            "code",
-            "count",
-            "call_numbers",
-            "should_instruct",
-            "status",
-            "arbitration",
-        ]
+        fields = ["id", "title", "code", "count", "call_numbers", "should_instruct", "status", "arbitration", "acl"]
 
     def get_should_instruct(self, obj: Resource) -> bool:
         library_id = obj.next_turn

@@ -40,8 +40,9 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
     serializer_class = ResourceSerializer
     permission_classes = [ResourcePermission]
     pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter, ResourceFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ResourceFilter]
     search_fields = ["title", "=code"]
+    ordering_fields = ["title", "count"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -104,6 +105,6 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
                 "resource": resource,
                 "collections": collections,
             },
-            context={"request": request},
+            context={"request": request, "view": self},
         )
         return Response(serializer.data)

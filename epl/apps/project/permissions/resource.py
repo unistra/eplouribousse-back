@@ -13,12 +13,7 @@ class ResourcePermission(BasePermission):
             # Allow read-only methods to anybody
             return True
 
-        if view.action in [
-            "retrieve",
-            "update",
-            "partial_update",
-            "list_statuses",
-        ]:
+        if view.action in ["retrieve", "update", "partial_update", "list_statuses", "collections"]:
             return self.user_has_permission(view.action, request.user, obj)
 
         return False
@@ -36,5 +31,7 @@ class ResourcePermission(BasePermission):
                 return False
             case "destroy":
                 return bool(user and user.is_authenticated and user.is_project_creator)
+            case "collections":
+                return True
 
         return False

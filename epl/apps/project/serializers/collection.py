@@ -9,7 +9,9 @@ from rest_framework import serializers
 
 from epl.apps.project.models import Collection, Library, Project, Resource
 from epl.apps.project.models.comment import Comment
+from epl.apps.project.permissions.collection import CollectionPermission
 from epl.libs.csv_import import handle_import
+from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 logger = logging.getLogger(__name__)
 
@@ -190,12 +192,13 @@ class PositioningCommentSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class CollectionPositioningSerializer(serializers.ModelSerializer):
+class CollectionPositioningSerializer(AclSerializerMixin, serializers.ModelSerializer):
     """
     Used to serialize the collection's positioning information.
     Is used in the ResourceSerializer as nested serializer.
     """
 
+    acl = AclField(permission_classes=[CollectionPermission])
     comment_positioning = serializers.SerializerMethodField()
 
     class Meta:
@@ -209,6 +212,7 @@ class CollectionPositioningSerializer(serializers.ModelSerializer):
             "is_excluded",
             "exclusion_reason",
             "comment_positioning",
+            "acl",
         ]
 
     def get_comment_positioning(self, obj):
