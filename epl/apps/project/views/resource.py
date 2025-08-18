@@ -42,7 +42,7 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, ResourceFilter]
     search_fields = ["title", "=code"]
-    ordering_fields = ["title", "count"]
+    ordering_fields = ["title", "count", "status"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
