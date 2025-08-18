@@ -7,7 +7,8 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from epl.apps.project.models import Collection, Library, Project, Resource
+from epl.apps.project.models import Collection, Library, Project, Resource, ResourceStatus
+from epl.apps.project.models.collection import Arbitration
 from epl.apps.project.models.comment import Comment
 from epl.apps.project.permissions.collection import CollectionPermission
 from epl.libs.csv_import import handle_import
@@ -148,10 +149,40 @@ class ImportSerializer(serializers.Serializer):
 
 class PositionSerializer(serializers.ModelSerializer):
     position = serializers.IntegerField(min_value=1, max_value=4, help_text=_("Position (rank) between 1 and 4"))
+    arbitration = serializers.ChoiceField(Arbitration, read_only=True, source="resource.arbitration")
+    status = serializers.ChoiceField(ResourceStatus, read_only=True, source="resource.status")
 
     class Meta:
         model = Collection
-        fields = ["position"]
+        fields = ["position", "arbitration", "status"]
+
+    def save(self, **kwargs):
+        position = self.validated_data["position"]
+        collection = self.instance
+        collection.position = position
+        collection.exclusion_reason = ""
+        collection.save(update_fields=["position", "exclusion_reason"])
+
+        resource = collection.resource
+        collections = Collection.objects.filter(resource=resource)
+        is_other_first = collections.filter(position=1).exclude(pk=collection.pk).exists()
+
+        if position == 1 and is_other_first:
+            resource.arbitration = Arbitration.ONE
+        elif (positions := list(collections.values_list("position", flat=True))) and 1 not in positions:
+            resource.arbitration = Arbitration.ZERO
+        else:
+            resource.arbitration = Arbitration.NONE
+        resource.save(update_fields=["arbitration"])
+
+        if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
+            resource.status = ResourceStatus.INSTRUCTION_BOUND
+            resource.instruction_turns["bound_copies"]["turns"] = [
+                str(id) for id in collections.order_by("position").values_list("id", flat=True)
+            ]
+            resource.save(update_fields=["status", "instruction_turns"])
+
+        return collection
 
 
 class ExclusionSerializer(serializers.ModelSerializer):
@@ -161,10 +192,12 @@ class ExclusionSerializer(serializers.ModelSerializer):
         allow_blank=False,
         help_text=_("Reason for excluding the collection from deduplication"),
     )
+    arbitration = serializers.ChoiceField(Arbitration, read_only=True, source="resource.arbitration")
+    status = serializers.ChoiceField(ResourceStatus, read_only=True, source="resource.status")
 
     class Meta:
         model = Collection
-        fields = ["exclusion_reason"]
+        fields = ["exclusion_reason", "arbitration", "status"]
 
     def validate_exclusion_reason(self, value):
         collection = self.instance
@@ -173,10 +206,25 @@ class ExclusionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("Invalid exclusion reason."))
         return value
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Collection, validated_data):
         instance.position = 0
         instance.exclusion_reason = validated_data["exclusion_reason"]
         instance.save()
+
+        resource = instance.resource
+        collections = Collection.objects.filter(resource=resource)
+
+        if (positions := list(collections.values_list("position", flat=True))) and 1 not in positions:
+            resource.arbitration = Arbitration.ZERO
+        else:
+            resource.arbitration = Arbitration.NONE
+        resource.save(update_fields=["arbitration"])
+
+        if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
+            resource.status = ResourceStatus.INSTRUCTION_BOUND
+            resource.instruction_turns["bound_copies"]["turns"] = collections.order_by("position")
+            resource.save(update_fields=["status", "instruction_turns"])
+
         return instance
 
 
