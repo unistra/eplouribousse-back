@@ -169,7 +169,11 @@ class PositionSerializer(serializers.ModelSerializer):
 
         if position == 1 and is_other_first:
             resource.arbitration = Arbitration.ONE
-        elif (positions := list(collections.values_list("position", flat=True))) and 1 not in positions:
+        elif (
+            (positions := list(collections.values_list("position", flat=True)))
+            and 1 not in positions
+            and all(c.position is not None or c.exclusion_reason for c in collections)
+        ):
             resource.arbitration = Arbitration.ZERO
         else:
             resource.arbitration = Arbitration.NONE
@@ -214,7 +218,11 @@ class ExclusionSerializer(serializers.ModelSerializer):
         resource = instance.resource
         collections = Collection.objects.filter(resource=resource)
 
-        if (positions := list(collections.values_list("position", flat=True))) and 1 not in positions:
+        if (
+            (positions := list(collections.values_list("position", flat=True)))
+            and 1 not in positions
+            and all(c.position is not None or c.exclusion_reason for c in collections)
+        ):
             resource.arbitration = Arbitration.ZERO
         else:
             resource.arbitration = Arbitration.NONE
