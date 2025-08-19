@@ -25,6 +25,14 @@ class Arbitration(models.IntegerChoices):
     NONE = 2, _("No arbitration")
 
 
+class Position(models.IntegerChoices):
+    ONE = 1, _("Position 1")
+    TWO = 2, _("Position 2")
+    THREE = 3, _("Position 3")
+    FOUR = 4, _("Position 4")
+    EXCLUDE = 0, _("Position excluded")
+
+
 class Resource(models.Model):
     id = UUIDPrimaryKeyField()
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
@@ -80,7 +88,9 @@ class Collection(models.Model):
     alias = models.CharField(
         "Alias", max_length=255, blank=True, help_text=_("Alias for a duplicate collection in the same library")
     )
-    position = models.IntegerField("Position", null=True, blank=True, help_text=_("Positioning rank of a collection"))
+    position = models.IntegerField(
+        _("Position"), choices=Position.choices, null=True, blank=True, help_text=_("Positioning rank of a collection")
+    )
     exclusion_reason = models.CharField(
         "Exclusion reason",
         max_length=255,
