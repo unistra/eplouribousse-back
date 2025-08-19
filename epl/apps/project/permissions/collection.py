@@ -35,7 +35,9 @@ class CollectionPermission(permissions.BasePermission):
             case "position":
                 return user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)
             case "comment_positioning":
-                return bool(user and user.is_authenticated)
+                return bool(
+                    user and user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)
+                )
             case "import_csv":
                 return bool(user and user.is_authenticated and user.is_project_creator)
             case "update" | "partial_update" | "position" | "exclude":

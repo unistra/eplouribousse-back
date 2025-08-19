@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
@@ -73,22 +75,7 @@ class CollectionPositionViewSetTest(TestCase):
     # Add a comment to the collection - tests / PATCH /api/collections/{id}/comment-positioning/
 
     def test_add_comment_positioning_success(self):
-        data = {"positioning_comment": "This is my beautiful comment for positioning."}
-        response = self.patch(
-            reverse("collection-comment-positioning", kwargs={"pk": self.collection.id}),
-            data=data,
-            content_type="application/json",
-            user=self.instructor,
-        )
-        self.response_ok(response)
-        self.collection.refresh_from_db()
-        self.assertEqual(self.collection.positioning_comment, "This is my beautiful comment for positioning.")
-
-    def test_update_comment_positioning_success(self):
-        self.collection.positioning_comment = "This is my initial beautiful comment for positioning."
-        self.collection.save()
-
-        data = {"positioning_comment": "This is my updated but still beautiful comment for positioning."}
+        data = {"content": "This is my beautiful comment for positioning."}
         response = self.patch(
             reverse("collection-comment-positioning", kwargs={"pk": self.collection.id}),
             data=data,
@@ -98,11 +85,12 @@ class CollectionPositionViewSetTest(TestCase):
         self.response_ok(response)
         self.collection.refresh_from_db()
         self.assertEqual(
-            self.collection.positioning_comment, "This is my updated but still beautiful comment for positioning."
+            self.collection.comments.filter(subject="Positioning comment").first().content,
+            "This is my beautiful comment for positioning.",
         )
 
     def test_positioning_comment_requires_authentication(self):
-        data = {"positioning_comment": "Test comment"}
+        data = {"content": "Test comment"}
         response = self.patch(
             reverse("collection-comment-positioning", kwargs={"pk": self.collection.id}), data=data, user=None
         )
@@ -110,16 +98,22 @@ class CollectionPositionViewSetTest(TestCase):
 
     def test_positioning_comment_requires_instructor_role(self):
         another_user = User.objects.create_user(email="another_user@eplouribousse.fr")
-        data = {"positioning_comment": "Test comment"}
+        data = {"content": "Test comment"}
         response = self.patch(
-            reverse("collection-comment-positioning", kwargs={"pk": self.collection.id}), data=data, user=another_user
+            reverse("collection-comment-positioning", kwargs={"pk": self.collection.id}),
+            data=data,
+            user=another_user,
+            content_type="application/json",
         )
         self.response_forbidden(response)
 
     def test_positioning_comment_collection_not_found(self):
-        data = {"positioning_comment": "Test comment for unexisting collection"}
+        data = {"content": "Test comment for unexisting collection"}
         response = self.patch(
-            reverse("collection-comment-positioning", kwargs={"pk": uuid4()}), data=data, user=self.instructor
+            reverse("collection-comment-positioning", kwargs={"pk": uuid4()}),
+            data=data,
+            user=self.instructor,
+            content_type="application/json",
         )
         self.response_not_found(response)
 
