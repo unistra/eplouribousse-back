@@ -44,6 +44,13 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
     search_fields = ["title", "=code"]
     ordering_fields = ["title", "count", "status"]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.action == "list":
+            context.update({"library": self.request.query_params.get("library")})
+
+        return context
+
     def get_queryset(self):
         queryset = super().get_queryset()
 
@@ -105,6 +112,6 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
                 "resource": resource,
                 "collections": collections,
             },
-            context={"request": request, "view": self},
+            context=self.get_serializer_context(),
         )
         return Response(serializer.data)

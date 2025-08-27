@@ -43,7 +43,7 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
 
     def get_should_position(self, obj: Resource) -> bool:
         user: User = self.context.get("request").user
-        library_id_selected = self.context.get("request").query_params.get("library")
+        library_id_selected = self.context.get("library")
 
         if library_id_selected and user.is_instructor(project=obj.project, library=library_id_selected):
             return Collection.objects.filter(
