@@ -144,3 +144,12 @@ EMAIL_PORT = 1025
 EMAIL_HOST_USER = ""
 EMAIL_HOST_PASSWORD = ""
 EMAIL_USE_TLS = False
+
+
+#########################
+# General configuration #
+#########################
+
+# Language code for this installation. All choices can be found here:
+# http://www.i18nguy.com/unicode/language-identifiers.html
+LANGUAGE_CODE = "en-US"
