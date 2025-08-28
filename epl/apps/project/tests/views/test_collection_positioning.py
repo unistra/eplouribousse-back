@@ -4,7 +4,8 @@ from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
 
-from epl.apps.project.models import Role, UserRole
+from epl.apps.project.models import ResourceStatus, Role, UserRole
+from epl.apps.project.models.collection import Arbitration
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
@@ -168,3 +169,81 @@ class CollectionPositionViewSetTest(TestCase):
         self.response_ok(response)
         self.collection.refresh_from_db()
         self.assertEqual(self.collection.exclusion_reason, "")
+
+    def test_last_user_to_position_makes_the_collection_change_status(self):
+        resource = self.collection.resource
+        self.assertEqual(resource.status, ResourceStatus.POSITIONING)
+
+        new_collection = CollectionFactory(
+            library=self.library, project=self.project, created_by=self.instructor, resource=resource
+        )
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection.id}),
+            data={"position": 3},
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": new_collection.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        resource.refresh_from_db()
+
+        self.assertEqual(resource.status, ResourceStatus.INSTRUCTION_BOUND)
+
+    def test_arbitration_type_0(self):
+        resource = self.collection.resource
+        self.assertEqual(resource.arbitration, Arbitration.NONE)
+
+        new_collection = CollectionFactory(
+            library=self.library, project=self.project, created_by=self.instructor, resource=resource
+        )
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": new_collection.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        resource.refresh_from_db()
+        self.assertEqual(resource.arbitration, Arbitration.ZERO)
+        self.assertEqual(resource.status, ResourceStatus.POSITIONING)
+
+    def test_arbitration_type_1(self):
+        resource = self.collection.resource
+        self.assertEqual(resource.arbitration, Arbitration.NONE)
+
+        new_collection = CollectionFactory(
+            library=self.library, project=self.project, created_by=self.instructor, resource=resource
+        )
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": new_collection.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        resource.refresh_from_db()
+        self.assertEqual(resource.arbitration, Arbitration.ONE)
+        self.assertEqual(resource.status, ResourceStatus.POSITIONING)
