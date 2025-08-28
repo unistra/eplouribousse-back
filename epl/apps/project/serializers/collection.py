@@ -164,7 +164,7 @@ class PositionSerializer(serializers.ModelSerializer):
         collection.save(update_fields=["position", "exclusion_reason"])
 
         resource = collection.resource
-        collections = Collection.objects.filter(resource=resource)
+        collections = resource.collections.all()
         is_other_first = collections.filter(position=1).exclude(pk=collection.pk).exists()
 
         if position == 1 and is_other_first:

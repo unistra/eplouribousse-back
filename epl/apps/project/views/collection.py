@@ -189,9 +189,8 @@ class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, Generic
             serializer = PositioningCommentSerializer(
                 comment, data=request.data, context={"request": request}, partial=True
             )
-            if serializer.is_valid():
-                serializer.save(content_object=collection)
-                return Response(
-                    serializer.data, status=status.HTTP_201_CREATED if request.method == "POST" else status.HTTP_200_OK
-                )
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(content_object=collection)
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED if request.method == "POST" else status.HTTP_200_OK
+            )
