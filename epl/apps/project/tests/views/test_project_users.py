@@ -38,7 +38,7 @@ class ProjectUsersTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["username"], self.user.username)
-        self.assertEqual(response.data[0]["roles"], ["instructor", "project_manager"])
+        self.assertEqual(response.data[0]["roles"], ["project_manager", "instructor"])
 
     def test_project_not_found(self):
         """Test retrieving users for a non-existent project."""

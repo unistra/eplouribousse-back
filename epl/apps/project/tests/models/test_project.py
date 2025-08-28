@@ -62,7 +62,7 @@ class UserRoleModelTest(TenantTestCase):
 
     def test_userrole_unique_constraint(self):
         with self.assertRaises(IntegrityError):
-            UserRole.objects.create(user=self.user, project=self.project, role=Role.INSTRUCTOR)
+            UserRole.objects.create(user=self.user, project=self.project, role=Role.INSTRUCTOR, library=self.library)
 
     def test_userrole_role_constraint(self):
         with self.assertRaises(IntegrityError):

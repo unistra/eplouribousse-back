@@ -45,7 +45,11 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
         user: User = self.context.get("request").user
         library_id_selected = self.context.get("library")
 
-        if library_id_selected and user.is_instructor(project=obj.project, library=library_id_selected):
+        if (
+            library_id_selected
+            and user.is_authenticated
+            and user.is_instructor(project=obj.project, library=library_id_selected)
+        ):
             return Collection.objects.filter(
                 resource=obj, library_id=library_id_selected, position=None, exclusion_reason__in=["", None]
             ).exists()
