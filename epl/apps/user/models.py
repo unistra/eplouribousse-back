@@ -70,13 +70,14 @@ class User(AbstractUser):
         return UserRole.objects.filter(user=self, project=project, role=Role.CONTROLLER).exists()
 
     def is_instructor(
-        self, project: Project, library: Library = None
+        self, project: Project, library: Library | str = None
     ) -> (
         bool
     ):  # library is optional so we can check if user is Instructor in the project, without needing to give a library
         queryset = UserRole.objects.filter(user=self, project=project, role=Role.INSTRUCTOR)
         if library is not None:
-            queryset = queryset.filter(library=library)
+            filter_kwargs = {"library_id": library} if isinstance(library, str) else {"library": library}
+            queryset = queryset.filter(**filter_kwargs)
         return queryset.exists()
 
     def is_guest(self, project: Project) -> bool:

@@ -23,6 +23,7 @@ class CollectionPermission(permissions.BasePermission):
                 | "position"
                 | "exclude"
                 | "comment_positioning"
+                | "position"
             ):
                 return bool(request.user and self.user_has_permission(view.action, request.user, obj))
 
@@ -31,9 +32,15 @@ class CollectionPermission(permissions.BasePermission):
     @staticmethod
     def user_has_permission(action: str, user: User, obj: Collection) -> bool:
         match action:
+            case "position":
+                return user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)
+            case "comment_positioning":
+                return bool(
+                    user and user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)
+                )
             case "import_csv":
                 return bool(user and user.is_authenticated and user.is_project_creator)
-            case "update" | "partial_update" | "position" | "exclude" | "comment_positioning":
+            case "update" | "partial_update" | "position" | "exclude":
                 return bool(user and user.is_authenticated and user.is_instructor(obj.project, obj.library))
             case "destroy":
                 return bool(user and user.is_authenticated and user.is_project_creator)

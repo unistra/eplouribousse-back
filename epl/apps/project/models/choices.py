@@ -18,3 +18,8 @@ class ResourceStatus(models.IntegerChoices):
     CONTROL_BOUND = 30, _("Control Bound Copies")
     INSTRUCTION_UNBOUND = 40, _("Instruction Unbound Copies")
     CONTROL_UNBOUND = 50, _("Control Unbound Copies")
+
+
+class SegmentType(models.TextChoices):
+    BOUND = "bound", _("Bound")
+    UNBOUND = "unbound", _("Unbound")

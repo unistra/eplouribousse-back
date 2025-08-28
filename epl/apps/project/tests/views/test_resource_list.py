@@ -1,4 +1,5 @@
 from django_tenants.urlresolvers import reverse
+from parameterized import parameterized
 
 from epl.apps.project.models import ResourceStatus, Role
 from epl.apps.project.tests.factories.collection import CollectionFactory
@@ -24,9 +25,22 @@ class ResourceListTest(TestCase):
         )
         _collection = CollectionFactory(library=self.library, project=self.project, resource=self.resource_library)
 
-    def test_list_resources(self):
-        response = self.get(self._get_url("resource-list"))
-        self.response_ok(response)
+    @parameterized.expand(
+        [
+            (Role.TENANT_SUPER_USER, 200),
+            (Role.PROJECT_CREATOR, 200),
+            (Role.INSTRUCTOR, 200),
+            (Role.PROJECT_ADMIN, 200),
+            (Role.PROJECT_MANAGER, 200),
+            (Role.CONTROLLER, 200),
+            (Role.GUEST, 200),
+            (None, 200),
+        ]
+    )
+    def test_list_resources(self, role, expected_status):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library)
+        response = self.get(self._get_url("resource-list"), user=user)
+        self.assertEqual(response.status_code, expected_status)
         self.assertEqual(
             response.data["count"],
             3,

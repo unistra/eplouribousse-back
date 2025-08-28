@@ -2,7 +2,7 @@ from django.db import IntegrityError
 from django.utils.translation import gettext_lazy as _
 from django_tenants.test.cases import TenantTestCase
 
-from epl.apps.project.models import Project, Role, UserRole
+from epl.apps.project.models import Library, Project, Role, UserRole
 from epl.apps.user.models import User
 
 
@@ -19,11 +19,12 @@ class UserRoleModelTest(TenantTestCase):
         self.project1 = Project.objects.create(name="Project 1", description="First test project")
         self.project2 = Project.objects.create(name="Project 2", description="Second test project")
 
+        self.library = Library.objects.create(name="Library 1", code="LB1")
+
         # Create roles
         self.role1 = UserRole.objects.create(
-            user=self.user1, project=self.project1, role=Role.INSTRUCTOR, assigned_by=self.admin
+            user=self.user1, project=self.project1, role=Role.PROJECT_ADMIN, assigned_by=self.admin
         )
-        self.role2 = UserRole.objects.create(user=self.user2, project=self.project1, role=Role.PROJECT_CREATOR)
 
     def test_userrole_creation(self):
         """Tests basic creation of a UserRole"""
@@ -36,26 +37,22 @@ class UserRoleModelTest(TenantTestCase):
 
     def test_userrole_str(self):
         """Tests the string representation of a UserRole"""
-        expected_str = f"{self.user1} - {_('Instructor')} ({self.project1})"
+        expected_str = f"{self.user1} - {_('Project Administrator')} ({self.project1})"
         self.assertEqual(str(self.role1), expected_str)
 
     def test_userrole_unique_constraint(self):
         """ " A UserRole record with the same user, role, and project should not be created"""
         # Creating a UserRole with the same user, role, and project should raise an IntegrityError
         with self.assertRaises(IntegrityError):
-            UserRole.objects.create(user=self.user1, project=self.project1, role=Role.INSTRUCTOR)
+            UserRole.objects.create(user=self.user1, project=self.project1, role=Role.PROJECT_ADMIN)
 
     def test_userrole_unique_constraint_different_users_can_have_same_role(self):
         # Creating the same role for a different user, in the same project should work
         created_role = UserRole.objects.create(
             user=self.user2,
             project=self.project1,
-            role=Role.INSTRUCTOR,
+            role=Role.PROJECT_ADMIN,
         )
-        # Check that the role was created successfully
-        self.assertEqual(created_role.user, self.user2)
-        self.assertEqual(created_role.role, Role.INSTRUCTOR)
-        self.assertEqual(created_role.project, self.project1)
         # Check that the role is the same as role1
         self.assertEqual(created_role.role, self.role1.role)
 

@@ -13,7 +13,6 @@ from epl.models import UUIDPrimaryKeyField
 if typing.TYPE_CHECKING:
     from epl.apps.user.models import User
 
-
 DEFAULT_EXCLUSION_REASONS = [
     _lazy("Participation in another project"),
     _lazy("Incorrect assignment"),
@@ -172,7 +171,16 @@ class UserRole(models.Model):
         verbose_name = _("Project User Role")
         verbose_name_plural = _("Project User Roles")
         constraints = [
-            models.UniqueConstraint(fields=["user", "role", "project"], name="unique_user_role_project"),
+            models.UniqueConstraint(
+                fields=["user", "role", "project"],
+                condition=~models.Q(role=Role.INSTRUCTOR.value),
+                name="unique_user_role_project",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "project", "library"],
+                condition=models.Q(role=Role.INSTRUCTOR.value),
+                name="unique_user_project_library_for_instructor",
+            ),
             models.CheckConstraint(
                 check=models.Q(role__in=[choice[0] for choice in Role.choices]),
                 name="%(app_label)s_%(class)s_role_valid",

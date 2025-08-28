@@ -156,20 +156,41 @@ class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, Generic
 
     @extend_schema(
         tags=["collection"],
-        summary="Set or update the positioning comment",
-        description="Set or update the instructor's comment on the collection positioning.",
+        summary="Add or update a comment on collection positioning",
+        description="This comment is used to provide additional context on the collection's position.",
         request=PositioningCommentSerializer,
         responses=PositioningCommentSerializer,
     )
     @action(
         detail=True,
-        methods=["patch"],
+        methods=["post", "patch", "get"],
         url_path="comment-positioning",
         serializer_class=PositioningCommentSerializer,
     )
     def comment_positioning(self, request, pk=None):
+        """
+        We handle the positioning comment for a collection, using a generic relation to the Comment model.
+        We do not create a separate viewset for this, because it is tightly coupled with the Collection model.
+        At this point, the code only allows to manipulate the last comment with the subject "Positioning comment",
+        but it should be sufficient for the use case defined in the user story.
+        """
         collection = self.get_object()
-        serializer = self.get_serializer(collection, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(PositioningCommentSerializer(collection).data, status=status.HTTP_200_OK)
+        if request.method == "GET":
+            comment = collection.comments.filter(subject=_("Positioning comment")).order_by("-created_at").first()
+            if not comment:
+                return Response({}, status=status.HTTP_404_NOT_FOUND)
+            serializer = PositioningCommentSerializer(comment)
+            return Response(serializer.data)
+        elif request.method in ["POST", "PATCH"]:
+            # Pour POST, on crée. Pour PATCH, on modifie le dernier commentaire.
+            comment = None
+            if request.method == "PATCH":
+                comment = collection.comments.filter(subject=_("Positioning comment")).order_by("-created_at").first()
+            serializer = PositioningCommentSerializer(
+                comment, data=request.data, context={"request": request}, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(content_object=collection)
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED if request.method == "POST" else status.HTTP_200_OK
+            )

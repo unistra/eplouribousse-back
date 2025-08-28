@@ -1,7 +1,9 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from epl.apps.project.models.choices import ResourceStatus
+from epl.apps.project.models.comment import Comment
 from epl.models import UUIDPrimaryKeyField
 from epl.validators import IssnValidator
 
@@ -23,6 +25,14 @@ class Arbitration(models.IntegerChoices):
     NONE = 2, _("No arbitration")
 
 
+class Position(models.IntegerChoices):
+    ONE = 1, _("Position 1")
+    TWO = 2, _("Position 2")
+    THREE = 3, _("Position 3")
+    FOUR = 4, _("Position 4")
+    EXCLUDE = 0, _("Position excluded")
+
+
 class Resource(models.Model):
     id = UUIDPrimaryKeyField()
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
@@ -34,10 +44,9 @@ class Resource(models.Model):
         _("Arbitration"), choices=Arbitration.choices, default=Arbitration.NONE, db_index=True
     )
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
+    comments = GenericRelation(Comment)
 
-    _extended_permissions = [
-        "list_statuses",
-    ]
+    _extended_permissions = ["list_statuses", "collections"]
 
     class Meta:
         verbose_name = _("Resource")
@@ -79,15 +88,14 @@ class Collection(models.Model):
     alias = models.CharField(
         "Alias", max_length=255, blank=True, help_text=_("Alias for a duplicate collection in the same library")
     )
-    position = models.IntegerField("Position", null=True, blank=True, help_text=_("Positioning rank of a collection"))
+    position = models.IntegerField(
+        _("Position"), choices=Position.choices, null=True, blank=True, help_text=_("Positioning rank of a collection")
+    )
     exclusion_reason = models.CharField(
         "Exclusion reason",
         max_length=255,
         blank=True,
         help_text=_("Reason for excluding the collection from deduplication"),
-    )
-    positioning_comment = models.TextField(
-        "Positioning comment", blank=True, help_text=_("Instructor's comment on the collection positioning")
     )
     is_result_collection = models.BooleanField(
         _("Is the result collection"),
@@ -95,6 +103,9 @@ class Collection(models.Model):
         db_index=True,
         help_text=_("The collection is the result of a deduplication process"),
     )
+    comments = GenericRelation(Comment)
+
+    _extended_permissions = ["position"]
 
     class Meta:
         verbose_name = _("Collection")
@@ -102,7 +113,7 @@ class Collection(models.Model):
         ordering = ["resource__title"]
 
     def __str__(self):
-        return f"{self.title}"
+        return f"{self.id}"
 
     def save(self, *args, **kwargs):
         if self.position is not None and self.position != 0:
