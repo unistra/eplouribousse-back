@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext as _
 
+from epl.apps.project.models import Resource
 from epl.apps.project.models.choices import SegmentType
 from epl.models import UUIDPrimaryKeyField
 
@@ -40,3 +41,8 @@ class Segment(models.Model):
 
     def __str__(self):
         return f"{self.collection.project} - {_('Segment')} n°{self.order}: {self.content}"
+
+    @classmethod
+    def get_last_order(cls, resource: Resource):
+        orders = resource.segments.values_list("order", flat=True)
+        return max(orders, default=0) + 1

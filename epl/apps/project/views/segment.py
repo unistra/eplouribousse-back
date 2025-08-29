@@ -1,0 +1,105 @@
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from rest_framework import exceptions, mixins, status
+from rest_framework.viewsets import GenericViewSet
+
+from epl.apps.project.models import Resource, ResourceStatus, Segment
+from epl.apps.project.models.choices import SegmentType
+from epl.apps.project.permissions.segment import SegmentPermissions
+from epl.apps.project.serializers.segment import SegmentSerializer
+from epl.schema_serializers import UnauthorizedSerializer
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=["segment"],
+        summary=_("List segments"),
+        description=_("List segments for a specific resource"),
+        parameters=[
+            OpenApiParameter(
+                name="resource_id",
+                location=OpenApiParameter.QUERY,
+                required=True,
+                type=OpenApiTypes.UUID,
+                description=_("Collection ID to filter segments"),
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: SegmentSerializer(many=True),
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
+    ),
+    create=extend_schema(
+        tags=["segment"],
+        summary=_("Create a segment"),
+        request=SegmentSerializer,
+        responses={
+            status.HTTP_201_CREATED: SegmentSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
+    ),
+    update=extend_schema(
+        tags=["segment"],
+        summary=_("Update a segment"),
+        request=SegmentSerializer,
+        responses={
+            status.HTTP_200_OK: SegmentSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
+    ),
+    partial_update=extend_schema(
+        tags=["segment"],
+        summary=_("Partially update a segment"),
+        request=SegmentSerializer,
+        responses={
+            status.HTTP_200_OK: SegmentSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
+    ),
+    destroy=extend_schema(
+        tags=["segment"],
+        summary=_("Delete a segment"),
+        description=_("Delete a segment permanently"),
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    ),
+)
+class SegmentViewSet(
+    mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericViewSet
+):
+    queryset = Segment.objects.all()
+    permission_classes = [SegmentPermissions]
+    serializer_class = SegmentSerializer
+    pagination_class = None
+
+    def get_segment_type(self, resource: Resource):
+        return SegmentType.BOUND if resource.status <= ResourceStatus.INSTRUCTION_BOUND else SegmentType.UNBOUND
+
+    def get_queryset(self):
+        resource_id = self.request.query_params.get("resource_id")
+        if not resource_id:
+            raise exceptions.ValidationError({"detail": _("Missing required query parameter: resource_id")})
+        try:
+            resource = Resource.objects.get(id=resource_id)
+            queryset = resource.segments
+        except Resource.DoesNotExist:
+            raise exceptions.NotFound({"detail": _("Resource does not exist")})
+        return queryset.order_by("order")
+
+    def perform_create(self, serializer):
+        resource = serializer.validated_data["collection"].resource
+        serializer.save(
+            segment_type=self.get_segment_type(resource),
+            order=Segment.get_last_order(resource),
+            retained=False,
+            created_by=self.request.user,
+            created_at=now(),
+        )
