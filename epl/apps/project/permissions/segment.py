@@ -9,7 +9,7 @@ class SegmentPermissions(BasePermission):
         match view.action:
             case "create":
                 project = Collection.objects.get(id=request.data.get("collection")).project
-                return bool(request.user.is_authenticated and request.user.is_instructor(project=project))
+                return request.user.is_authenticated and request.user.is_instructor(project=project)
             case _:
                 return True
 
