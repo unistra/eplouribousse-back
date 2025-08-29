@@ -8,20 +8,28 @@ class SegmentPermissions(BasePermission):
     def has_permission(self, request, view):
         match view.action:
             case "create":
-                project = Collection.objects.get(id=request.data.get("collection")).project
-                return request.user.is_authenticated and request.user.is_instructor(project=project)
+                return request.user.is_authenticated and self.is_user_instructor(
+                    collection_id=request.data.get("collection"), user=request.user
+                )
             case _:
                 return True
 
     def has_object_permission(self, request, view, obj: Segment) -> bool:
-        if view.action in []:
-            return self.user_has_permission(view.action, request.user, obj)
+        if view.action in ["partial_update"]:
+            return self.user_has_permission(self, view.action, request.user, obj)
         return False
 
     @staticmethod
-    def user_has_permission(action: str, user: User, project: Segment = None) -> bool:
+    def user_has_permission(self, action: str, user: User, segment: Segment = None) -> bool:
         if not user.is_authenticated:
             return False
         match action:
+            case "partial_update":
+                return self.is_user_instructor(collection_id=segment.collection.id, user=user)
             case _:
                 return False
+
+    @staticmethod
+    def is_user_instructor(collection_id: str, user: User) -> bool:
+        project = Collection.objects.get(id=collection_id).project
+        return user.is_instructor(project=project)

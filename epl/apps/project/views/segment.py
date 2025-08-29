@@ -2,8 +2,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import exceptions, mixins, status
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import exceptions, status, viewsets
 
 from epl.apps.project.models import Resource, ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
@@ -41,16 +40,6 @@ from epl.schema_serializers import UnauthorizedSerializer
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
     ),
-    update=extend_schema(
-        tags=["segment"],
-        summary=_("Update a segment"),
-        request=SegmentSerializer,
-        responses={
-            status.HTTP_200_OK: SegmentSerializer,
-            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
-            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
-        },
-    ),
     partial_update=extend_schema(
         tags=["segment"],
         summary=_("Partially update a segment"),
@@ -72,9 +61,8 @@ from epl.schema_serializers import UnauthorizedSerializer
         },
     ),
 )
-class SegmentViewSet(
-    mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericViewSet
-):
+class SegmentViewSet(viewsets.ModelViewSet):
+    http_method_names = ["get", "post", "patch", "delete"]
     queryset = Segment.objects.all()
     permission_classes = [SegmentPermissions]
     serializer_class = SegmentSerializer
@@ -84,6 +72,9 @@ class SegmentViewSet(
         return SegmentType.BOUND if resource.status <= ResourceStatus.INSTRUCTION_BOUND else SegmentType.UNBOUND
 
     def get_queryset(self):
+        if self.action != "list":
+            return super().get_queryset()
+
         resource_id = self.request.query_params.get("resource_id")
         if not resource_id:
             raise exceptions.ValidationError({"detail": _("Missing required query parameter: resource_id")})
