@@ -2,7 +2,9 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import exceptions, status, viewsets
+from rest_framework import exceptions, status
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, ListModelMixin, UpdateModelMixin
+from rest_framework.viewsets import GenericViewSet
 
 from epl.apps.project.models import Resource, ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
@@ -61,7 +63,7 @@ from epl.schema_serializers import UnauthorizedSerializer
         },
     ),
 )
-class SegmentViewSet(viewsets.ModelViewSet):
+class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     http_method_names = ["get", "post", "patch", "delete"]
     queryset = Segment.objects.all()
     permission_classes = [SegmentPermissions]
@@ -94,3 +96,16 @@ class SegmentViewSet(viewsets.ModelViewSet):
             created_by=self.request.user,
             created_at=now(),
         )
+
+    def perform_destroy(self, instance):
+        collection = instance.collection
+        deleted_order = instance.order
+
+        instance.delete()
+
+        # Update the order of all segments with higher order values
+        segments_to_update = Segment.objects.filter(collection=collection, order__gt=deleted_order)
+
+        for segment in segments_to_update:
+            segment.order -= 1
+            segment.save(update_fields=["order"])

@@ -15,7 +15,10 @@ class SegmentPermissions(BasePermission):
                 return True
 
     def has_object_permission(self, request, view, obj: Segment) -> bool:
-        if view.action in ["partial_update"]:
+        if view.action in [
+            "partial_update",
+            "destroy",
+        ]:
             return self.user_has_permission(self, view.action, request.user, obj)
         return False
 
@@ -24,7 +27,7 @@ class SegmentPermissions(BasePermission):
         if not user.is_authenticated:
             return False
         match action:
-            case "partial_update":
+            case "partial_update" | "destroy":
                 return self.is_user_instructor(collection_id=segment.collection.id, user=user)
             case _:
                 return False
