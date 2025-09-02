@@ -41,7 +41,7 @@ class ResourceCollectionsTest(TestCase):
     def test_get_resource_collections(self, role, expected_status):
         user = UserWithRoleFactory(role=role, project=self.project, library=self.library) if role else None
 
-        url = f"{reverse('resource-collections', args=[self.resource.id])}?project_id={self.project.id}"
+        url = reverse("resource-collections", args=[self.resource.id])
         response = self.get(url, user=user)
 
         self.assertEqual(response.status_code, expected_status)
@@ -62,11 +62,3 @@ class ResourceCollectionsTest(TestCase):
             self.assertIn(str(self.collection2.id), collection_ids)
 
             self.assertNotIn(str(self.other_collection.id), collection_ids)
-
-    def test_get_resource_collections_missing_project_id(self):
-        url = reverse("resource-collections", args=[self.resource.id])
-
-        response = self.get(url, user=self.default_user)
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("detail", response.data)
-        self.assertEqual(response.data["detail"], "project_id is required")

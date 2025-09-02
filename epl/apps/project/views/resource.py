@@ -102,11 +102,8 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
     )
     @action(detail=True, methods=["get"], url_path="collections")
     def collections(self, request, pk=None):
-        project_id = request.query_params.get("project_id")
-        if not project_id:
-            return Response({"detail": "project_id is required"}, status=400)
         resource = self.get_object()
-        collections = resource.collections.filter(project_id=project_id)
+        collections = resource.collections.filter(project=resource.project)
         serializer = ResourceWithCollectionsSerializer(
             {
                 "resource": resource,
