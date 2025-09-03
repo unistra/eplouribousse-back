@@ -18,6 +18,8 @@ class SegmentPermissions(BasePermission):
         if view.action in [
             "partial_update",
             "destroy",
+            "up",
+            "down",
         ]:
             return self.user_has_permission(self, view.action, request.user, obj)
         return False
@@ -29,6 +31,10 @@ class SegmentPermissions(BasePermission):
         match action:
             case "partial_update" | "destroy":
                 return self.is_user_instructor(collection_id=segment.collection.id, user=user)
+            case "up" | "down":
+                return self.is_user_instructor(
+                    collection_id=segment.collection.id, user=user
+                ) or self.is_user_controller(collection_id=segment.collection.id, user=user)
             case _:
                 return False
 
@@ -36,3 +42,8 @@ class SegmentPermissions(BasePermission):
     def is_user_instructor(collection_id: str, user: User) -> bool:
         project = Collection.objects.get(id=collection_id).project
         return user.is_instructor(project=project)
+
+    @staticmethod
+    def is_user_controller(collection_id: str, user: User) -> bool:
+        project = Collection.objects.get(id=collection_id).project
+        return user.is_controller(project=project)
