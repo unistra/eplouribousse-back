@@ -20,8 +20,9 @@ class ResourceCollectionsTest(TestCase):
         self.collection2 = CollectionFactory(library=self.library, project=self.project, resource=self.resource)
 
         self.other_project = ProjectFactory()
+        self.other_resource = ResourceFactory(project=self.other_project)
         self.other_collection = CollectionFactory(
-            library=self.library, project=self.other_project, resource=self.resource
+            library=self.library, project=self.other_project, resource=self.other_resource
         )
 
         self.default_user = UserWithRoleFactory(role=Role.GUEST, project=self.project)

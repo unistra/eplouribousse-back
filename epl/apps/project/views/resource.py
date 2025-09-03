@@ -1,7 +1,6 @@
 from django.contrib.postgres.aggregates import StringAgg
 from django.db import models
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin
@@ -88,22 +87,15 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         return Response(serializer.data)
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="project_id",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.QUERY,
-                required=True,
-                description="ID du projet",
-            )
-        ],
+        summary="Retrieve collections for a specific resource",
+        description="Returns all collections associated with a specific resource within the same project. ",
         responses=ResourceWithCollectionsSerializer,
         tags=["collection", "resource"],
     )
     @action(detail=True, methods=["get"], url_path="collections")
     def collections(self, request, pk=None):
         resource = self.get_object()
-        collections = resource.collections.filter(project=resource.project)
+        collections = resource.collections.all()
         serializer = ResourceWithCollectionsSerializer(
             {
                 "resource": resource,
