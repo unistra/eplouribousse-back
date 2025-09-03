@@ -1,7 +1,7 @@
 from django_tenants.urlresolvers import reverse
 from parameterized import parameterized
 
-from epl.apps.project.models import Role
+from epl.apps.project.models import Role, Segment
 from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.tests.factories.segment import SegmentFactory
 from epl.apps.project.tests.factories.user import UserWithRoleFactory
@@ -67,6 +67,46 @@ class SegmentCreateTest(TestCase):
                 collection.segments.count(),
                 3,
             )
+
+    def test_create_segment_with_after_segment(self):
+        segment3 = SegmentFactory(collection=self.segment1.collection)
+        collection = self.segment1.collection
+
+        self.assertEqual(self.segment1.order, 1)
+        self.assertEqual(self.segment2.order, 2)
+        self.assertEqual(segment3.order, 3)
+
+        data = {
+            "content": "2010-2015",
+            "improvable_elements": "2014",
+            "exception": "2013",
+            "improved_segment": self.segment1.id,
+            "collection": collection.id,
+            "after_segment": str(self.segment1.id),
+        }
+
+        response = self.post(
+            reverse("segment-list"),
+            data,
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(collection.segments.count(), 4)
+
+        new_segment_id = response.data["id"]
+        new_segment = Segment.objects.get(id=new_segment_id)
+        self.assertEqual(new_segment.order, 2)
+
+        self.segment1.refresh_from_db()
+        self.assertEqual(self.segment1.order, 1)
+
+        self.segment2.refresh_from_db()
+        self.assertEqual(self.segment2.order, 3)
+
+        segment3.refresh_from_db()
+        self.assertEqual(segment3.order, 4)
 
     def test_default_values(self):
         collection = self.segment1.collection

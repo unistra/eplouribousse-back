@@ -1,15 +1,15 @@
-from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import exceptions, status
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, ListModelMixin, UpdateModelMixin
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from epl.apps.project.models import Resource, ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.permissions.segment import SegmentPermissions
-from epl.apps.project.serializers.segment import SegmentSerializer
+from epl.apps.project.serializers.segment import SegmentCreateSerializer, SegmentSerializer
 from epl.schema_serializers import UnauthorizedSerializer
 
 
@@ -35,9 +35,9 @@ from epl.schema_serializers import UnauthorizedSerializer
     create=extend_schema(
         tags=["segment"],
         summary=_("Create a segment"),
-        request=SegmentSerializer,
+        request=SegmentCreateSerializer,
         responses={
-            status.HTTP_201_CREATED: SegmentSerializer,
+            status.HTTP_201_CREATED: SegmentCreateSerializer,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
@@ -73,6 +73,11 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
     def get_segment_type(self, resource: Resource):
         return SegmentType.BOUND if resource.status <= ResourceStatus.INSTRUCTION_BOUND else SegmentType.UNBOUND
 
+    def get_serializer_class(self):
+        if self.action == "create":
+            return SegmentCreateSerializer
+        return SegmentSerializer
+
     def get_queryset(self):
         if self.action != "list":
             return super().get_queryset()
@@ -87,15 +92,11 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             raise exceptions.NotFound({"detail": _("Resource does not exist")})
         return queryset.order_by("order")
 
-    def perform_create(self, serializer):
-        resource = serializer.validated_data["collection"].resource
-        serializer.save(
-            segment_type=self.get_segment_type(resource),
-            order=Segment.get_last_order(resource),
-            retained=False,
-            created_by=self.request.user,
-            created_at=now(),
-        )
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_destroy(self, instance):
         collection = instance.collection
