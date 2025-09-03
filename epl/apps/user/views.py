@@ -68,7 +68,6 @@ def change_password(request: Request) -> Response:
     serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
     serializer.is_valid(raise_exception=True)
     serializer.save()
-
     send_password_change_email(request.user)
     ActionLog.log(
         message="User has changed their password",
@@ -308,7 +307,7 @@ def _get_invite_signer() -> signing.TimestampSigner:
     },
 )
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsSuperUser])
 def invite(request: Request) -> Response:
     serializer = EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)

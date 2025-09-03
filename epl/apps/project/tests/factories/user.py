@@ -52,6 +52,9 @@ class UserWithRoleFactory(factory.django.DjangoModelFactory):
         user = manager.create_user(*args, **kwargs)
 
         match role:
+            case Role.TENANT_SUPER_USER:
+                user.is_superuser = True
+                user.save()
             case Role.PROJECT_CREATOR:
                 user.set_is_project_creator(True, assigned_by=user)
             case Role.INSTRUCTOR:
