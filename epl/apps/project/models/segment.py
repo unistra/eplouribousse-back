@@ -36,6 +36,7 @@ class Segment(models.Model):
             models.UniqueConstraint(
                 fields=["collection", "order"],
                 name="unique_collection_order",
+                deferrable=models.Deferrable.DEFERRED,
             ),
         ]
 
