@@ -54,8 +54,14 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         queryset = super().get_queryset()
 
         if self.action == "list":
+            # Annotate with count of collections and aggregated call numbers within the specified project
+            project = self.request.query_params.get("project")
             queryset = queryset.annotate(
-                count=models.Count("collections"),
+                count=models.Count(
+                    "collections",
+                    filter=models.Q(collections__resource__project=project),
+                    distinct=True,
+                ),
                 call_numbers=StringAgg(
                     "collections__call_number",
                     delimiter=", ",
@@ -63,7 +69,6 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
                     output_field=models.CharField(),
                 ),
             )
-
         return queryset
 
     @extend_schema(
