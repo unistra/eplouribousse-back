@@ -116,14 +116,14 @@ class SegmentOrderSerializer(serializers.Serializer):
         return None
 
     def move_up(self, segment):
-        collection = segment.collection
+        resource = segment.collection.resource
         current_order = segment.order
 
         if current_order <= 1:
             raise ValidationError(_("Segment is already at the top of the collection"))
 
         try:
-            previous_segment = Segment.objects.get(collection=collection, order=current_order - 1)
+            previous_segment = Segment.objects.get(collection__resource=resource, order=current_order - 1)
         except Segment.DoesNotExist:
             raise NotFound(_("Previous segment not found"))
 
@@ -135,11 +135,11 @@ class SegmentOrderSerializer(serializers.Serializer):
         return {"current": segment, "previous": previous_segment}
 
     def move_down(self, segment):
-        collection = segment.collection
+        resource = segment.collection.resource
         current_order = segment.order
 
         try:
-            next_segment = Segment.objects.get(collection=collection, order=current_order + 1)
+            next_segment = Segment.objects.get(collection__resource=resource, order=current_order + 1)
         except Segment.DoesNotExist:
             raise ValidationError(_("Segment is already at the bottom of the collection"))
 
