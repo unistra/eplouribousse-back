@@ -21,20 +21,20 @@ class SegmentPermissions(BasePermission):
             "up",
             "down",
         ]:
-            return self.user_has_permission(self, view.action, request.user, obj)
+            return self.user_has_permission(view.action, request.user, obj)
         return False
 
     @staticmethod
-    def user_has_permission(self, action: str, user: User, segment: Segment = None) -> bool:
+    def user_has_permission(action: str, user: User, segment: Segment = None) -> bool:
         if not user.is_authenticated:
             return False
         match action:
             case "partial_update" | "destroy":
-                return self.is_user_instructor(collection_id=segment.collection.id, user=user)
+                return SegmentPermissions.is_user_instructor(collection_id=segment.collection.id, user=user)
             case "up" | "down":
-                return self.is_user_instructor(
+                return SegmentPermissions.is_user_instructor(
                     collection_id=segment.collection.id, user=user
-                ) or self.is_user_controller(collection_id=segment.collection.id, user=user)
+                ) or SegmentPermissions.is_user_controller(collection_id=segment.collection.id, user=user)
             case _:
                 return False
 

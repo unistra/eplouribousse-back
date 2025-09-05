@@ -29,6 +29,8 @@ class Segment(models.Model):
     created_by = models.ForeignKey("user.User", on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
 
+    _extended_permissions = ["up", "down"]
+
     class Meta:
         verbose_name = _("Collection segment")
         verbose_name_plural = _("Collection segments")
@@ -45,5 +47,5 @@ class Segment(models.Model):
 
     @classmethod
     def get_last_order(cls, resource: Resource):
-        orders = resource.segments.values_list("order", flat=True)
-        return max(orders, default=0) + 1
+        max_order = resource.segments.aggregate(models.Max("order"))["order__max"] or 0
+        return max_order + 1

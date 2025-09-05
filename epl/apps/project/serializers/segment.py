@@ -7,9 +7,12 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from epl.apps.project.models import ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
+from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 
-class SegmentSerializer(serializers.ModelSerializer):
+class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
+    acl = AclField(exclude=["retrieve", "update"])
+
     class Meta:
         model = Segment
         fields = [
@@ -24,6 +27,7 @@ class SegmentSerializer(serializers.ModelSerializer):
             "retained",
             "created_by",
             "created_at",
+            "acl",
         ]
         read_only_fields = ["id", "segment_type", "order", "retained", "created_at", "created_by"]
 
