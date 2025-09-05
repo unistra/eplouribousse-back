@@ -67,6 +67,12 @@ class Resource(models.Model):
             return self.instruction_turns.get("unbound_copies", {}).get("turns", [])[0]
         return ""
 
+    @property
+    def segments(self):
+        from epl.apps.project.models.segment import Segment
+
+        return Segment.objects.filter(collection__resource=self)
+
 
 class Collection(models.Model):
     id = UUIDPrimaryKeyField()

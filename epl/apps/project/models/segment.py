@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext as _
 
+from epl.apps.project.models import Resource
 from epl.apps.project.models.choices import SegmentType
 from epl.models import UUIDPrimaryKeyField
 
@@ -28,6 +29,8 @@ class Segment(models.Model):
     created_by = models.ForeignKey("user.User", on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
 
+    _extended_permissions = ["up", "down"]
+
     class Meta:
         verbose_name = _("Collection segment")
         verbose_name_plural = _("Collection segments")
@@ -35,8 +38,14 @@ class Segment(models.Model):
             models.UniqueConstraint(
                 fields=["collection", "order"],
                 name="unique_collection_order",
+                deferrable=models.Deferrable.DEFERRED,
             ),
         ]
 
     def __str__(self):
         return f"{self.collection.project} - {_('Segment')} n°{self.order}: {self.content}"
+
+    @classmethod
+    def get_last_order(cls, resource: Resource):
+        max_order = resource.segments.aggregate(models.Max("order"))["order__max"] or 0
+        return max_order + 1
