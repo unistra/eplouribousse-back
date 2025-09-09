@@ -18,6 +18,10 @@ class ResourceFilter(filters.BaseFilterBackend):
     status_param_description = _("Filter by resource status")
 
     def filter_queryset(self, request, queryset, view):
+        status = int(request.query_params.get(self.status_param, 0))
+        if status not in ResourceStatus:
+            raise ValidationError({"status": _("Invalid status value")})
+
         if project_id := request.query_params.get(self.project_param, None):
             try:
                 _project = Project.objects.filter(id=project_id).exists()
@@ -31,22 +35,21 @@ class ResourceFilter(filters.BaseFilterBackend):
             except (Library.DoesNotExist, DjangoValidationError):
                 raise ValidationError({"library": _("Library not found")})
 
-        if status := int(request.query_params.get(self.status_param, 0)):
-            if status == ResourceStatus.POSITIONING:
-                # If a Resource is in Instruction or Control positioning status but does
-                # not have any segments assigned yet, we consider it can still be positioned.
-                queryset = queryset.filter(
-                    Q(status=ResourceStatus.POSITIONING) | Q(collections__segments__isnull=True)
-                ).distinct()
-            elif status in [
-                ResourceStatus.INSTRUCTION_BOUND,
-                ResourceStatus.CONTROL_BOUND,
-                ResourceStatus.INSTRUCTION_UNBOUND,
-                ResourceStatus.CONTROL_UNBOUND,
-            ]:
-                queryset = queryset.filter(status=status)
-            else:
-                raise ValidationError({"status": _("Invalid status value")})
+            # Only return resources that must be instructed by the specified library
+            if status == ResourceStatus.INSTRUCTION_BOUND:
+                queryset = queryset.filter(instruction_turns__bound_copies__turns__0=str(library_id))
+            if status == ResourceStatus.INSTRUCTION_UNBOUND:
+                queryset = queryset.filter(instruction_turns__unbound_copies__turns__0=str(library_id))
+
+        if status == ResourceStatus.POSITIONING:
+            # If a Resource is in Instruction or Control positioning status but does
+            # not have any segments assigned yet, we consider it can still be positioned.
+            queryset = queryset.filter(
+                Q(status=ResourceStatus.POSITIONING) | Q(collections__segments__isnull=True)
+            ).distinct()
+        elif status > ResourceStatus.POSITIONING:
+            queryset = queryset.filter(status=status)
+
         if against_id := request.query_params.get(self.against_param, None):
             try:
                 _against_library = Library.objects.filter(id=against_id).exists()
