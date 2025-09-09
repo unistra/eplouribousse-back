@@ -85,7 +85,7 @@ class ProjectLaunchTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self._assert_email_sent(
             users,
-            subject_contains=["launching project"],
+            subject_contains=["Launch of the"],
             body_contains=[self.project.name, "now"],
         )
 
@@ -105,6 +105,6 @@ class ProjectLaunchTest(TestCase):
         )
         self._assert_email_sent(
             users,
-            subject_contains=["launching project"],
+            subject_contains=["Launch of the"],
             body_contains=[timezone.localtime(self.project.active_after).strftime("%Y-%m-%d")],
         )

@@ -107,7 +107,7 @@ def send_invite_project_admins_to_review_email(
 
     send_mail(
         subject=f"eplouribousse | {tenant_name} | "
-        + _("Project '%(project_name)s' has been launched") % {"project_name": project_name},
+        + _("Creation of the {project_name} project").format(project_name=project_name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
@@ -127,7 +127,7 @@ def send_project_launched_email(
         "emails/project_launched.txt",
         {
             "project_name": project.name,
-            "launcher_name": request.user,
+            "launcher_name": request.user.email,
             "project_active_date": _("now")
             if is_starting_now
             else f"{active_date.strftime('%Y-%m-%d')} {_('at')} {active_date.strftime('%H:%M')}",
@@ -138,7 +138,8 @@ def send_project_launched_email(
     )
 
     send_mail(
-        subject=f"eplouribousse | {request.tenant.name} | {_('launching project')} {project.name}",
+        subject=f"eplouribousse | {request.tenant.name} | "
+        + _("Launch of the {project_name} project").format(project_name=project.name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=project_users,
         fail_silently=False,
