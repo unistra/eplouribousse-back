@@ -46,13 +46,11 @@ def invite_project_admins_to_review(project: Project, request):
     )
 
     tenant_name = request.tenant.name
-
-    project_creator = User.objects.filter(
-        project_roles__project=project,
-        project_roles__role=Role.PROJECT_CREATOR,
-    ).first()
-
-    project_creator_email = project_creator.email if project_creator else None
+    # Guard against AnonymousUser which has no email.
+    # We consider that the user who sent the request is the creator of the project.
+    project_creator_email = (
+        request.user.email if getattr(request.user, "is_authenticated", False) and request.user.email else None
+    )
 
     for project_admin in project_admins:
         send_invite_project_admins_to_review_email(

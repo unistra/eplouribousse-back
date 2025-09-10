@@ -1059,8 +1059,8 @@ msgid ""
 "If you believe this message is the result of an error, please contact the "
 "project creator: %(project_creator_email)s"
 msgstr ""
-"En tant qu'administrateur, vous devez, en consultation avec vos co-administrateurs "
-"et les chefs de projet, vérifier et, si nécessaire, modifier les paramètres et "
+"En tant qu'administrateur, vous devez, en consultation avec vos co-administrateurs"
+" et les chefs de projet, vérifier et, si nécessaire, modifier les paramètres et "
 "les réglages avant la mise en ligne du projet.\n"
 "Si vous pensez que ce message résulte d'une erreur, veuillez contacter le "
 "créateur du projet : %(project_creator_email)s"
@@ -1167,7 +1167,7 @@ msgstr "vous pouvez ignorer ce message et votre mot de passe ne changera pas"
 #: epl/templates/emails/project_launched.txt:3
 #, python-format
 msgid "The project %(project_name)s has been launched by %(launcher_name)s ;"
-msgstr "Le projet %(project_name)s a été lancé par %(launcher_name)s"
+msgstr "Le projet %(project_name)s a été lancé par %(launcher_name)s ;"
 
 #: epl/templates/emails/project_launched.txt:4
 #, python-format
