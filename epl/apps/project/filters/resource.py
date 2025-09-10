@@ -22,25 +22,68 @@ class ResourceFilter(filters.BaseFilterBackend):
         if status not in ResourceStatus:
             raise ValidationError({"status": _("Invalid status value")})
 
-        if project_id := request.query_params.get(self.project_param, None):
-            try:
-                _project = Project.objects.filter(id=project_id).exists()
-                queryset = queryset.filter(project_id=project_id)
-            except (Project.DoesNotExist, DjangoValidationError):
-                raise ValidationError({"project": _("Project not found")})
-
+        library = None
         if library_id := request.query_params.get(self.library_param, None):
             try:
-                _library = Library.objects.filter(id=library_id).exists()
+                library = Library.objects.get(id=library_id)
             except (Library.DoesNotExist, DjangoValidationError):
                 raise ValidationError({"library": _("Library not found")})
 
-            # Only return resources that must be instructed by the specified library
-            if status == ResourceStatus.INSTRUCTION_BOUND:
-                queryset = queryset.filter(instruction_turns__bound_copies__turns__0=str(library_id))
-            if status == ResourceStatus.INSTRUCTION_UNBOUND:
-                queryset = queryset.filter(instruction_turns__unbound_copies__turns__0=str(library_id))
+        against_library = None
+        if against_id := request.query_params.get(self.against_param, None):
+            try:
+                against_library = Library.objects.get(id=against_id)
+            except (Library.DoesNotExist, DjangoValidationError):
+                raise ValidationError({"against": _("Library to compare against not found")})
 
+        if project_id := request.query_params.get(self.project_param, None):
+            try:
+                project = Project.objects.get(id=project_id)
+                queryset = queryset.filter(project=project)
+            except (Project.DoesNotExist, DjangoValidationError):
+                raise ValidationError({"project": _("Project not found")})
+
+        if not library:
+            # Not for a specific library
+            queryset = self.filter_no_library(queryset, status)
+        else:
+            # Resources having collections in the specified library
+            # optionally in common with another library
+            queryset = self.filter_for_library(queryset, status, library, against_library)
+
+        return queryset
+
+    def filter_for_library(self, queryset, status, library, against_library=None):
+        if status == ResourceStatus.POSITIONING:
+            # If a Resource is in Instruction or Control positioning status but does
+            # not have any segments assigned yet, we consider it can still be positioned.
+            queryset = queryset.filter(collections__library=library)
+
+            queryset = queryset.filter(Q(status=status) | Q(collections__segments__isnull=True))
+
+        elif status == ResourceStatus.INSTRUCTION_BOUND:
+            queryset = queryset.filter(
+                status=status,
+                collections__library=library,
+                instruction_turns__bound_copies__turns__0=str(library.id),
+            )
+
+        elif status == ResourceStatus.INSTRUCTION_UNBOUND:
+            queryset = queryset.filter(
+                status=status,
+                collections__library=library,
+                instruction_turns__unbound_copies__turns__0=str(library.id),
+            )
+
+        elif status in [ResourceStatus.CONTROL_BOUND, ResourceStatus.CONTROL_UNBOUND]:
+            queryset = queryset.filter(status=status, collections__library=library)
+
+        if against_library:
+            queryset = queryset.filter(collections__library=against_library)
+
+        return queryset
+
+    def filter_no_library(self, queryset, status):
         if status == ResourceStatus.POSITIONING:
             # If a Resource is in Instruction or Control positioning status but does
             # not have any segments assigned yet, we consider it can still be positioned.
@@ -49,27 +92,6 @@ class ResourceFilter(filters.BaseFilterBackend):
             ).distinct()
         elif status > ResourceStatus.POSITIONING:
             queryset = queryset.filter(status=status)
-
-        if against_id := request.query_params.get(self.against_param, None):
-            try:
-                _against_library = Library.objects.filter(id=against_id).exists()
-            except (Library.DoesNotExist, DjangoValidationError):
-                raise ValidationError({"against": _("Library to compare against not found")})
-
-        if against_id and library_id:
-            if against_id == library_id:
-                raise ValidationError(
-                    {"against": _("The library to compare against cannot be the same as the current library")}
-                )
-            else:
-                queryset = queryset.filter(
-                    Q(collections__library_id=against_id) | Q(collections__library_id=library_id)
-                )
-        elif library_id and not against_id:
-            queryset = queryset.filter(collections__library_id=library_id)
-        elif against_id and not library_id:
-            raise ValidationError({"against": _("You must specify a library to compare against")})
-
         return queryset
 
     def get_schema_operation_parameters(self, view):
@@ -109,7 +131,7 @@ class ResourceFilter(filters.BaseFilterBackend):
             },
             {
                 "name": self.status_param,
-                "required": False,
+                "required": True,
                 "in": "query",
                 "description": str(self.status_param_description),
                 "schema": {
