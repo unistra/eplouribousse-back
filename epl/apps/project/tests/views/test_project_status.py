@@ -126,7 +126,7 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         sent_email = mail.outbox[1]
         self.assertEqual(sent_email.to, [self.project_admin.email])
         self.assertIn(self.project.name, sent_email.subject)
-        self.assertIn("Invitation to review project settings", sent_email.body)
+        self.assertIn("As an administrator, you must, in consultation with your co-administrators", sent_email.body)
 
     def test_send_invitation_to_review_project_after_new_project_admin_subscription(self):
         invited_user_email = "new_project_admin@test.com"
@@ -164,7 +164,7 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         self.assertEqual(len(mail.outbox), 2)
         sent_email = mail.outbox[0]
         self.assertEqual(sent_email.to, [new_user.email])
-        self.assertIn("Project 'Test Project' has been launched", sent_email.subject)
+        self.assertIn("Creation of the Test Project project", sent_email.subject)
         self.assertIn(self.project.name, sent_email.body)
 
         self.assertEqual(len(self.project.invitations), 0)
