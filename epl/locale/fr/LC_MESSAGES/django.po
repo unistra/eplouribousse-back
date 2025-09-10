@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-09 14:52+0200\n"
+"POT-Creation-Date: 2025-09-10 12:06+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,33 +51,27 @@ msgid "ID of the library to compare against"
 msgstr "ID de la bibliothèque à comparer"
 
 #: epl/apps/project/filters/resource.py:24
-#, fuzzy
-#| msgid "Page not found"
 msgid "Project not found"
-msgstr "Page non trouvée"
+msgstr "Projet non trouvé"
 
 #: epl/apps/project/filters/resource.py:30
-#, fuzzy
-#| msgid "Page not found"
 msgid "Library not found"
-msgstr "Page non trouvée"
+msgstr "Bibliothèque non trouvée"
 
 #: epl/apps/project/filters/resource.py:36
-#, fuzzy
-#| msgid "ID of the library to compare against"
 msgid "Library to compare against not found"
-msgstr "ID de la bibliothèque à comparer"
+msgstr "Bibliothèque à comparer introuvable"
 
 #: epl/apps/project/filters/resource.py:41
 msgid ""
 "The library to compare against cannot be the same as the current library"
 msgstr ""
+"La bibliothèque à comparer ne peut pas être la même que la bibliothèque "
+"active."
 
 #: epl/apps/project/filters/resource.py:50
-#, fuzzy
-#| msgid "ID of the library to compare against"
 msgid "You must specify a library to compare against"
-msgstr "ID de la bibliothèque à comparer"
+msgstr "Vous devez spécifier une bibliothèque à comparer"
 
 #: epl/apps/project/models/choices.py:8
 msgid "Draft"
@@ -93,7 +87,7 @@ msgstr "Prêt"
 
 #: epl/apps/project/models/choices.py:11
 msgid "Launched"
-msgstr ""
+msgstr "Lancé"
 
 #: epl/apps/project/models/choices.py:12
 msgid "Archived"
@@ -108,72 +102,56 @@ msgid "Instruction Bound Copies"
 msgstr "Instruction des ressources reliées"
 
 #: epl/apps/project/models/choices.py:18
-#, fuzzy
-#| msgid "Instruction Bound Copies"
 msgid "Control Bound Copies"
-msgstr "Instruction des ressources reliées"
+msgstr "Instruction des éléments reliés"
 
 #: epl/apps/project/models/choices.py:19
-#, fuzzy
-#| msgid "Instruction Bound Copies"
 msgid "Instruction Unbound Copies"
-msgstr "Instruction des ressources reliées"
+msgstr "Instruction des éléments non reliés"
 
 #: epl/apps/project/models/choices.py:20
-#, fuzzy
-#| msgid "Instruction Bound Copies"
 msgid "Control Unbound Copies"
-msgstr "Instruction des ressources reliées"
+msgstr "Contrôle des éléments non reliés"
 
 #: epl/apps/project/models/choices.py:24
 msgid "Bound"
-msgstr ""
+msgstr "Relié"
 
 #: epl/apps/project/models/choices.py:25
 msgid "Unbound"
-msgstr ""
+msgstr "Non relié"
 
 #: epl/apps/project/models/collection.py:23
 msgid "Arbitration Type 0"
-msgstr ""
+msgstr "Arbitrage de type 0"
 
 #: epl/apps/project/models/collection.py:24
 msgid "Arbitration Type 1"
-msgstr ""
+msgstr "Arbitrage de type 1"
 
 #: epl/apps/project/models/collection.py:25
 msgid "No arbitration"
-msgstr ""
+msgstr "Pas d'arbitrage"
 
 #: epl/apps/project/models/collection.py:29
-#, fuzzy
-#| msgid "Positioning"
 msgid "Position 1"
-msgstr "Positionnement"
+msgstr "Position 1"
 
 #: epl/apps/project/models/collection.py:30
-#, fuzzy
-#| msgid "Positioning"
 msgid "Position 2"
-msgstr "Positionnement"
+msgstr "Position 2"
 
 #: epl/apps/project/models/collection.py:31
-#, fuzzy
-#| msgid "Positioning"
 msgid "Position 3"
-msgstr "Positionnement"
+msgstr "Position 3"
 
 #: epl/apps/project/models/collection.py:32
-#, fuzzy
-#| msgid "Positioning"
 msgid "Position 4"
-msgstr "Positionnement"
+msgstr "Position 4"
 
 #: epl/apps/project/models/collection.py:33
-#, fuzzy
-#| msgid "List of IDs to exclude."
 msgid "Position excluded"
-msgstr "Liste des ID à exclure."
+msgstr "Position exclue"
 
 #: epl/apps/project/models/collection.py:38
 msgid "Code (PPN or other)"
@@ -189,16 +167,12 @@ msgid "Status"
 msgstr "Statut"
 
 #: epl/apps/project/models/collection.py:42
-#, fuzzy
-#| msgid "Instructor"
 msgid "Instruction turns"
-msgstr "Instructeur"
+msgstr "Tours d'instructions"
 
 #: epl/apps/project/models/collection.py:44
-#, fuzzy
-#| msgid "Invitation"
 msgid "Arbitration"
-msgstr "Invitation"
+msgstr "Arbitrage"
 
 #: epl/apps/project/models/collection.py:46
 #: epl/apps/project/models/collection.py:91
@@ -209,11 +183,11 @@ msgstr "Créé le"
 
 #: epl/apps/project/models/collection.py:52
 msgid "Resource"
-msgstr ""
+msgstr "Ressource"
 
 #: epl/apps/project/models/collection.py:53
 msgid "Resources"
-msgstr ""
+msgstr "resources"
 
 #: epl/apps/project/models/collection.py:82
 msgid "ISSN"
@@ -252,10 +226,8 @@ msgid "Alias for a duplicate collection in the same library"
 msgstr "Alias pour une collection dupliquée dans la même bibliothèque"
 
 #: epl/apps/project/models/collection.py:98
-#, fuzzy
-#| msgid "Positioning"
 msgid "Position"
-msgstr "Positionnement"
+msgstr "Position"
 
 #: epl/apps/project/models/collection.py:98
 msgid "Positioning rank of a collection"
@@ -267,14 +239,12 @@ msgid "Reason for excluding the collection from deduplication"
 msgstr "Raison de l'exclusion de la collection de la déduplication"
 
 #: epl/apps/project/models/collection.py:107
-#, fuzzy
-#| msgid "List collections"
 msgid "Is the result collection"
-msgstr "Liste des collections"
+msgstr "Est la collection résultante"
 
 #: epl/apps/project/models/collection.py:110
 msgid "The collection is the result of a deduplication process"
-msgstr ""
+msgstr "La collection est le résultat d'une opération de déduplication"
 
 #: epl/apps/project/models/collection.py:117
 msgid "Collection"
@@ -286,19 +256,19 @@ msgstr "Collections"
 
 #: epl/apps/project/models/comment.py:12
 msgid "Subject"
-msgstr ""
+msgstr "Sujet"
 
 #: epl/apps/project/models/comment.py:13
 msgid "Content"
-msgstr ""
+msgstr "Contenu"
 
 #: epl/apps/project/models/comment.py:27
 msgid "Comment"
-msgstr ""
+msgstr "Commentaire"
 
 #: epl/apps/project/models/comment.py:28
 msgid "Comments"
-msgstr ""
+msgstr "Commentaires"
 
 #: epl/apps/project/models/library.py:13 epl/apps/project/models/project.py:76
 msgid "Name"
@@ -358,8 +328,6 @@ msgstr "Est un lieu de conservation alternatif"
 
 #: epl/apps/project/models/project.py:137
 #: epl/apps/project/tests/models/test_project.py:83
-#, fuzzy
-#| msgid "Is alternate site"
 msgid "Alternative storage site"
 msgstr "Lieu de conservation alternatif"
 
@@ -404,33 +372,27 @@ msgstr "Rôles utilisateurs du projet"
 
 #: epl/apps/project/models/segment.py:14
 msgid "Segment type"
-msgstr ""
+msgstr "Type de segment"
 
 #: epl/apps/project/models/segment.py:16 epl/apps/project/models/segment.py:46
 msgid "Segment"
-msgstr ""
+msgstr "Segment"
 
 #: epl/apps/project/models/segment.py:17
 msgid "Improbable elements"
-msgstr ""
+msgstr "Éléments improbables"
 
 #: epl/apps/project/models/segment.py:18
-#, fuzzy
-#| msgid "Description"
 msgid "Exception"
-msgstr "Description"
+msgstr "Exception"
 
 #: epl/apps/project/models/segment.py:35
-#, fuzzy
-#| msgid "Collections"
 msgid "Collection segment"
-msgstr "Collections"
+msgstr "Segment de collection"
 
 #: epl/apps/project/models/segment.py:36
-#, fuzzy
-#| msgid "Collections"
 msgid "Collection segments"
-msgstr "Collections"
+msgstr "Segments de collection"
 
 #: epl/apps/project/serializers/collection.py:28
 msgid "Library to which the collection belongs"
@@ -483,10 +445,8 @@ msgstr "Motif d'exclusion non valide."
 #: epl/apps/project/serializers/collection.py:275
 #: epl/apps/project/views/collection.py:179
 #: epl/apps/project/views/collection.py:188
-#, fuzzy
-#| msgid "Positioning"
 msgid "Positioning comment"
-msgstr "Positionnement"
+msgstr "Message de positionnement"
 
 #: epl/apps/project/serializers/common.py:6
 #: epl/apps/project/serializers/project.py:202
@@ -557,51 +517,47 @@ msgstr "Motifs d'exclusion à ajouter ou à supprimer du projet"
 
 #: epl/apps/project/serializers/resource.py:15
 msgid "Indicates if the user should instruct this resource"
-msgstr ""
+msgstr "Indique si l'utilisateur doit instruire cette ressource"
 
 #: epl/apps/project/serializers/resource.py:18
 msgid "Indicates if the user should position this resource"
-msgstr ""
+msgstr "Indique si l'utilisateur doit positionner cette ressource"
 
 #: epl/apps/project/serializers/segment.py:67
 msgid "Referenced segment belongs to a different collection"
-msgstr ""
+msgstr "Le segment référencé appartient à une autre collection"
 
 #: epl/apps/project/serializers/segment.py:74
-#, fuzzy
-#| msgid "Project does not exist."
 msgid "Referenced segment does not exist"
-msgstr "Le projet n'existe pas."
+msgstr "Le segment référencé n'existe pas"
 
 #: epl/apps/project/serializers/segment.py:123
 msgid "Segment is already at the top of the collection"
-msgstr ""
+msgstr "Le segment est déjà au sommet de la collection"
 
 #: epl/apps/project/serializers/segment.py:128
-#, fuzzy
-#| msgid "Page not found"
 msgid "Previous segment not found"
-msgstr "Page non trouvée"
+msgstr "Le segment précédent n'a pas été trouvé"
 
 #: epl/apps/project/serializers/segment.py:144
 msgid "Segment is already at the bottom of the collection"
-msgstr ""
+msgstr "Le segment est déjà en bas de la collection"
 
 #: epl/apps/project/views/collection.py:25
 msgid "List collections"
 msgstr "Liste des collections"
 
 #: epl/apps/project/views/collection.py:34
-#, fuzzy
-#| msgid "Delete a project"
 msgid "Delete a collection"
-msgstr "Supprimer un projet"
+msgstr "Supprimer une collection"
 
 #: epl/apps/project/views/collection.py:35
 msgid ""
 "Delete a collection permanently. This action requires project creator "
 "permissions."
 msgstr ""
+"Supprimer définitivement une collection. Cette action nécessite d'être "
+"créateur du projet "
 
 #: epl/apps/project/views/collection.py:84
 msgid ""
@@ -688,66 +644,60 @@ msgid "Specify if the library is an alternative storage location"
 msgstr "Indiquer si la bibliothèque est un lieu de conservation alternatif"
 
 #: epl/apps/project/views/segment.py:20
-#, fuzzy
-#| msgid "List of users"
 msgid "List segments"
-msgstr "Liste des utilisateurs"
+msgstr "Lister les segments"
 
 #: epl/apps/project/views/segment.py:21
 msgid "List segments for a specific resource"
-msgstr ""
+msgstr "Lister les segments pour une ressource spécifique"
 
 #: epl/apps/project/views/segment.py:28
 msgid "Collection ID to filter segments"
-msgstr ""
+msgstr "ID de la collection où filtrer les segments"
 
 #: epl/apps/project/views/segment.py:38
-#, fuzzy
-#| msgid "Created at"
 msgid "Create a segment"
-msgstr "Créé le"
+msgstr "Créer un segment"
 
 #: epl/apps/project/views/segment.py:48
-#, fuzzy
-#| msgid "Partially update a project"
 msgid "Partially update a segment"
-msgstr "Mettre à jour partiellement un projet"
+msgstr "Mettre à jour un segment partiellement"
 
 #: epl/apps/project/views/segment.py:58
-#, fuzzy
-#| msgid "Delete a project"
 msgid "Delete a segment"
-msgstr "Supprimer un projet"
+msgstr "Supprimer un segment"
 
 #: epl/apps/project/views/segment.py:59
 msgid "Delete a segment permanently"
-msgstr ""
+msgstr "Supprimer définitivement un segment"
 
 #: epl/apps/project/views/segment.py:88
 msgid "Missing required query parameter: resource_id"
-msgstr ""
+msgstr "Paramètre de requête manquant : resource_id"
 
 #: epl/apps/project/views/segment.py:93
-#, fuzzy
-#| msgid "User does not exist."
 msgid "Resource does not exist"
-msgstr "L'utilisateur n'existe pas."
+msgstr "La ressource n'existe pas."
 
 #: epl/apps/project/views/segment.py:117
 msgid "Move segment up"
-msgstr ""
+msgstr "Déplacer le segment vers le haut"
 
 #: epl/apps/project/views/segment.py:118
 msgid "Move the selected segment up in the order, and move the previous down"
 msgstr ""
+"Déplacer le segment sélectionné vers le haut, et déplacer le précédent vers "
+"le bas"
 
 #: epl/apps/project/views/segment.py:137
 msgid "Move segment down"
-msgstr ""
+msgstr "Déplacer le segment vers le bas"
 
 #: epl/apps/project/views/segment.py:138
 msgid "Move the selected segment down in the order, and move the next up"
 msgstr ""
+"Déplacer le segment sélectionné vers le bas, et déplacer le segment suivant "
+"vers le haut"
 
 #: epl/apps/tenant/models.py:10
 msgid "Tenant name"
@@ -762,8 +712,6 @@ msgid "Frontend domain"
 msgstr "Domain du frontend"
 
 #: epl/apps/user/authentication.py:21
-#, fuzzy
-#| msgid "Invalid uidb64"
 msgid "Invalid audience"
 msgstr "Audience invalide"
 
@@ -797,8 +745,6 @@ msgid "New password and confirm password do not match"
 msgstr "Le nouveau mot de passe et sa confirmation ne correspondent pas"
 
 #: epl/apps/user/serializers.py:75
-#, fuzzy
-#| msgid "User is not active"
 msgid "User is inactive"
 msgstr "L'utilisateur n'est pas actif"
 
@@ -1059,9 +1005,9 @@ msgid ""
 "If you believe this message is the result of an error, please contact the "
 "project creator: %(project_creator_email)s"
 msgstr ""
-"En tant qu'administrateur, vous devez, en consultation avec vos co-administrateurs"
-" et les chefs de projet, vérifier et, si nécessaire, modifier les paramètres et "
-"les réglages avant la mise en ligne du projet.\n"
+"En tant qu'administrateur, vous devez, en consultation avec vos co-"
+"administrateurs et les chefs de projet, vérifier et, si nécessaire, modifier "
+"les paramètres et les réglages avant la mise en ligne du projet.\n"
 "Si vous pensez que ce message résulte d'une erreur, veuillez contacter le "
 "créateur du projet : %(project_creator_email)s"
 
@@ -1081,7 +1027,7 @@ msgstr ""
 #: epl/templates/emails/invite_to_epl.txt:20
 #: epl/templates/emails/password_changed.txt:17
 #: epl/templates/emails/password_reset.txt:14
-#: epl/templates/emails/project_launched.txt:9
+#: epl/templates/emails/project_launched.txt:13
 msgid "This is an automated message, please do not reply"
 msgstr "Ceci est un message automatique, vous ne pouvez pas y répondre"
 
@@ -1169,7 +1115,12 @@ msgstr "vous pouvez ignorer ce message et votre mot de passe ne changera pas"
 msgid "The project %(project_name)s has been launched by %(launcher_name)s ;"
 msgstr "Le projet %(project_name)s a été lancé par %(launcher_name)s ;"
 
-#: epl/templates/emails/project_launched.txt:4
+#: epl/templates/emails/project_launched.txt:5
+#, python-format
+msgid "it is possible to start working on it from now : %(project_url)s."
+msgstr "il est possible d'y travailler à compter de maintenant : %(project_url)s."
+
+#: epl/templates/emails/project_launched.txt:7
 #, python-format
 msgid ""
 "it is possible to start working on it from %(project_active_date)s : "
@@ -1178,7 +1129,7 @@ msgstr ""
 "il est possible d'y travailler à compter du %(project_active_date)s : "
 "%(project_url)s."
 
-#: epl/templates/emails/project_launched.txt:5
+#: epl/templates/emails/project_launched.txt:9
 #, python-format
 msgid ""
 "If you think this message was sent by error, please contact: "
