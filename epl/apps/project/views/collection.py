@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import filters, mixins, parsers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -109,6 +110,81 @@ class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, Generic
         serializer.is_valid(raise_exception=True)
         imported_collections: dict[int, int] = serializer.save()
         return Response(imported_collections, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        tags=["collection"],
+        summary=_("Bulk delete collections by library and project"),
+        description=_(
+            "Delete multiple collections belonging to a specific library within a specific project. Collections of the same library in other projects are not affected."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="library_id",
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.QUERY,
+                description=_("Library ID whose collections should be deleted"),
+                required=True,
+            ),
+            OpenApiParameter(
+                name="project_id",
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.QUERY,
+                description=_("Project ID to scope the deletion to"),
+                required=True,
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: {
+                "type": "object",
+                "properties": {
+                    "deleted_count": {"type": "integer", "description": _("Number of collections deleted")},
+                    "message": {"type": "string", "description": _("Success message")},
+                },
+                "example": {"deleted_count": 15, "message": "Collections successfully deleted for library in project"},
+            },
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_403_FORBIDDEN: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(
+        detail=False,
+        methods=["delete"],
+        url_path="bulk-delete",
+        url_name="bulk_delete",
+    )
+    def bulk_delete(self, request):
+        """
+        Delete all collections of a specific library.
+        Used to delete collections imported from a CSV file, during the project creation step.
+        Collections from this library in other projects will not be deleted.
+        """
+        library_id = request.query_params.get("library_id")
+        project_id = request.query_params.get("project_id")
+
+        if not library_id:
+            return Response({"detail": _("library_id parameter is required")}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not project_id:
+            return Response({"detail": _("project_id parameter is required")}, status=status.HTTP_400_BAD_REQUEST)
+
+        self.check_object_permissions(request, None)
+
+        collections_to_delete = Collection.objects.filter(project_id=project_id, library_id=library_id)
+        deleted_count = collections_to_delete.count()
+        if deleted_count == 0:
+            return Response(
+                {"deleted_count": 0, "message": _("No collections found for this library in this project")},
+                status=status.HTTP_200_OK,
+            )
+
+        collections_to_delete.delete()
+
+        return Response(
+            {"deleted_count": deleted_count, "message": _("Collections successfully deleted for library in project")},
+            status=status.HTTP_200_OK,
+        )
 
     @extend_schema(
         tags=["collection"],

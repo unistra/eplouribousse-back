@@ -20,6 +20,7 @@ class CollectionPermission(permissions.BasePermission):
                 | "partial_update"
                 | "destroy"
                 | "import_csv"
+                | "bulk_delete"
                 | "position"
                 | "exclude"
                 | "comment_positioning"
@@ -38,7 +39,7 @@ class CollectionPermission(permissions.BasePermission):
                 return bool(
                     user and user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)
                 )
-            case "import_csv":
+            case "import_csv" | "bulk_delete":
                 return bool(user and user.is_authenticated and user.is_project_creator)
             case "update" | "partial_update" | "position" | "exclude":
                 return bool(user and user.is_authenticated and user.is_instructor(obj.project, obj.library))
