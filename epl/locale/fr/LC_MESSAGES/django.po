@@ -1048,7 +1048,7 @@ msgstr "Erreur"
 #: epl/templates/emails/invite_project_admin_to_review.txt:3
 #, python-format
 msgid "The project %(project_name)s is now available."
-msgstr ""
+msgstr "Le projet %(project_name)s est à présent disponible."
 
 #: epl/templates/emails/invite_project_admin_to_review.txt:4
 #, python-format
@@ -1059,6 +1059,11 @@ msgid ""
 "If you believe this message is the result of an error, please contact the "
 "project creator: %(project_creator_email)s"
 msgstr ""
+"En tant qu'administrateur, vous devez, en consultation avec vos co-administrateurs "
+"et les chefs de projet, vérifier et, si nécessaire, modifier les paramètres et "
+"les réglages avant la mise en ligne du projet.\n"
+"Si vous pensez que ce message résulte d'une erreur, veuillez contacter le "
+"créateur du projet : %(project_creator_email)s"
 
 #: epl/templates/emails/invite_project_admin_to_review.txt:10
 #: epl/templates/emails/invite_to_epl.txt:12
