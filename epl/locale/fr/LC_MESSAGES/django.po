@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-10 12:06+0200\n"
+"POT-Creation-Date: 2025-09-11 08:36+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,13 +20,13 @@ msgstr ""
 
 #: epl/apps/project/filters/collection.py:11
 #: epl/apps/project/filters/resource.py:12
-#: epl/apps/project/views/collection.py:72
+#: epl/apps/project/views/collection.py:73
 msgid "Project ID to which the collection belongs"
 msgstr "ID du projet auquel la collection appartient"
 
 #: epl/apps/project/filters/collection.py:13
 #: epl/apps/project/filters/resource.py:14
-#: epl/apps/project/views/collection.py:67
+#: epl/apps/project/views/collection.py:68
 msgid "Library ID to which the collection belongs"
 msgstr "ID de la bibliothèque à laquelle appartient la collection"
 
@@ -443,8 +443,8 @@ msgstr "Motif d'exclusion non valide."
 
 #: epl/apps/project/serializers/collection.py:246
 #: epl/apps/project/serializers/collection.py:275
-#: epl/apps/project/views/collection.py:179
-#: epl/apps/project/views/collection.py:188
+#: epl/apps/project/views/collection.py:253
+#: epl/apps/project/views/collection.py:262
 msgid "Positioning comment"
 msgstr "Message de positionnement"
 
@@ -543,15 +543,26 @@ msgstr "Le segment précédent n'a pas été trouvé"
 msgid "Segment is already at the bottom of the collection"
 msgstr "Le segment est déjà en bas de la collection"
 
-#: epl/apps/project/views/collection.py:25
+#: epl/apps/project/tests/views/test_collection.py:311
+#, fuzzy
+#| msgid "Collections successfully deleted for library in project"
+msgid "Collections successfully deleted for this library"
+msgstr "Collections supprimées avec succès pour cette bibliothèque"
+
+#: epl/apps/project/tests/views/test_collection.py:325
+#: epl/apps/project/views/collection.py:180
+msgid "No collections found for this library in this project"
+msgstr "Aucune collection trouvée pour cette bibliothèque dans ce projet"
+
+#: epl/apps/project/views/collection.py:26
 msgid "List collections"
 msgstr "Liste des collections"
 
-#: epl/apps/project/views/collection.py:34
+#: epl/apps/project/views/collection.py:35
 msgid "Delete a collection"
 msgstr "Supprimer une collection"
 
-#: epl/apps/project/views/collection.py:35
+#: epl/apps/project/views/collection.py:36
 msgid ""
 "Delete a collection permanently. This action requires project creator "
 "permissions."
@@ -559,13 +570,55 @@ msgstr ""
 "Supprimer définitivement une collection. Cette action nécessite d'être "
 "créateur du projet "
 
-#: epl/apps/project/views/collection.py:84
+#: epl/apps/project/views/collection.py:85
 msgid ""
 "Key represents the number of duplicates (1=unique, 2=duplicate, "
 "3=triplicate, etc), value is the count"
 msgstr ""
 "La clé représente le nombre de doublons (1=unique, 2=doublon, 3=triplon, "
 "etc.), la valeur est le nombre"
+
+#: epl/apps/project/views/collection.py:116
+msgid "Bulk delete collections by library and project"
+msgstr "Suppression en lot de collections par bibliothèque et par projet"
+
+#: epl/apps/project/views/collection.py:118
+msgid ""
+"Delete multiple collections belonging to a specific library within a "
+"specific project. Collections of the same library in other projects are not "
+"affected."
+msgstr ""
+"Supprimer plusieurs collections appartenant à une bibliothèque spécifique au sein d'un "
+"projet spécifique. Les collections de la même bibliothèque dans d'autres projets ne sont pas "
+"affectées."
+
+#: epl/apps/project/views/collection.py:125
+msgid "Library ID whose collections should be deleted"
+msgstr "ID de la bibliothèque dont les collections doivent être supprimées"
+
+#: epl/apps/project/views/collection.py:132
+msgid "Project ID to scope the deletion to"
+msgstr "ID du projet auquel restreindre la suppression"
+
+#: epl/apps/project/views/collection.py:140
+msgid "Number of collections deleted"
+msgstr "Nombre de collections supprimées"
+
+#: epl/apps/project/views/collection.py:141
+msgid "Success message"
+msgstr "Message de succès"
+
+#: epl/apps/project/views/collection.py:167
+msgid "library_id parameter is required"
+msgstr "Le paramètre library_id est requis"
+
+#: epl/apps/project/views/collection.py:170
+msgid "project_id parameter is required"
+msgstr "Le paramètre project_id est requis"
+
+#: epl/apps/project/views/collection.py:178
+msgid "Collections successfully deleted for library in project"
+msgstr "Collections supprimées avec succès pour la bibliothèque du projet"
 
 #: epl/apps/project/views/library.py:16
 msgid "List all libraries"
@@ -1118,7 +1171,8 @@ msgstr "Le projet %(project_name)s a été lancé par %(launcher_name)s ;"
 #: epl/templates/emails/project_launched.txt:5
 #, python-format
 msgid "it is possible to start working on it from now : %(project_url)s."
-msgstr "il est possible d'y travailler à compter de maintenant : %(project_url)s."
+msgstr ""
+"il est possible d'y travailler à compter de maintenant : %(project_url)s."
 
 #: epl/templates/emails/project_launched.txt:7
 #, python-format

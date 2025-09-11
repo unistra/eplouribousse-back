@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
@@ -271,6 +272,56 @@ class CollectionViewSetTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Collection.objects.filter(library=self.library, project=self.project).exists())
+
+    @parameterized.expand(
+        [
+            (Role.TENANT_SUPER_USER, False, 403),
+            (Role.PROJECT_CREATOR, True, 200),
+            (Role.INSTRUCTOR, False, 403),
+            (Role.PROJECT_ADMIN, False, 403),
+            (Role.PROJECT_MANAGER, False, 403),
+            (Role.CONTROLLER, False, 403),
+            (Role.GUEST, False, 403),
+            (None, False, 401),  # Anonymous user
+        ]
+    )
+    def test_collection_bulk_delete(self, role, should_succeed, expected_status):
+        user = UserWithRoleFactory(role=role, project=self.project, library=self.library) if role else None
+        collections_to_delete = CollectionFactory.create_batch(3, project=self.project, library=self.library)
+
+        # Datas not to be deleted
+        other_project = ProjectFactory()
+        other_library = LibraryFactory()
+        ## Case 1: Same library, but different project
+        CollectionFactory.create_batch(2, project=other_project, library=self.library)
+        ## Case 2: Same project, but different library
+        CollectionFactory.create_batch(2, project=self.project, library=other_library)
+        ## Case 3: Completely different project and library
+        CollectionFactory.create_batch(2, project=other_project, library=other_library)
+
+        url = reverse("collection-bulk_delete")
+        url_with_params = f"{url}?project_id={self.project.id}&library_id={self.library.id}"
+
+        response = self.delete(url_with_params, user=user)
+
+        self.assertEqual(response.status_code, expected_status)
+
+        if should_succeed:
+            self.assertEqual(response.data["deleted_count"], 3)
+            self.assertEqual(response.data["message"], _("Collections successfully deleted for this library"))
+            self.assertFalse(Collection.objects.filter(id__in=[c.id for c in collections_to_delete]).exists())
+            self.assertEqual(Collection.objects.count(), 6)
+
+        else:
+            self.assertEqual(Collection.objects.count(), 9)
+
+    def test_collection_bulk_delete_when_no_collections_to_delete(self):
+        user = UserWithRoleFactory(role=Role.PROJECT_CREATOR, project=self.project, library=self.library)
+        url = reverse("collection-bulk_delete")
+        url_with_params = f"{url}?project_id={self.project.id}&library_id={self.library.id}"
+        response = self.delete(url_with_params, user=user)
+        self.assertEqual(response.data["deleted_count"], 0)
+        self.assertEqual(response.data["message"], _("No collections found for this library in this project"))
 
 
 class CollectionListViewTest(TestCase):
