@@ -1,0 +1,18 @@
+{% load i18n %}
+
+{% blocktranslate %}The project {{ project_name }} is now ready for launch.{% endblocktranslate %}
+{% blocktranslate %}As a pilot, you can now launch or schedule the actual launch of this project.
+To do so, go to {{ project_url }}.
+If you believe this message is the result of an error, please contact the project creator: {{ project_creator_email }}{% endblocktranslate %}.
+
+
+===>    {{ front_domain }}
+
+- {% trans "If you need any assistance" %}, {% trans "please contact the site administrator at the following address" %}:
+
+===>    {{ email_support }}
+
+---
+
+{% trans "This is an automated message, please do not reply" %}.
+Eplouribousse - {% now "Y" %}

@@ -12,10 +12,10 @@ from rest_framework_simplejwt.serializers import AuthUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 
-from epl.apps.project.models import Project, Role
+from epl.apps.project.models import Project, ProjectStatus, Role
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
-from epl.services.project.notifications import invite_project_admins_to_review
+from epl.services.project.notifications import invite_project_admins_to_review, invite_project_managers_to_launch
 from epl.services.user.email import send_password_change_email
 from epl.validators import JSONSchemaValidator
 
@@ -359,6 +359,9 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                     # If the user has a project_admin role, he is notified that he must review the project's settings.
                     if self.role == Role.PROJECT_ADMIN:
                         invite_project_admins_to_review(project, self.context["request"])
+                    # If the user has a project_manager role, and the project status is READY, he is notified that he must launch or schedule the project start
+                    if self.role == Role.PROJECT_MANAGER and project.status == ProjectStatus.READY:
+                        invite_project_managers_to_launch(project, self.context["request"])
                     # If the user has an invitation pending in project.invitations, it is removed.
                     if self.email in [invitation.get("email") for invitation in project.invitations]:
                         project.invitations = [

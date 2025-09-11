@@ -1,5 +1,6 @@
 from django.core import mail
 from django.core.signing import TimestampSigner
+from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
@@ -168,3 +169,108 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         self.assertIn(self.project.name, sent_email.body)
 
         self.assertEqual(len(self.project.invitations), 0)
+
+
+class TestUpdateProjectStatusToLaunchTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project_creator = UserFactory()
+            self.project_admin = UserFactory()
+            self.project_manager = UserFactory()
+
+            self.project = ProjectFactory(
+                name="Test Project",
+                description="This is a test project.",
+                status=ProjectStatus.REVIEW,
+                invitations=[{"email": "new_project_manager@test.com", "role": Role.PROJECT_MANAGER}],
+            )
+
+            self.project.user_roles.create(user=self.project_creator, role=Role.PROJECT_CREATOR)
+            self.project.user_roles.create(user=self.project_admin, role=Role.PROJECT_ADMIN)
+            self.project.user_roles.create(user=self.project_manager, role=Role.PROJECT_MANAGER)
+
+    def test_set_status_to_ready_invites_project_managers_to_launch_project(self):
+        """
+        Check that project managers are notified when a project is set to ready.
+        """
+        url = reverse("project-update-status", kwargs={"pk": self.project.id})
+        data = {"status": ProjectStatus.READY}
+        response = self.patch(url, data=data, content_type="application/json", user=self.project_admin)
+
+        self.response_ok(response)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.status, ProjectStatus.READY)
+
+        self.assertEqual(len(mail.outbox), 1)
+
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, [self.project_manager.email])
+
+        self.assertIn(self.project.name, sent_email.subject)
+        self.assertIn(str(_("As a pilot, you can now launch or schedule")), sent_email.body)
+
+
+class TestSubscriptionNotificationForProjectManagers(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project_creator = UserFactory()
+            self.invited_user_email = "new_manager@test.com"
+            self.invited_user_password = "SecurePassword123!"  # noqa: S105
+
+    def _register_invited_user(self, project: Project):
+        """Simulates a user registering after receiving an invitation."""
+        invitation_payload = {
+            "email": self.invited_user_email,
+            "project_id": str(project.id),
+            "role": Role.PROJECT_MANAGER,
+            "assigned_by_id": str(self.project_creator.id),
+        }
+        signer = TimestampSigner(salt=INVITE_TOKEN_SALT)
+        token = signer.sign_object(invitation_payload)
+
+        registration_url = reverse("create_account")
+        registration_data = {
+            "token": token,
+            "password": self.invited_user_password,
+            "confirm_password": self.invited_user_password,
+        }
+
+        mail.outbox = []
+        response = self.client.post(registration_url, registration_data, format="json")
+        self.response_created(response)
+
+    def test_manager_receives_notification_if_project_is_ready(self):
+        """
+        Checks that a project manager receives a notification, when subscribing when the project is ready.
+        """
+        project = ProjectFactory(
+            status=ProjectStatus.READY, invitations=[{"email": self.invited_user_email, "role": Role.PROJECT_MANAGER}]
+        )
+        self._register_invited_user(project)
+
+        # An invitation to launch the project has been sent
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, [self.invited_user_email])
+        self.assertIn(str(_("is now ready for launch")), sent_email.body)
+
+    def test_manager_does_not_receive_notification_if_project_is_launched(self):
+        """
+        Checks that a project manager does not receive an invitation to launch the project,
+        when subscribing after the project is launched.
+        """
+        project = ProjectFactory(
+            status=ProjectStatus.LAUNCHED,
+            invitations=[{"email": self.invited_user_email, "role": Role.PROJECT_MANAGER}],
+        )
+
+        self._register_invited_user(project)
+
+        # check that the user has been created, but no invitation to launch the project has been sent
+        user = User.objects.get(email=self.invited_user_email)
+        user_role = UserRole.objects.get(user=user, project=project)
+        self.assertEqual(user.username, self.invited_user_email)
+        self.assertEqual(user_role.role, Role.PROJECT_MANAGER)
+        self.assertEqual(len(mail.outbox), 0)
