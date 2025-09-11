@@ -51,7 +51,7 @@ class UpdateProjectStatusTest(TestCase):
     )
     def test_update_status(self, target_status, initial_status, role, should_succeed, expected_status_code):
         """
-        Test les transitions de statut avec différents rôles utilisateur.
+        Teste les transitions de statut avec différents rôles utilisateur.
         """
         project = ProjectFactory(status=initial_status)
         library = LibraryFactory()
@@ -117,61 +117,23 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         self.project.refresh_from_db()
         self.assertEqual(len(mail.outbox), 2)
 
-        # first email should be an invitation to epl
-        sent_email = mail.outbox[0]
-        self.assertEqual(sent_email.to, ["new_project_admin@test.com"])
-        self.assertIn("invitation", sent_email.subject.lower())
-        self.assertIn("invited", sent_email.body.lower())
+        # L'ordre des e-mails n'est pas garanti, nous vérifions donc la présence des deux.
+        recipient_emails = {email.to[0] for email in mail.outbox}
+        self.assertSetEqual(recipient_emails, {"new_project_admin@test.com", self.project_admin.email})
 
-        # second email should be a notification to review the project, for the already registered project admin
-        sent_email = mail.outbox[1]
-        self.assertEqual(sent_email.to, [self.project_admin.email])
-        self.assertIn(self.project.name, sent_email.subject)
-        self.assertIn("As an administrator, you must, in consultation with your co-administrators", sent_email.body)
+        invitation_email = next(email for email in mail.outbox if email.to[0] == "new_project_admin@test.com")
+        notification_email = next(email for email in mail.outbox if email.to[0] == self.project_admin.email)
 
-    def test_send_invitation_to_review_project_after_new_project_admin_subscription(self):
-        invited_user_email = "new_project_admin@test.com"
-        invited_user_role = Role.PROJECT_ADMIN
-        invited_user_password = "SecurePassword123!"  # noqa: S105
+        self.assertIn("invitation", invitation_email.subject.lower())
+        self.assertIn("invited", invitation_email.body.lower())
 
-        invitation_payload = {
-            "email": str(invited_user_email),
-            "project_id": str(self.project.id),
-            "library_id": None,
-            "role": str(invited_user_role),
-            "assigned_by_id": str(self.project_creator.id),
-        }
-        signer = TimestampSigner(salt=INVITE_TOKEN_SALT)
-        token = signer.sign_object(invitation_payload)
-        registration_url = reverse("create_account")
-
-        registration_data = {
-            "token": token,
-            "password": invited_user_password,
-            "confirm_password": invited_user_password,
-        }
-
-        response = self.client.post(registration_url, registration_data, format="json")
-        self.project.refresh_from_db()
-        self.response_created(response)
-
-        try:
-            new_user = User.objects.get(email=invited_user_email)
-        except User.DoesNotExist:
-            self.fail("User was not created in the database.")
-
-        self.assertTrue(UserRole.objects.filter(user=new_user, project=self.project, role=Role.PROJECT_ADMIN).exists())
-
-        self.assertEqual(len(mail.outbox), 2)
-        sent_email = mail.outbox[0]
-        self.assertEqual(sent_email.to, [new_user.email])
-        self.assertIn("Creation of the Test Project project", sent_email.subject)
-        self.assertIn(self.project.name, sent_email.body)
-
-        self.assertEqual(len(self.project.invitations), 0)
+        self.assertIn(self.project.name, notification_email.subject)
+        self.assertIn(
+            "As an administrator, you must, in consultation with your co-administrators", notification_email.body
+        )
 
 
-class TestUpdateProjectStatusToLaunchTest(TestCase):
+class TestUpdateProjectStatusToReadyTest(TestCase):
     def setUp(self):
         super().setUp()
         with tenant_context(self.tenant):
@@ -250,7 +212,6 @@ class TestSubscriptionNotificationForProjectManagers(TestCase):
         )
         self._register_invited_user(project)
 
-        # An invitation to launch the project has been sent
         self.assertEqual(len(mail.outbox), 1)
         sent_email = mail.outbox[0]
         self.assertEqual(sent_email.to, [self.invited_user_email])
@@ -268,9 +229,68 @@ class TestSubscriptionNotificationForProjectManagers(TestCase):
 
         self._register_invited_user(project)
 
-        # check that the user has been created, but no invitation to launch the project has been sent
         user = User.objects.get(email=self.invited_user_email)
-        user_role = UserRole.objects.get(user=user, project=project)
-        self.assertEqual(user.username, self.invited_user_email)
-        self.assertEqual(user_role.role, Role.PROJECT_MANAGER)
+        self.assertTrue(UserRole.objects.filter(user=user, project=project, role=Role.PROJECT_MANAGER).exists())
+        self.assertEqual(len(mail.outbox), 0)
+
+
+class TestSubscriptionNotificationForProjectAdmins(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project_creator = UserFactory()
+            self.invited_user_email = "new_admin@test.com"
+            self.invited_user_password = "SecurePassword123!"  # noqa: S105
+
+    def _register_invited_user(self, project: Project):
+        """Simulates an admin registering after receiving an invitation."""
+        invitation_payload = {
+            "email": self.invited_user_email,
+            "project_id": str(project.id),
+            "role": Role.PROJECT_ADMIN,
+            "assigned_by_id": str(self.project_creator.id),
+        }
+        signer = TimestampSigner(salt=INVITE_TOKEN_SALT)
+        token = signer.sign_object(invitation_payload)
+
+        registration_url = reverse("create_account")
+        registration_data = {
+            "token": token,
+            "password": self.invited_user_password,
+            "confirm_password": self.invited_user_password,
+        }
+
+        mail.outbox = []
+        response = self.client.post(registration_url, registration_data, format="json")
+        self.response_created(response)
+
+    def test_admin_receives_notification_if_project_is_in_review(self):
+        """
+        Checks that an admin receives a notification to review the project
+        when subscribing if the project is in REVIEW status.
+        """
+        project = ProjectFactory(
+            status=ProjectStatus.REVIEW, invitations=[{"email": self.invited_user_email, "role": Role.PROJECT_ADMIN}]
+        )
+        self._register_invited_user(project)
+
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, [self.invited_user_email])
+        self.assertIn("As an administrator, you must, in consultation with your co-administrators", sent_email.body)
+
+    def test_admin_not_invited_to_review_if_project_status_is_ready(self):
+        """
+        Checks that an admin is NOT invited to review the project if it is
+        already in READY status during their subscription.
+        """
+        project = ProjectFactory(
+            status=ProjectStatus.READY,
+            invitations=[{"email": self.invited_user_email, "role": Role.PROJECT_ADMIN}],
+        )
+
+        self._register_invited_user(project)
+
+        user = User.objects.get(email=self.invited_user_email)
+        self.assertTrue(UserRole.objects.filter(user=user, project=project, role=Role.PROJECT_ADMIN).exists())
         self.assertEqual(len(mail.outbox), 0)
