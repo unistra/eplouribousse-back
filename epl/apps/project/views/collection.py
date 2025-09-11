@@ -172,17 +172,15 @@ class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, Generic
         self.check_object_permissions(request, None)
 
         collections_to_delete = Collection.objects.filter(project_id=project_id, library_id=library_id)
-        deleted_count = collections_to_delete.count()
-        if deleted_count == 0:
-            return Response(
-                {"deleted_count": 0, "message": _("No collections found for this library in this project")},
-                status=status.HTTP_200_OK,
-            )
+        deleted_count, _deleted_model_type_dict = collections_to_delete.delete()
 
-        collections_to_delete.delete()
+        if deleted_count > 0:
+            message = _("Collections successfully deleted for this library")
+        else:
+            message = _("No collections found for this library in this project")
 
         return Response(
-            {"deleted_count": deleted_count, "message": _("Collections successfully deleted for library in project")},
+            {"deleted_count": deleted_count, "message": message},
             status=status.HTTP_200_OK,
         )
 

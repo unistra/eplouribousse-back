@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
@@ -307,10 +308,20 @@ class CollectionViewSetTest(TestCase):
 
         if should_succeed:
             self.assertEqual(response.data["deleted_count"], 3)
+            self.assertEqual(response.data["message"], _("Collections successfully deleted for this library"))
             self.assertFalse(Collection.objects.filter(id__in=[c.id for c in collections_to_delete]).exists())
             self.assertEqual(Collection.objects.count(), 6)
+
         else:
             self.assertEqual(Collection.objects.count(), 9)
+
+    def test_collection_bulk_delete_when_no_collections_to_delete(self):
+        user = UserWithRoleFactory(role=Role.PROJECT_CREATOR, project=self.project, library=self.library)
+        url = reverse("collection-bulk_delete")
+        url_with_params = f"{url}?project_id={self.project.id}&library_id={self.library.id}"
+        response = self.delete(url_with_params, user=user)
+        self.assertEqual(response.data["deleted_count"], 0)
+        self.assertEqual(response.data["message"], _("No collections found for this library in this project"))
 
 
 class CollectionListViewTest(TestCase):
