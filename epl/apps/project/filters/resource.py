@@ -18,38 +18,39 @@ class ResourceFilter(filters.BaseFilterBackend):
     status_param_description = _("Filter by resource status")
 
     def filter_queryset(self, request, queryset, view):
-        status = int(request.query_params.get(self.status_param, 0))
-        if status not in ResourceStatus:
-            raise ValidationError({"status": _("Invalid status value")})
+        if view.action == "list":
+            status = int(request.query_params.get(self.status_param, 0))
+            if status not in ResourceStatus:
+                raise ValidationError({"status": _("Invalid status value")})
 
-        library = None
-        if library_id := request.query_params.get(self.library_param, None):
-            try:
-                library = Library.objects.get(id=library_id)
-            except (Library.DoesNotExist, DjangoValidationError):
-                raise ValidationError({"library": _("Library not found")})
+            library = None
+            if library_id := request.query_params.get(self.library_param, None):
+                try:
+                    library = Library.objects.get(id=library_id)
+                except (Library.DoesNotExist, DjangoValidationError):
+                    raise ValidationError({"library": _("Library not found")})
 
-        against_library = None
-        if against_id := request.query_params.get(self.against_param, None):
-            try:
-                against_library = Library.objects.get(id=against_id)
-            except (Library.DoesNotExist, DjangoValidationError):
-                raise ValidationError({"against": _("Library to compare against not found")})
+            against_library = None
+            if against_id := request.query_params.get(self.against_param, None):
+                try:
+                    against_library = Library.objects.get(id=against_id)
+                except (Library.DoesNotExist, DjangoValidationError):
+                    raise ValidationError({"against": _("Library to compare against not found")})
 
-        if project_id := request.query_params.get(self.project_param, None):
-            try:
-                project = Project.objects.get(id=project_id)
-                queryset = queryset.filter(project=project)
-            except (Project.DoesNotExist, DjangoValidationError):
-                raise ValidationError({"project": _("Project not found")})
+            if project_id := request.query_params.get(self.project_param, None):
+                try:
+                    project = Project.objects.get(id=project_id)
+                    queryset = queryset.filter(project=project)
+                except (Project.DoesNotExist, DjangoValidationError):
+                    raise ValidationError({"project": _("Project not found")})
 
-        if not library:
-            # Not for a specific library
-            queryset = self.filter_no_library(queryset, status)
-        else:
-            # Resources having collections in the specified library
-            # optionally in common with another library
-            queryset = self.filter_for_library(queryset, status, library, against_library)
+            if not library:
+                # Not for a specific library
+                queryset = self.filter_no_library(queryset, status)
+            else:
+                # Resources having collections in the specified library
+                # optionally in common with another library
+                queryset = self.filter_for_library(queryset, status, library, against_library)
 
         return queryset
 
