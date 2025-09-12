@@ -374,7 +374,7 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                         send_invite_project_managers_to_launch_email(
                             email=user.email,
                             request=request,
-                            project_name=project.name,
+                            project=project,
                             tenant_name=request.tenant.name,
                             project_creator_email=assigned_by.email if assigned_by else None,
                         )

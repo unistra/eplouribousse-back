@@ -118,26 +118,28 @@ def send_invite_project_admins_to_review_email(
 def send_invite_project_managers_to_launch_email(
     email: str,
     request: Request,
-    project_name: str,
+    project: Project,
     tenant_name: str,
     project_creator_email: str,
 ) -> None:
     front_domain = get_front_domain(request)
+    project_url = f"{front_domain}/projects/{project.id}"
 
     email_content = render_to_string(
         "emails/invite_project_managers_to_launch.txt",
         {
             "email_support": settings.EMAIL_SUPPORT,
-            "project_name": project_name,
+            "project_name": project.name,
             "front_domain": front_domain,
             "tenant_name": tenant_name,
             "project_creator_email": project_creator_email,
+            "project_url": project_url,
         },
     )
 
     send_mail(
         subject=f"eplouribousse | {tenant_name} | "
-        + _("Availability of the {project_name} project for launch").format(project_name=project_name),
+        + _("Availability of the {project_name} project for launch").format(project_name=project.name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,

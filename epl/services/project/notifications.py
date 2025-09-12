@@ -87,7 +87,7 @@ def invite_project_managers_to_launch(project: Project, request):
         send_invite_project_managers_to_launch_email(
             email=project_manager.email,
             request=request,
-            project_name=project.name,
+            project=project,
             tenant_name=tenant_name,
             project_creator_email=project_creator_email,
         )
