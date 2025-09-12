@@ -78,18 +78,17 @@ def invite_project_managers_to_launch(project: Project, request):
 
     tenant_name = request.tenant.name
     # Guard against AnonymousUser which has no email.
-    # We consider that the user who sent the request is the creator of the project.
-    project_creator_email = (
+
+    admin_email = (
         request.user.email if getattr(request.user, "is_authenticated", False) and request.user.email else None
     )
-
     for project_manager in project_managers:
         send_invite_project_managers_to_launch_email(
             email=project_manager.email,
             request=request,
             project=project,
             tenant_name=tenant_name,
-            project_creator_email=project_creator_email,
+            action_user_email=admin_email,
         )
 
 

@@ -2,8 +2,10 @@
 
 {% blocktranslate %}The project {{ project_name }} is now ready for launch.{% endblocktranslate %}
 {% blocktranslate %}As a pilot, you can now launch or schedule the actual launch of this project.
-To do so, go to {{ project_url }}.
-If you believe this message is the result of an error, please contact the project creator: {{ project_creator_email }}{% endblocktranslate %}.
+To do so, go to {{ project_url }}.{% endblocktranslate %}
+
+{% blocktranslate %}If you believe this message is the result of an error, please contact the administrator who sent this message {{ action_user_email }}{% endblocktranslate %}
+
 
 
 ===>    {{ front_domain }}

@@ -120,7 +120,7 @@ def send_invite_project_managers_to_launch_email(
     request: Request,
     project: Project,
     tenant_name: str,
-    project_creator_email: str,
+    action_user_email: str,
 ) -> None:
     front_domain = get_front_domain(request)
     project_url = f"{front_domain}/projects/{project.id}"
@@ -132,7 +132,7 @@ def send_invite_project_managers_to_launch_email(
             "project_name": project.name,
             "front_domain": front_domain,
             "tenant_name": tenant_name,
-            "project_creator_email": project_creator_email,
+            "action_user_email": action_user_email,
             "project_url": project_url,
         },
     )

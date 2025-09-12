@@ -376,7 +376,7 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                             request=request,
                             project=project,
                             tenant_name=request.tenant.name,
-                            project_creator_email=assigned_by.email if assigned_by else None,
+                            action_user_email=assigned_by.email if assigned_by else None,
                         )
 
                     # If the user has an invitation pending in project.invitations, it is removed.
