@@ -180,9 +180,10 @@ class PositionSerializer(serializers.ModelSerializer):
         resource.save(update_fields=["arbitration"])
 
         if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
+            # All libraries have positioned and no arbitration is needed: move to Instruction Bound and set turns
             resource.status = ResourceStatus.INSTRUCTION_BOUND
             resource.instruction_turns["bound_copies"]["turns"] = [
-                str(id) for id in collections.order_by("position").values_list("id", flat=True)
+                str(library_id) for library_id in collections.order_by("position").values_list("library_id", flat=True)
             ]
             resource.save(update_fields=["status", "instruction_turns"])
 
@@ -230,7 +231,9 @@ class ExclusionSerializer(serializers.ModelSerializer):
 
         if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
             resource.status = ResourceStatus.INSTRUCTION_BOUND
-            resource.instruction_turns["bound_copies"]["turns"] = collections.order_by("position")
+            resource.instruction_turns["bound_copies"]["turns"] = [
+                str(_collection.library_id) for _collection in collections.order_by("position")
+            ]
             resource.save(update_fields=["status", "instruction_turns"])
 
         return instance
