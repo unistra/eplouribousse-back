@@ -2,6 +2,7 @@ from epl.apps.project.models import Project, Role
 from epl.apps.user.models import User
 from epl.services.user.email import (
     send_invite_project_admins_to_review_email,
+    send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
     send_project_launched_email,
 )
@@ -34,7 +35,7 @@ def invite_unregistered_users_to_epl(project: Project, request):
 
 def invite_project_admins_to_review(project: Project, request):
     """
-    Send an email to project admins when a project is ready for review.
+    Email project admins when a project is ready for review.
     This function is intended to be called:
      - when the project goes from "DRAFT" into "REVIEW",
      - and the user with a role of PROJECT_ADMIN is already registered in the database.
@@ -59,6 +60,35 @@ def invite_project_admins_to_review(project: Project, request):
             project_name=project.name,
             tenant_name=tenant_name,
             project_creator_email=project_creator_email,
+        )
+
+
+def invite_project_managers_to_launch(project: Project, request):
+    """
+    Email project pilots when a project is ready for launch.
+    This function is intended to be called:
+     - when the project goes from "REVIEW" into "READY",
+     - and the user with a role of PROJECT_PILOT is already registered in the database.
+    """
+
+    project_managers = User.objects.filter(
+        project_roles__project=project,
+        project_roles__role=Role.PROJECT_MANAGER,
+    )
+
+    tenant_name = request.tenant.name
+    # Guard against AnonymousUser which has no email.
+
+    admin_email = (
+        request.user.email if getattr(request.user, "is_authenticated", False) and request.user.email else None
+    )
+    for project_manager in project_managers:
+        send_invite_project_managers_to_launch_email(
+            email=project_manager.email,
+            request=request,
+            project=project,
+            tenant_name=tenant_name,
+            action_user_email=admin_email,
         )
 
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-11 08:36+0200\n"
+"POT-Creation-Date: 2025-09-12 11:55+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,28 +50,25 @@ msgstr "Inclure les projets archivés dans les résultats"
 msgid "ID of the library to compare against"
 msgstr "ID de la bibliothèque à comparer"
 
-#: epl/apps/project/filters/resource.py:24
-msgid "Project not found"
-msgstr "Projet non trouvé"
+#: epl/apps/project/filters/resource.py:18
+msgid "Filter by resource status"
+msgstr "Filtrer par statut de ressource"
 
-#: epl/apps/project/filters/resource.py:30
+#: epl/apps/project/filters/resource.py:24
+msgid "Invalid status value"
+msgstr "Valeur de statut non valide"
+
+#: epl/apps/project/filters/resource.py:31
 msgid "Library not found"
 msgstr "Bibliothèque non trouvée"
 
-#: epl/apps/project/filters/resource.py:36
+#: epl/apps/project/filters/resource.py:38
 msgid "Library to compare against not found"
 msgstr "Bibliothèque à comparer introuvable"
 
-#: epl/apps/project/filters/resource.py:41
-msgid ""
-"The library to compare against cannot be the same as the current library"
-msgstr ""
-"La bibliothèque à comparer ne peut pas être la même que la bibliothèque "
-"active."
-
-#: epl/apps/project/filters/resource.py:50
-msgid "You must specify a library to compare against"
-msgstr "Vous devez spécifier une bibliothèque à comparer"
+#: epl/apps/project/filters/resource.py:45
+msgid "Project not found"
+msgstr "Projet non trouvé"
 
 #: epl/apps/project/models/choices.py:8
 msgid "Draft"
@@ -449,7 +446,7 @@ msgid "Positioning comment"
 msgstr "Message de positionnement"
 
 #: epl/apps/project/serializers/common.py:6
-#: epl/apps/project/serializers/project.py:202
+#: epl/apps/project/serializers/project.py:203
 msgid "Project status"
 msgstr "Statut du projet"
 
@@ -457,61 +454,61 @@ msgstr "Statut du projet"
 msgid "Label"
 msgstr "Label"
 
-#: epl/apps/project/serializers/project.py:59 epl/apps/user/serializers.py:188
+#: epl/apps/project/serializers/project.py:60 epl/apps/user/serializers.py:191
 msgid "User's roles in this project"
 msgstr "Rôles de l'utilisateur dans ce projet"
 
-#: epl/apps/project/serializers/project.py:73
+#: epl/apps/project/serializers/project.py:74
 msgid "Role label"
 msgstr "Étiquette du rôle"
 
-#: epl/apps/project/serializers/project.py:93
+#: epl/apps/project/serializers/project.py:94
 msgid "Library should not be provided for this role."
 msgstr "La bibliothèque ne doit être renseignée pour ce rôle"
 
-#: epl/apps/project/serializers/project.py:96
-#: epl/apps/project/serializers/project.py:322
+#: epl/apps/project/serializers/project.py:97
+#: epl/apps/project/serializers/project.py:325
 msgid "Library is not attached to the project."
 msgstr "La bibliothèque n'est pas rattachée au projet"
 
-#: epl/apps/project/serializers/project.py:104 epl/apps/user/serializers.py:222
+#: epl/apps/project/serializers/project.py:105 epl/apps/user/serializers.py:225
 msgid "Project does not exist."
 msgstr "Le projet n'existe pas."
 
-#: epl/apps/project/serializers/project.py:108
+#: epl/apps/project/serializers/project.py:109
 msgid "Library must be provided for instructor role."
 msgstr "La bibliothèque doit être fournie pour le rôle d'instructeur."
 
-#: epl/apps/project/serializers/project.py:123
+#: epl/apps/project/serializers/project.py:124
 msgid "This invitation already exists."
 msgstr "Cette invitation existe déjà."
 
-#: epl/apps/project/serializers/project.py:145
+#: epl/apps/project/serializers/project.py:146
 msgid "Invitation not found."
 msgstr "Invitation non trouvée"
 
-#: epl/apps/project/serializers/project.py:257
+#: epl/apps/project/serializers/project.py:260
 msgid "User id"
 msgstr "Id de l'utilisateur"
 
-#: epl/apps/project/serializers/project.py:258
+#: epl/apps/project/serializers/project.py:261
 msgid "Library id"
 msgstr "Id de la Bibliothèque"
 
-#: epl/apps/project/serializers/project.py:264
+#: epl/apps/project/serializers/project.py:267
 msgid "User does not exist."
 msgstr "L'utilisateur n'existe pas."
 
-#: epl/apps/project/serializers/project.py:271
-#: epl/apps/project/serializers/project.py:317 epl/apps/user/serializers.py:227
+#: epl/apps/project/serializers/project.py:274
+#: epl/apps/project/serializers/project.py:320 epl/apps/user/serializers.py:230
 msgid "Library does not exist."
 msgstr "La bibliothèque n'existe pas."
 
-#: epl/apps/project/serializers/project.py:299
+#: epl/apps/project/serializers/project.py:302
 msgid "Role not found for this user in the project."
 msgstr "Rôle non trouvé pour cet utilisateur dans le projet."
 
-#: epl/apps/project/serializers/project.py:351
+#: epl/apps/project/serializers/project.py:354
 msgid "Exclusion reason to add or delete from the project"
 msgstr "Motifs d'exclusion à ajouter ou à supprimer du projet"
 
@@ -544,15 +541,22 @@ msgid "Segment is already at the bottom of the collection"
 msgstr "Le segment est déjà en bas de la collection"
 
 #: epl/apps/project/tests/views/test_collection.py:311
-#, fuzzy
-#| msgid "Collections successfully deleted for library in project"
+#: epl/apps/project/views/collection.py:178
 msgid "Collections successfully deleted for this library"
 msgstr "Collections supprimées avec succès pour cette bibliothèque"
 
-#: epl/apps/project/tests/views/test_collection.py:325
+#: epl/apps/project/tests/views/test_collection.py:324
 #: epl/apps/project/views/collection.py:180
 msgid "No collections found for this library in this project"
 msgstr "Aucune collection trouvée pour cette bibliothèque dans ce projet"
+
+#: epl/apps/project/tests/views/test_project_status.py:173
+msgid "As a pilot, you can now launch or schedule"
+msgstr "En tant que pilote, vous pouvez maintenant lancer ou programmer"
+
+#: epl/apps/project/tests/views/test_project_status.py:218
+msgid "is now ready for launch"
+msgstr "est désormais disponible pour le lancement"
 
 #: epl/apps/project/views/collection.py:26
 msgid "List collections"
@@ -588,9 +592,9 @@ msgid ""
 "specific project. Collections of the same library in other projects are not "
 "affected."
 msgstr ""
-"Supprimer plusieurs collections appartenant à une bibliothèque spécifique au sein d'un "
-"projet spécifique. Les collections de la même bibliothèque dans d'autres projets ne sont pas "
-"affectées."
+"Supprimer plusieurs collections appartenant à une bibliothèque spécifique au "
+"sein d'un projet spécifique. Les collections de la même bibliothèque dans "
+"d'autres projets ne sont pas affectées."
 
 #: epl/apps/project/views/collection.py:125
 msgid "Library ID whose collections should be deleted"
@@ -615,10 +619,6 @@ msgstr "Le paramètre library_id est requis"
 #: epl/apps/project/views/collection.py:170
 msgid "project_id parameter is required"
 msgstr "Le paramètre project_id est requis"
-
-#: epl/apps/project/views/collection.py:178
-msgid "Collections successfully deleted for library in project"
-msgstr "Collections supprimées avec succès pour la bibliothèque du projet"
 
 #: epl/apps/project/views/library.py:16
 msgid "List all libraries"
@@ -788,88 +788,88 @@ msgstr "Utilisateur"
 msgid "Users"
 msgstr "Utilisateurs"
 
-#: epl/apps/user/serializers.py:31
+#: epl/apps/user/serializers.py:34
 msgid "Old password is incorrect"
 msgstr "L'ancien mot de passe est erroné"
 
-#: epl/apps/user/serializers.py:36 epl/apps/user/serializers.py:109
+#: epl/apps/user/serializers.py:39 epl/apps/user/serializers.py:112
 #: epl/apps/user/tests/views/test_reset_password.py:116
 msgid "New password and confirm password do not match"
 msgstr "Le nouveau mot de passe et sa confirmation ne correspondent pas"
 
-#: epl/apps/user/serializers.py:75
+#: epl/apps/user/serializers.py:78
 msgid "User is inactive"
 msgstr "L'utilisateur n'est pas actif"
 
-#: epl/apps/user/serializers.py:97
+#: epl/apps/user/serializers.py:100
 msgid "Invalid uidb64"
 msgstr "uidb64 invalide"
 
-#: epl/apps/user/serializers.py:111
+#: epl/apps/user/serializers.py:114
 msgid "Token is invalid or has already been used"
 msgstr "Le jeton n'est pas valide ou a déjà été utilisé"
 
-#: epl/apps/user/serializers.py:127
+#: epl/apps/user/serializers.py:130
 msgid "User's roles in the project"
 msgstr "Rôles de l'utilisateur dans le projet"
 
-#: epl/apps/user/serializers.py:151
+#: epl/apps/user/serializers.py:154
 msgid "Whether the user can log in locally with username and password?"
 msgstr ""
 "L'utilisateur peut-il se connecter localement avec un nom d'utilisateur et "
 "un mot de passe ?"
 
-#: epl/apps/user/serializers.py:156
+#: epl/apps/user/serializers.py:159
 msgid "User settings"
 msgstr "Paramètres de l'utilisateur"
 
-#: epl/apps/user/serializers.py:188
+#: epl/apps/user/serializers.py:191
 msgid "Role in project"
 msgstr "Rôle dans le projet"
 
-#: epl/apps/user/serializers.py:232
+#: epl/apps/user/serializers.py:235
 msgid "Invalid role."
 msgstr "Rôle non valide."
 
-#: epl/apps/user/serializers.py:237 epl/apps/user/tests/views/test_invite.py:55
+#: epl/apps/user/serializers.py:240 epl/apps/user/tests/views/test_invite.py:55
 msgid "Email is already linked to an account"
 msgstr "L'email est déjà lié à un compte"
 
-#: epl/apps/user/serializers.py:253
+#: epl/apps/user/serializers.py:256
 msgid "Token is required."
 msgstr "Le jeton est requis."
 
-#: epl/apps/user/serializers.py:260
+#: epl/apps/user/serializers.py:263
 msgid "Invalid token format."
 msgstr "Format de jeton invalide."
 
-#: epl/apps/user/serializers.py:268
+#: epl/apps/user/serializers.py:271
 msgid "Invite token expired"
 msgstr "Le jeton d'invitation a expiré"
 
-#: epl/apps/user/serializers.py:270
+#: epl/apps/user/serializers.py:273
 msgid "Invalid invite token"
 msgstr "Le jeton d'invitation n'est pas valide"
 
-#: epl/apps/user/serializers.py:304
+#: epl/apps/user/serializers.py:307
 msgid "Password and confirm password do not match"
 msgstr ""
 "Le mot de passe et le mot de passe de confirmation ne correspondent pas"
 
-#: epl/apps/user/serializers.py:324
+#: epl/apps/user/serializers.py:327
 msgid "The project associated with this invitation no longer exists."
 msgstr "Le projet associé à l'invitation a été supprimé."
 
-#: epl/apps/user/serializers.py:334
+#: epl/apps/user/serializers.py:337
 msgid "Invitation expired. The user who sent the invitation no longer exists."
 msgstr ""
 "L'invitation a expiré. L'utilisateur qui a envoyé l'invitation n'existe plus."
 
-#: epl/apps/user/serializers.py:345
+#: epl/apps/user/serializers.py:348
 msgid "This email is not invited to join this project."
 msgstr "L'adresse email n'est pas invitée à rejoindre ce projet."
 
-#: epl/apps/user/serializers.py:353
+#: epl/apps/user/serializers.py:356
 msgid "The library associated with this invitation no longer exists."
 msgstr "La bibliothèque associée à cette invitation n'existe plus."
 
@@ -1019,15 +1019,20 @@ msgstr "Invitation"
 msgid "Creation of the {project_name} project"
 msgstr "Création du projet {project_name}"
 
-#: epl/services/user/email.py:131
+#: epl/services/user/email.py:142
+#, python-brace-format
+msgid "Availability of the {project_name} project for launch"
+msgstr "Disponibilité du projet {project_name} pour le lancement"
+
+#: epl/services/user/email.py:163
 msgid "now"
 msgstr "maintenant"
 
-#: epl/services/user/email.py:133
+#: epl/services/user/email.py:165
 msgid "at"
 msgstr "à"
 
-#: epl/services/user/email.py:142
+#: epl/services/user/email.py:174
 #, python-brace-format
 msgid "Launch of the {project_name} project"
 msgstr "Lancement du projet {project_name}"
@@ -1044,45 +1049,70 @@ msgstr "Page non trouvée"
 msgid "Error"
 msgstr "Erreur"
 
-#: epl/templates/emails/invite_project_admin_to_review.txt:3
+#: epl/templates/emails/invite_project_admins_to_review.txt:3
 #, python-format
 msgid "The project %(project_name)s is now available."
 msgstr "Le projet %(project_name)s est à présent disponible."
 
-#: epl/templates/emails/invite_project_admin_to_review.txt:4
-#, python-format
+#: epl/templates/emails/invite_project_admins_to_review.txt:4
 msgid ""
 "As an administrator, you must, in consultation with your co-administrators "
 "and the project leaders, check and, if necessary, modify the settings and "
 "parameters before the project goes live.\n"
 "If you believe this message is the result of an error, please contact the "
-"project creator: %(project_creator_email)s"
+"project creator %(project_creator_email)s"
 msgstr ""
 "En tant qu'administrateur, vous devez, en consultation avec vos co-"
 "administrateurs et les chefs de projet, vérifier et, si nécessaire, modifier "
 "les paramètres et les réglages avant la mise en ligne du projet.\n"
 "Si vous pensez que ce message résulte d'une erreur, veuillez contacter le "
-"créateur du projet : %(project_creator_email)s"
+"créateur du projet %(project_creator_email)s"
 
-#: epl/templates/emails/invite_project_admin_to_review.txt:10
+#: epl/templates/emails/invite_project_admins_to_review.txt:10
+#: epl/templates/emails/invite_project_managers_to_launch.txt:13
 #: epl/templates/emails/invite_to_epl.txt:12
 msgid "If you need any assistance"
 msgstr "Si vous avez besoin d'aide"
 
-#: epl/templates/emails/invite_project_admin_to_review.txt:10
+#: epl/templates/emails/invite_project_admins_to_review.txt:10
+#: epl/templates/emails/invite_project_managers_to_launch.txt:13
 #: epl/templates/emails/invite_to_epl.txt:12
 msgid "please contact the site administrator at the following address"
-msgstr ""
-"veuillez contacter l'administrateur du site immédiatement à l'adresse "
-"suivante"
+msgstr "veuillez contacter l'administrateur du site à l'adresse suivante"
 
-#: epl/templates/emails/invite_project_admin_to_review.txt:16
+
+#: epl/templates/emails/invite_project_admins_to_review.txt:16
+#: epl/templates/emails/invite_project_managers_to_launch.txt:19
 #: epl/templates/emails/invite_to_epl.txt:20
 #: epl/templates/emails/password_changed.txt:17
 #: epl/templates/emails/password_reset.txt:14
 #: epl/templates/emails/project_launched.txt:13
 msgid "This is an automated message, please do not reply"
-msgstr "Ceci est un message automatique, vous ne pouvez pas y répondre"
+msgstr "Ceci est un message automatique, merci de ne pas y répondre"
+
+#: epl/templates/emails/invite_project_managers_to_launch.txt:3
+#, python-format
+msgid "The project %(project_name)s is now ready for launch."
+msgstr "Le projet %(project_name)s est désormais disponible pour le lancement."
+
+#: epl/templates/emails/invite_project_managers_to_launch.txt:4
+msgid ""
+"As a pilot, you can now launch or schedule the actual launch of this "
+"project.\n"
+"To do so, go to %(project_url)s."
+msgstr ""
+"En tant que pilote, vous pouvez désormais lancer ou programmer le lancement "
+"effectif de ce projet.\n"
+"Pour cela rendez-vous en %(project_url)s."
+
+#: epl/templates/emails/invite_project_managers_to_launch.txt:7
+#, python-format
+msgid ""
+"If you believe this message is the result of an error, please contact the "
+"administrator who sent this message %(action_user_email)s"
+msgstr ""
+"Si vous pensez que ce message résulte d'une erreur, veuillez contacter l'"
+"administrateur qui a envoyé ce message %(action_user_email)s"
 
 #: epl/templates/emails/invite_to_epl.txt:5
 msgid "You have been invited to join Eplouribousse"
@@ -1195,6 +1225,18 @@ msgstr ""
 #: epl/validators.py:45
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
+
+#~ msgid ""
+#~ "The library to compare against cannot be the same as the current library"
+#~ msgstr ""
+#~ "La bibliothèque à comparer ne peut pas être la même que la bibliothèque "
+#~ "active."
+
+#~ msgid "You must specify a library to compare against"
+#~ msgstr "Vous devez spécifier une bibliothèque à comparer"
+
+#~ msgid "Collections successfully deleted for library in project"
+#~ msgstr "Collections supprimées avec succès pour la bibliothèque du projet"
 
 #, fuzzy, python-brace-format
 #~| msgid "Creation of the {project_name} project"

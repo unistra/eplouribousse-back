@@ -12,11 +12,14 @@ from rest_framework_simplejwt.serializers import AuthUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 
-from epl.apps.project.models import Project, Role
+from epl.apps.project.models import Project, ProjectStatus, Role
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
-from epl.services.project.notifications import invite_project_admins_to_review
-from epl.services.user.email import send_password_change_email
+from epl.services.user.email import (
+    send_invite_project_admins_to_review_email,
+    send_invite_project_managers_to_launch_email,
+    send_password_change_email,
+)
 from epl.validators import JSONSchemaValidator
 
 
@@ -354,11 +357,28 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                             )
 
                     project.user_roles.create(**user_role_data)
+                    request = self.context["request"]
 
                     # Post-creation actions:
                     # If the user has a project_admin role, he is notified that he must review the project's settings.
-                    if self.role == Role.PROJECT_ADMIN:
-                        invite_project_admins_to_review(project, self.context["request"])
+                    if self.role == Role.PROJECT_ADMIN and project.status == ProjectStatus.REVIEW:
+                        send_invite_project_admins_to_review_email(
+                            email=user.email,
+                            request=request,
+                            project_name=project.name,
+                            tenant_name=request.tenant.name,
+                            project_creator_email=assigned_by.email if assigned_by else None,
+                        )
+                    # If the user has a project_manager role, and the project status is READY, he is notified that he must launch or schedule the project start
+                    if self.role == Role.PROJECT_MANAGER and project.status == ProjectStatus.READY:
+                        send_invite_project_managers_to_launch_email(
+                            email=user.email,
+                            request=request,
+                            project=project,
+                            tenant_name=request.tenant.name,
+                            action_user_email=assigned_by.email if assigned_by else None,
+                        )
+
                     # If the user has an invitation pending in project.invitations, it is removed.
                     if self.email in [invitation.get("email") for invitation in project.invitations]:
                         project.invitations = [

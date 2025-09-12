@@ -2,7 +2,7 @@
 
 {% blocktranslate %}The project {{ project_name }} is now available.{% endblocktranslate %}
 {% blocktranslate %}As an administrator, you must, in consultation with your co-administrators and the project leaders, check and, if necessary, modify the settings and parameters before the project goes live.
-If you believe this message is the result of an error, please contact the project creator: {{ project_creator_email }}{% endblocktranslate %}.
+If you believe this message is the result of an error, please contact the project creator {{ project_creator_email }}{% endblocktranslate %}.
 
 
 ===>    {{ front_domain }}

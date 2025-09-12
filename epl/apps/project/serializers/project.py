@@ -18,6 +18,7 @@ from epl.apps.user.serializers import NestedUserSerializer
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
     invite_project_admins_to_review,
+    invite_project_managers_to_launch,
     invite_unregistered_users_to_epl,
     notify_project_launched,
 )
@@ -225,8 +226,10 @@ class ChangeStatusSerializer(serializers.ModelSerializer):
                 # Admins that are not registered atm, will receive this notification when they create their account.
                 invite_project_admins_to_review(project, self.context["request"])
             case ProjectStatus.REVIEW, ProjectStatus.READY:
-                # todo : send notification to project manager : he can publish the project
-                pass
+                # Send notification to project managers to publish or schedule the project.
+                # Project managers that are not registered atm, will receive this notification when they create their account.
+                invite_project_managers_to_launch(project, self.context["request"])
+
         return project
 
 
