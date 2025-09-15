@@ -334,17 +334,17 @@ msgstr "Super utilisateur du tenant"
 
 #: epl/apps/project/models/project.py:147
 msgid "Project Creator"
-msgstr "Créateur du projet"
+msgstr "Monteur de projet"
 
 #: epl/apps/project/models/project.py:148
 #: epl/apps/project/tests/models/test_user_role.py:40
 msgid "Project Administrator"
-msgstr "Administrateur du projet"
+msgstr "Administrateur de projet"
 
 #: epl/apps/project/models/project.py:149
 #: epl/apps/project/tests/models/test_user_role.py:94
 msgid "Project Manager"
-msgstr "Gestionnaire de projet"
+msgstr "Pilote de projet"
 
 #: epl/apps/project/models/project.py:150
 #: epl/apps/project/tests/models/test_project.py:60
