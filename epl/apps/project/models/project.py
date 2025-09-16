@@ -28,7 +28,7 @@ class ProjectQuerySet(models.QuerySet):
         if user.is_superuser or user.is_project_creator:
             return self.all()
 
-        return self.public() | self.participating(user)
+        return (self.public() | self.participating(user)).distinct()
 
     def participating(self, user: User = None) -> models.QuerySet[Project]:
         if not user or not user.is_authenticated:
