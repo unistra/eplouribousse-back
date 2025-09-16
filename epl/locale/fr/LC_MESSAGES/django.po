@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-12 11:55+0200\n"
+"POT-Creation-Date: 2025-09-16 11:24+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -231,7 +231,7 @@ msgid "Positioning rank of a collection"
 msgstr "Positionnement du rang d'une collection"
 
 #: epl/apps/project/models/collection.py:104
-#: epl/apps/project/serializers/collection.py:197
+#: epl/apps/project/serializers/collection.py:202
 msgid "Reason for excluding the collection from deduplication"
 msgstr "Raison de l'exclusion de la collection de la déduplication"
 
@@ -334,7 +334,7 @@ msgstr "Super utilisateur du tenant"
 
 #: epl/apps/project/models/project.py:147
 msgid "Project Creator"
-msgstr "Monteur de projet"
+msgstr "Monteur projet"
 
 #: epl/apps/project/models/project.py:148
 #: epl/apps/project/tests/models/test_user_role.py:40
@@ -434,12 +434,12 @@ msgstr "Un lieu de conservation alternatif ne peut pas recevoir de collection"
 msgid "Position (rank) between 1 and 4"
 msgstr "Position (rang) entre 1 et 4"
 
-#: epl/apps/project/serializers/collection.py:210
+#: epl/apps/project/serializers/collection.py:215
 msgid "Invalid exclusion reason."
 msgstr "Motif d'exclusion non valide."
 
-#: epl/apps/project/serializers/collection.py:246
-#: epl/apps/project/serializers/collection.py:275
+#: epl/apps/project/serializers/collection.py:253
+#: epl/apps/project/serializers/collection.py:282
 #: epl/apps/project/views/collection.py:253
 #: epl/apps/project/views/collection.py:262
 msgid "Positioning comment"
@@ -1037,6 +1037,12 @@ msgstr "à"
 msgid "Launch of the {project_name} project"
 msgstr "Lancement du projet {project_name}"
 
+#: epl/services/user/email.py:200
+#, fuzzy
+#| msgid "Arbitration"
+msgid "arbitration"
+msgstr "Arbitrage"
+
 #: epl/templates/403.html:6
 msgid "You are not allowed to see this page"
 msgstr "Vous n'êtes pas autorisé à accéder à cette page"
@@ -1055,6 +1061,7 @@ msgid "The project %(project_name)s is now available."
 msgstr "Le projet %(project_name)s est à présent disponible."
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:4
+#, python-format
 msgid ""
 "As an administrator, you must, in consultation with your co-administrators "
 "and the project leaders, check and, if necessary, modify the settings and "
@@ -1080,10 +1087,11 @@ msgstr "Si vous avez besoin d'aide"
 msgid "please contact the site administrator at the following address"
 msgstr "veuillez contacter l'administrateur du site à l'adresse suivante"
 
-
 #: epl/templates/emails/invite_project_admins_to_review.txt:16
 #: epl/templates/emails/invite_project_managers_to_launch.txt:19
 #: epl/templates/emails/invite_to_epl.txt:20
+#: epl/templates/emails/notify_arbitration_type0.txt:8
+#: epl/templates/emails/notify_arbitration_type1.txt:8
 #: epl/templates/emails/password_changed.txt:17
 #: epl/templates/emails/password_reset.txt:14
 #: epl/templates/emails/project_launched.txt:13
@@ -1096,6 +1104,7 @@ msgid "The project %(project_name)s is now ready for launch."
 msgstr "Le projet %(project_name)s est désormais disponible pour le lancement."
 
 #: epl/templates/emails/invite_project_managers_to_launch.txt:4
+#, python-format
 msgid ""
 "As a pilot, you can now launch or schedule the actual launch of this "
 "project.\n"
@@ -1111,8 +1120,8 @@ msgid ""
 "If you believe this message is the result of an error, please contact the "
 "administrator who sent this message %(action_user_email)s"
 msgstr ""
-"Si vous pensez que ce message résulte d'une erreur, veuillez contacter l'"
-"administrateur qui a envoyé ce message %(action_user_email)s"
+"Si vous pensez que ce message résulte d'une erreur, veuillez contacter "
+"l'administrateur qui a envoyé ce message %(action_user_email)s"
 
 #: epl/templates/emails/invite_to_epl.txt:5
 msgid "You have been invited to join Eplouribousse"
@@ -1131,6 +1140,30 @@ msgstr ""
 #: epl/templates/emails/invite_to_epl.txt:16
 msgid "This invitation will expire in 7 days"
 msgstr "Cette invitation va expirer dans 7 jours"
+
+#: epl/templates/emails/notify_arbitration_type0.txt:3
+#, fuzzy, python-format
+#| msgid ""
+#| "The repositioning of your collection for the resource "
+#| "\"%(resource_title)s\" may resolve a type 0 arbitration case."
+msgid ""
+"The repositioning of your collection for the resource \"%(resource_title)s\" "
+"may resolve a type 0 arbitration case:"
+msgstr ""
+"Le repositionnement de votre collection pour la ressource "
+"\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 0."
+
+#: epl/templates/emails/notify_arbitration_type1.txt:3
+#, fuzzy, python-format
+#| msgid ""
+#| "The repositioning of your collection for the resource "
+#| "\"%(resource_title)s\" may resolve a type 0 arbitration case."
+msgid ""
+"The repositioning of your collection for the resource \"%(resource_title)s\" "
+"may resolve a type 1 arbitration case:"
+msgstr ""
+"Le repositionnement de votre collection pour la ressource "
+"\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 0."
 
 #: epl/templates/emails/password_changed.txt:5
 #: epl/tests/services/email/test_user_email.py:38
@@ -1225,6 +1258,9 @@ msgstr ""
 #: epl/validators.py:45
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
+
+#~ msgid "To view the details, please follow this link:"
+#~ msgstr "Pour voir les détails, veuillez suivre ce lien :"
 
 #~ msgid ""
 #~ "The library to compare against cannot be the same as the current library"

@@ -1,6 +1,8 @@
-from epl.apps.project.models import Project, Role
+from epl.apps.project.models import Project, Resource, Role, UserRole
+from epl.apps.project.models.collection import Arbitration
 from epl.apps.user.models import User
 from epl.services.user.email import (
+    send_arbitration_notification_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
@@ -103,3 +105,37 @@ def notify_project_launched(project: Project, request, is_starting_now: bool):
         project_users=[user.email for user in project_users],
         is_starting_now=is_starting_now,
     )
+
+
+def notify_instructors_of_arbitration(resource: Resource, request):
+    """
+    Notifie les instructeurs concernés par un cas d'arbitrage (type 0 ou 1).
+    """
+    arbitration_type = resource.arbitration
+    library_ids_to_notify = []
+
+    match arbitration_type:
+        case Arbitration.ONE:
+            library_ids_to_notify = resource.collections.filter(position=1).values_list("library_id", flat=True)
+
+        case Arbitration.ZERO:
+            # Every resource instructor has to be notified.
+            library_ids_to_notify = resource.collections.all().values_list("library_id", flat=True)
+
+        case _:
+            return
+
+    instructors_to_notify = (
+        UserRole.objects.filter(project=resource.project, role=Role.INSTRUCTOR, library_id__in=library_ids_to_notify)
+        .select_related("user", "library")
+        .distinct()  # prevent sending multiple emails to the same user if the code eventually evolves.
+    )
+
+    for instructor in instructors_to_notify:
+        send_arbitration_notification_email(
+            email=instructor.user.email,
+            request=request,
+            resource=resource,
+            library_code=instructor.library.code,
+            arbitration_type=arbitration_type,
+        )
