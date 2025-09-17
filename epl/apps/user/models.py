@@ -69,11 +69,8 @@ class User(AbstractUser):
     def is_controller(self, project: Project) -> bool:
         return UserRole.objects.filter(user=self, project=project, role=Role.CONTROLLER).exists()
 
-    def is_instructor(
-        self, project: Project, library: Library | str = None
-    ) -> (
-        bool
-    ):  # library is optional so we can check if user is Instructor in the project, without needing to give a library
+    def is_instructor(self, project: Project, library: Library | str = None) -> bool:
+        # library is optional so we can check if user is Instructor in the project, without needing to give a library
         queryset = UserRole.objects.filter(user=self, project=project, role=Role.INSTRUCTOR)
         if library is not None:
             filter_kwargs = {"library_id": library} if isinstance(library, str) else {"library": library}

@@ -256,7 +256,8 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     @extend_schema(
         tags=["user"],
-        summary=_("Set a user as project creator"),
+        summary=_("Get, set or delete a user's project creator role"),
+        description=_("Check if a user has project creator role or set or delete that role"),
         request=None,
         responses={
             status.HTTP_200_OK: inline_serializer(

@@ -217,7 +217,7 @@ class ExclusionSerializer(serializers.ModelSerializer):
         instance.save()
 
         resource = instance.resource
-        collections = Collection.objects.filter(resource=resource)
+        collections = resource.collections.all()
 
         if (
             (positions := list(collections.values_list("position", flat=True)))
