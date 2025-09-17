@@ -4,6 +4,7 @@ import logging
 from collections import Counter
 
 from django.db import transaction
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -147,7 +148,18 @@ class ImportSerializer(serializers.Serializer):
         return attrs
 
 
-class PositionSerializer(serializers.ModelSerializer):
+class MoveToInstructionMixin:
+    def move_to_instruction_if_possible(self, collections: QuerySet[Collection], resource: Resource) -> None:
+        if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
+            # All libraries have positioned and no arbitration is needed: move to Instruction Bound and set turns
+            resource.status = ResourceStatus.INSTRUCTION_BOUND
+            turns: list[str] = [str(_collection.library_id) for _collection in collections.order_by("position")]
+            resource.instruction_turns["bound_copies"]["turns"] = turns.copy()
+            resource.instruction_turns["unbound_copies"]["turns"] = turns.copy()
+            resource.save(update_fields=["status", "instruction_turns"])
+
+
+class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
     position = serializers.IntegerField(min_value=1, max_value=4, help_text=_("Position (rank) between 1 and 4"))
     arbitration = serializers.ChoiceField(Arbitration, read_only=True, source="resource.arbitration")
     status = serializers.ChoiceField(ResourceStatus, read_only=True, source="resource.status")
@@ -167,30 +179,26 @@ class PositionSerializer(serializers.ModelSerializer):
         collections = resource.collections.all()
         is_other_first = collections.filter(position=1).exclude(pk=collection.pk).exists()
 
+        arbitration: Arbitration = Arbitration.NONE
+
         if position == 1 and is_other_first:
-            resource.arbitration = Arbitration.ONE
+            arbitration = Arbitration.ONE
         elif (
             (positions := list(collections.values_list("position", flat=True)))
             and 1 not in positions
             and all(c.position is not None or c.exclusion_reason for c in collections)
         ):
-            resource.arbitration = Arbitration.ZERO
-        else:
-            resource.arbitration = Arbitration.NONE
+            arbitration = Arbitration.ZERO
+
+        resource.arbitration = arbitration
         resource.save(update_fields=["arbitration"])
 
-        if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
-            # All libraries have positioned and no arbitration is needed: move to Instruction Bound and set turns
-            resource.status = ResourceStatus.INSTRUCTION_BOUND
-            resource.instruction_turns["bound_copies"]["turns"] = [
-                str(library_id) for library_id in collections.order_by("position").values_list("library_id", flat=True)
-            ]
-            resource.save(update_fields=["status", "instruction_turns"])
+        self.move_to_instruction_if_possible(collections, resource)
 
         return collection
 
 
-class ExclusionSerializer(serializers.ModelSerializer):
+class ExclusionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
     exclusion_reason = serializers.CharField(
         max_length=255,
         required=True,
@@ -224,17 +232,14 @@ class ExclusionSerializer(serializers.ModelSerializer):
             and 1 not in positions
             and all(c.position is not None or c.exclusion_reason for c in collections)
         ):
-            resource.arbitration = Arbitration.ZERO
+            arbitration = Arbitration.ZERO
         else:
-            resource.arbitration = Arbitration.NONE
+            arbitration = Arbitration.NONE
+
+        resource.arbitration = arbitration
         resource.save(update_fields=["arbitration"])
 
-        if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
-            resource.status = ResourceStatus.INSTRUCTION_BOUND
-            resource.instruction_turns["bound_copies"]["turns"] = [
-                str(_collection.library_id) for _collection in collections.order_by("position")
-            ]
-            resource.save(update_fields=["status", "instruction_turns"])
+        self.move_to_instruction_if_possible(collections, resource)
 
         return instance
 
