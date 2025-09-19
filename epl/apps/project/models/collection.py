@@ -1,4 +1,3 @@
-from functools import cached_property
 from typing import TypedDict
 
 from django.contrib.contenttypes.fields import GenericRelation
@@ -68,10 +67,10 @@ class Resource(models.Model):
         return f"{self.code} - {self.project_id}"
 
     def save(self, *args, **kwargs):
-        del self.next_turn
+        # del self.next_turn
         return super().save(*args, **kwargs)
 
-    @cached_property
+    @property
     def next_turn(self) -> TurnType | None:
         turn = None
         try:
@@ -81,7 +80,7 @@ class Resource(models.Model):
                 turn = self.instruction_turns.get("unbound_copies", {}).get("turns", [])[0]
         except IndexError:
             turn = None
-        if not isinstance(turn, dict) and (set(turn.keys()) != {"library", "collection"}):
+        if not isinstance(turn, dict) or (set(turn.keys()) != {"library", "collection"}):
             turn = None
 
         return turn
