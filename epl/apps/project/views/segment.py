@@ -101,16 +101,16 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
 
     def perform_destroy(self, instance):
         collection = instance.collection
-        deleted_order = instance.order
 
         instance.delete()
 
-        # Update the order of all segments with higher order values
-        segments_to_update = Segment.objects.filter(collection=collection, order__gt=deleted_order)
+        segments_to_update = Segment.objects.filter(collection=collection).order_by("order")
 
-        for segment in segments_to_update:
-            segment.order -= 1
-            segment.save(update_fields=["order"])
+        for index, segment in enumerate(segments_to_update):
+            new_order = index + 1
+            if segment.order != new_order:
+                segment.order = new_order
+                segment.save(update_fields=["order"])
 
     @extend_schema(
         tags=["segment"],
