@@ -1,3 +1,6 @@
+from functools import cached_property
+from typing import TypedDict
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils.translation import gettext as _
@@ -33,6 +36,11 @@ class Position(models.IntegerChoices):
     EXCLUDE = 0, _("Position excluded")
 
 
+class TurnType(TypedDict):
+    library: str
+    collection: str
+
+
 class Resource(models.Model):
     id = UUIDPrimaryKeyField()
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
@@ -59,8 +67,12 @@ class Resource(models.Model):
     def __str__(self):
         return f"{self.code} - {self.project_id}"
 
-    @property
-    def next_turn(self) -> str:
+    def save(self, *args, **kwargs):
+        del self.next_turn
+        return super().save(*args, **kwargs)
+
+    @cached_property
+    def next_turn(self) -> TurnType | None:
         turn = None
         try:
             if self.status == ResourceStatus.INSTRUCTION_BOUND:
@@ -69,11 +81,10 @@ class Resource(models.Model):
                 turn = self.instruction_turns.get("unbound_copies", {}).get("turns", [])[0]
         except IndexError:
             turn = None
+        if not isinstance(turn, dict) and (set(turn.keys()) != {"library", "collection"}):
+            turn = None
 
-        if isinstance(turn, dict):
-            return turn.get("library")
-        else:
-            return turn
+        return turn
 
     @property
     def segments(self):
