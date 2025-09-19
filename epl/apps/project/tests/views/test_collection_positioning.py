@@ -454,3 +454,7 @@ class ArbitrationNotificationTest(TestCase):
         self.assertEqual(self.resource.arbitration, Arbitration.ZERO)
 
         self.assertEqual(len(mail.outbox), 2)
+
+        # check instructor 3 has not been notified
+        actual_recipients = {email.to[0] for email in mail.outbox}
+        self.assertNotIn(instructor_3.email, actual_recipients)

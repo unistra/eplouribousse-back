@@ -119,8 +119,8 @@ def notify_instructors_of_arbitration(resource: Resource, request):
             library_ids_to_notify = resource.collections.filter(position=1).values_list("library_id", flat=True)
 
         case Arbitration.ZERO:
-            # Every resource instructor has to be notified.
-            library_ids_to_notify = resource.collections.all().values_list("library_id", flat=True)
+            # Every resource instructor has to be notified, except those with position (excluded collection)
+            library_ids_to_notify = resource.collections.filter(position__gt=0).values_list("library_id", flat=True)
 
         case _:
             return

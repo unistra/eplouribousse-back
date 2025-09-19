@@ -243,6 +243,9 @@ class ExclusionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
         resource.arbitration = arbitration
         resource.save(update_fields=["arbitration"])
 
+        if resource.arbitration == Arbitration.ZERO:
+            notify_instructors_of_arbitration(resource, self.context["request"])
+
         self.move_to_instruction_if_possible(collections, resource)
 
         return instance
