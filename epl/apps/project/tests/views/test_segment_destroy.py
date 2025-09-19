@@ -77,3 +77,29 @@ class SegmentDestroyTest(TestCase):
         segment4.refresh_from_db()
         self.assertEqual(segment3.order, 2)
         self.assertEqual(segment4.order, 3)
+
+    def test_order_when_destroy_cascade(self):
+        segment2 = SegmentFactory(collection=self.collection, order=2)
+        SegmentFactory(collection=self.collection, order=3, improved_segment=self.segment)
+        SegmentFactory(collection=self.collection, order=4, improved_segment=self.segment)
+        segment5 = SegmentFactory(collection=self.collection, order=5)
+
+        response = self.delete(
+            reverse("segment-detail", kwargs={"pk": self.segment.id}),
+            user=self.instructor,
+        )
+
+        self.assertEqual(response.status_code, 204)
+
+        segment2.refresh_from_db()
+        segment5.refresh_from_db()
+
+        # Refresh remaining segments from DB and check their order
+        remaining_segments = Segment.objects.filter(collection=self.collection).order_by("order")
+        self.assertEqual(list(remaining_segments), [segment2, segment5])
+        self.assertEqual(segment2.order, 1)
+        self.assertEqual(segment5.order, 2)
+
+        expected_orders = list(range(1, len(remaining_segments) + 1))
+        actual_orders = [segment.order for segment in remaining_segments]
+        self.assertEqual(actual_orders, expected_orders)
