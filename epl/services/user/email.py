@@ -90,6 +90,29 @@ def send_invite_to_epl_email(
     )
 
 
+def send_account_created_email(user: User, request: Request) -> None:
+    front_domain = get_front_domain(request)
+    tenant_url = f"{front_domain}/"
+
+    email_content = render_to_string(
+        "emails/confirm_account_creation.txt",
+        {
+            "tenant_url": tenant_url,
+            "username": user.email,
+        },
+    )
+
+    subject = f"eplouribousse | {request.tenant.name} | {_('your account creation')}"
+
+    send_mail(
+        subject=subject,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+        message=email_content,
+    )
+
+
 def send_invite_project_admins_to_review_email(
     email: str,
     request: Request,

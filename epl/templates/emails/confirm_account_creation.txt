@@ -1,0 +1,8 @@
+{% load i18n %}
+{% trans "Your account has just been opened; you can now log in to the site:" %} {{ tenant_url }}
+
+{% trans "For the record, your username is:" %} {{ username }}
+
+---
+{% trans "This is an automated message, please do not reply." %}
+Eplouribousse - {% now "Y" %}
