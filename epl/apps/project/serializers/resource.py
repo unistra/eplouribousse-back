@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from epl.apps.project.models import Collection, Resource
+from epl.apps.project.models.collection import TurnType
 from epl.apps.project.serializers.collection import CollectionPositioningSerializer
 from epl.apps.user.models import User
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
@@ -27,6 +28,7 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "count",
             "call_numbers",
             "should_instruct",
+            "instruction_turns",
             "should_position",
             "status",
             "arbitration",
@@ -34,7 +36,8 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
         ]
 
     def get_should_instruct(self, obj: Resource) -> bool:
-        library_id = obj.next_turn
+        next_turn: TurnType | None = obj.next_turn
+        library_id = next_turn["library"] if next_turn else None
         user: User = self.context.get("request").user
 
         if not user or not user.is_authenticated or not library_id:

@@ -58,22 +58,22 @@ class ResourceFilter(filters.BaseFilterBackend):
         if status == ResourceStatus.POSITIONING:
             # If a Resource is in Instruction or Control positioning status but does
             # not have any segments assigned yet, we consider it can still be positioned.
-            queryset = queryset.filter(collections__library=library)
-
-            queryset = queryset.filter(Q(status=status) | Q(collections__segments__isnull=True))
+            queryset = queryset.filter(
+                Q(collections__library=library) & Q(Q(status=status) | Q(collections__segments__isnull=True))
+            )
 
         elif status == ResourceStatus.INSTRUCTION_BOUND:
             queryset = queryset.filter(
                 status=status,
                 collections__library=library,
-                instruction_turns__bound_copies__turns__0=str(library.id),
+                instruction_turns__bound_copies__turns__0__library=str(library.id),
             )
 
         elif status == ResourceStatus.INSTRUCTION_UNBOUND:
             queryset = queryset.filter(
                 status=status,
                 collections__library=library,
-                instruction_turns__unbound_copies__turns__0=str(library.id),
+                instruction_turns__unbound_copies__turns__0__library=str(library.id),
             )
 
         elif status in [ResourceStatus.CONTROL_BOUND, ResourceStatus.CONTROL_UNBOUND]:

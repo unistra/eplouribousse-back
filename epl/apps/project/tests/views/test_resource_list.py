@@ -22,71 +22,108 @@ class FilterResourceOnStatusTest(TestCase):
         self.resource_positioning = ResourceFactory(
             project=self.project,
             status=ResourceStatus.POSITIONING,
-            instruction_turns={"bound_copies": {"turns": [str(self.library.id)]}, "unbound_copies": {"turns": []}},
         )
         _c1 = CollectionFactory(library=self.library, project=self.project, resource=self.resource_positioning)
+        self.resource_positioning.instruction_turns = (
+            {
+                "bound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c1.id)}]},
+                "unbound_copies": {"turns": []},
+            },
+        )
+        self.resource_positioning.save()
 
         self.resource_instruction_bound_for_user = ResourceFactory(
             project=self.project,
             status=ResourceStatus.INSTRUCTION_BOUND,
-            instruction_turns={"bound_copies": {"turns": [str(self.library.id)]}},
         )
         _c2 = CollectionFactory(
             library=self.library, project=self.project, resource=self.resource_instruction_bound_for_user
         )
+
+        self.resource_instruction_bound_for_user.instruction_turns = {
+            "bound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c2.id)}]}
+        }
+        self.resource_instruction_bound_for_user.save()
         self.resource_instruction_bound_for_other_library = ResourceFactory(
             project=self.project,
             status=ResourceStatus.INSTRUCTION_BOUND,
-            instruction_turns={"bound_copies": {"turns": [str(uuid.uuid4())]}},
+            instruction_turns={
+                "bound_copies": {"turns": [{"library": str(uuid.uuid4()), "collection": str(uuid.uuid4())}]}
+            },
         )
         _c3 = CollectionFactory(project=self.project, resource=self.resource_instruction_bound_for_other_library)
 
         self.resource_control_bound = ResourceFactory(
             project=self.project,
             status=ResourceStatus.CONTROL_BOUND,
-            instruction_turns={"bound_copies": {"turns": []}, "unbound_copies": {"turns": [str(self.library.id)]}},
         )
         _c4 = CollectionFactory(project=self.project, library=self.library, resource=self.resource_control_bound)
+        self.resource_control_bound.instruction_turns = {
+            "bound_copies": {"turns": []},
+            "unbound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c4.id)}]},
+        }
+        self.resource_control_bound.save()
 
         self.resource_instruction_unbound_for_user = ResourceFactory(
             project=self.project,
             status=ResourceStatus.INSTRUCTION_UNBOUND,
-            instruction_turns={"bound_copies": {"turns": []}, "unbound_copies": {"turns": [str(self.library.id)]}},
         )
         _c5 = CollectionFactory(
             project=self.project, library=self.library, resource=self.resource_instruction_unbound_for_user
         )
+        self.resource_instruction_unbound_for_user.instruction_turns = {
+            "bound_copies": {"turns": []},
+            "unbound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c5.id)}]},
+        }
+        self.resource_instruction_unbound_for_user.save()
+
         self.resource_instruction_unbound_for_other_library = ResourceFactory(
             project=self.project,
             status=ResourceStatus.INSTRUCTION_UNBOUND,
-            instruction_turns={"bound_copies": {"turns": []}, "unbound_copies": {"turns": [str(uuid.uuid4())]}},
         )
         _c6 = CollectionFactory(project=self.project, resource=self.resource_instruction_unbound_for_other_library)
+        self.resource_instruction_unbound_for_other_library.instruction_turns = (
+            {
+                "bound_copies": {"turns": []},
+                "unbound_copies": {"turns": [{"library": str(uuid.uuid4()), "collection": str(uuid.uuid4())}]},
+            },
+        )
+        self.resource_instruction_bound_for_other_library.save()
 
         self.resource_control_unbound = ResourceFactory(
             project=self.project,
             status=ResourceStatus.CONTROL_UNBOUND,
-            instruction_turns={"unbound_copies": {"turns": [str(self.library.id)]}},
         )
         _c7 = CollectionFactory(project=self.project, library=self.library, resource=self.resource_control_unbound)
+        self.resource_control_unbound.instruction_turns = {
+            "unbound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c7.id)}]},
+        }
+        self.resource_control_unbound.save()
 
         self.resource_instruction_bound_without_segments = ResourceFactory(
             project=self.project,
             status=ResourceStatus.INSTRUCTION_BOUND,
-            instruction_turns={"bound_copies": {"turns": [str(self.library.id)]}},
         )
         _c8 = CollectionFactory(
             project=self.project, library=self.library, resource=self.resource_instruction_bound_without_segments
         )
+        self.resource_instruction_bound_without_segments.instruction_turns = {
+            "bound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c8.id)}]},
+        }
+        self.resource_instruction_bound_without_segments.save()
+
         self.resource_instruction_bound_with_segment = ResourceFactory(
             project=self.project,
             status=ResourceStatus.INSTRUCTION_BOUND,
-            instruction_turns={"bound_copies": {"turns": [str(uuid.uuid4())]}},
         )
         _c9 = CollectionFactory(
             project=self.project, library=self.library, resource=self.resource_instruction_bound_with_segment
         )
         _segment = SegmentFactory(collection=_c9)
+        self.resource_instruction_bound_with_segment.instruction_turns = {
+            "bound_copies": {"turns": [{"library": str(uuid.uuid4()), "collection": str(_c9.id)}]}
+        }
+        self.resource_instruction_bound_with_segment.save()
 
     def _get_url(self, name, url_params=None, query_params=None):
         url = reverse(name, kwargs=url_params or {})

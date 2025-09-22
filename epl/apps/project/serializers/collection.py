@@ -154,7 +154,10 @@ class MoveToInstructionMixin:
         if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
             # All libraries have positioned and no arbitration is needed: move to Instruction Bound and set turns
             resource.status = ResourceStatus.INSTRUCTION_BOUND
-            turns: list[str] = [str(_collection.library_id) for _collection in collections.order_by("position")]
+            turns: list[dict[str, str]] = [
+                {"library": str(_collection.library_id), "collection": str(_collection.id)}
+                for _collection in collections.order_by("position")
+            ]
             resource.instruction_turns["bound_copies"]["turns"] = turns.copy()
             resource.instruction_turns["unbound_copies"]["turns"] = turns.copy()
             resource.save(update_fields=["status", "instruction_turns"])

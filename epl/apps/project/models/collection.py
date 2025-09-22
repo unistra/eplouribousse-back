@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils.translation import gettext as _
@@ -33,6 +35,11 @@ class Position(models.IntegerChoices):
     EXCLUDE = 0, _("Position excluded")
 
 
+class TurnType(TypedDict):
+    library: str
+    collection: str
+
+
 class Resource(models.Model):
     id = UUIDPrimaryKeyField()
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
@@ -59,13 +66,24 @@ class Resource(models.Model):
     def __str__(self):
         return f"{self.code} - {self.project_id}"
 
+    def save(self, *args, **kwargs):
+        # del self.next_turn
+        return super().save(*args, **kwargs)
+
     @property
-    def next_turn(self) -> str:
-        if self.status == ResourceStatus.INSTRUCTION_BOUND:
-            return self.instruction_turns.get("bound_copies", {}).get("turns", [])[0]
-        elif self.status == ResourceStatus.INSTRUCTION_UNBOUND:
-            return self.instruction_turns.get("unbound_copies", {}).get("turns", [])[0]
-        return ""
+    def next_turn(self) -> TurnType | None:
+        turn = None
+        try:
+            if self.status == ResourceStatus.INSTRUCTION_BOUND:
+                turn = self.instruction_turns.get("bound_copies", {}).get("turns", [])[0]
+            elif self.status == ResourceStatus.INSTRUCTION_UNBOUND:
+                turn = self.instruction_turns.get("unbound_copies", {}).get("turns", [])[0]
+        except IndexError:
+            turn = None
+        if not isinstance(turn, dict) or (set(turn.keys()) != {"library", "collection"}):
+            turn = None
+
+        return turn
 
     @property
     def segments(self):
