@@ -212,10 +212,14 @@ class TestSubscriptionNotificationForProjectManagers(TestCase):
         )
         self._register_invited_user(project)
 
-        self.assertEqual(len(mail.outbox), 1)
-        sent_email = mail.outbox[0]
-        self.assertEqual(sent_email.to, [self.invited_user_email])
-        self.assertIn(str(_("is now ready for launch")), sent_email.body)
+        # 2 emails are sent: account confirmation and invitation to launch the project.
+        self.assertEqual(len(mail.outbox), 2)
+        subjects = [email.subject for email in mail.outbox]
+        bodies = [email.body for email in mail.outbox]
+        account_creation_subject_part = str(_("your account creation"))
+        project_ready_body_part = str(_("is now ready for launch"))
+        self.assertTrue(any(account_creation_subject_part in s for s in subjects))
+        self.assertTrue(any(project_ready_body_part in b for b in bodies))
 
     def test_manager_does_not_receive_notification_if_project_is_launched(self):
         """
@@ -231,7 +235,10 @@ class TestSubscriptionNotificationForProjectManagers(TestCase):
 
         user = User.objects.get(email=self.invited_user_email)
         self.assertTrue(UserRole.objects.filter(user=user, project=project, role=Role.PROJECT_MANAGER).exists())
-        self.assertEqual(len(mail.outbox), 0)
+        # Check that the only email sent is the confirmation of registration.
+        self.assertEqual(len(mail.outbox), 1)
+        expected_string_in_subject = str(_("your account creation"))
+        self.assertIn(expected_string_in_subject, mail.outbox[0].subject)
 
 
 class TestSubscriptionNotificationForProjectAdmins(TestCase):
@@ -274,10 +281,11 @@ class TestSubscriptionNotificationForProjectAdmins(TestCase):
         )
         self._register_invited_user(project)
 
-        self.assertEqual(len(mail.outbox), 1)
-        sent_email = mail.outbox[0]
-        self.assertEqual(sent_email.to, [self.invited_user_email])
-        self.assertIn("As an administrator, you must, in consultation with your co-administrators", sent_email.body)
+        # 2 emails are sent: account confirmation and invitation to review the project.
+        self.assertEqual(len(mail.outbox), 2)
+        bodies = [email.body for email in mail.outbox]
+        project_review_body_part = str(_("As an administrator, you must, in consultation with your co-administrators"))
+        self.assertTrue(any(project_review_body_part in b for b in bodies))
 
     def test_admin_not_invited_to_review_if_project_status_is_ready(self):
         """
@@ -290,7 +298,10 @@ class TestSubscriptionNotificationForProjectAdmins(TestCase):
         )
 
         self._register_invited_user(project)
-
         user = User.objects.get(email=self.invited_user_email)
+
         self.assertTrue(UserRole.objects.filter(user=user, project=project, role=Role.PROJECT_ADMIN).exists())
-        self.assertEqual(len(mail.outbox), 0)
+        # Check that the only email sent is the confirmation of registration.
+        self.assertEqual(len(mail.outbox), 1)
+        expected_string_in_subject = str(_("your account creation"))
+        self.assertIn(expected_string_in_subject, mail.outbox[0].subject)
