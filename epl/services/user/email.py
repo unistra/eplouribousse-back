@@ -74,11 +74,15 @@ def send_invite_to_epl_email(
 
     email_content = render_to_string(
         "emails/invite_to_epl.txt",
-        {"email_support": settings.EMAIL_SUPPORT, "invitation_link": invitation_link},
+        {
+            "email_support": settings.EMAIL_SUPPORT,
+            "invitation_link": invitation_link,
+            "inviter": request.user.email,
+        },
     )
 
     send_mail(
-        subject=f"[eplouribousse] {_('Invitation')}",
+        subject=f"eplouribousse | {request.tenant.name} | " + _("creating your account (pending)"),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,

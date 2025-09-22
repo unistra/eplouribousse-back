@@ -1,7 +1,5 @@
 {% load i18n %}
 
-{% trans "Invitation" %} - Eplouribousse
-
 {% trans "You have been invited to join Eplouribousse" %}.
 
 
@@ -9,9 +7,9 @@
 
 ===>    {{ invitation_link }}
 
-- {% trans "If you need any assistance" %}, {% trans "please contact the site administrator at the following address" %}:
+- {% trans "If you believe this is an error, please contact the creator of your account" %}:
 
-===>    {{ email_support }}
+===>    {{ inviter }}
 
 {% trans "This invitation will expire in 7 days" %}.
 

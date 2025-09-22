@@ -73,6 +73,8 @@ class TestUserEmailServices(TestCase):
         mock_render_to_string.return_value = "Email content"
         signer = signing.TimestampSigner()
         request = MagicMock(spec=Request)
+        request.tenant = MagicMock()
+        request.tenant.name = "Test Tenant"
         email = "invitee@example.com"
         project_id = "123"
         library_id = "456"

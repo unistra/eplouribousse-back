@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-16 11:24+0200\n"
+"POT-Creation-Date: 2025-09-22 11:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -231,7 +231,7 @@ msgid "Positioning rank of a collection"
 msgstr "Positionnement du rang d'une collection"
 
 #: epl/apps/project/models/collection.py:104
-#: epl/apps/project/serializers/collection.py:202
+#: epl/apps/project/serializers/collection.py:203
 msgid "Reason for excluding the collection from deduplication"
 msgstr "Raison de l'exclusion de la collection de la déduplication"
 
@@ -391,55 +391,55 @@ msgstr "Segment de collection"
 msgid "Collection segments"
 msgstr "Segments de collection"
 
-#: epl/apps/project/serializers/collection.py:28
+#: epl/apps/project/serializers/collection.py:29
 msgid "Library to which the collection belongs"
 msgstr "Bibliothèque à laquelle appartient la collection"
 
-#: epl/apps/project/serializers/collection.py:33
+#: epl/apps/project/serializers/collection.py:34
 msgid "Project to which the collection belongs"
 msgstr "Projet auquel appartient la collection"
 
-#: epl/apps/project/serializers/collection.py:59
+#: epl/apps/project/serializers/collection.py:60
 msgid "CSV file to be imported."
 msgstr "Fichier CSV à importer."
 
-#: epl/apps/project/serializers/collection.py:60
+#: epl/apps/project/serializers/collection.py:61
 msgid "Library ID to which the collection belongs."
 msgstr "ID de la bibliothèque à laquelle appartient la collection."
 
-#: epl/apps/project/serializers/collection.py:61
+#: epl/apps/project/serializers/collection.py:62
 msgid "Project ID to which the collection belongs."
 msgstr "ID du projet auquel la collection appartient."
 
-#: epl/apps/project/serializers/collection.py:121
+#: epl/apps/project/serializers/collection.py:122
 #, python-format
 msgid "Column(s) %(column)s missing in the CSV file."
 msgstr "Colonne(s) %(column)s manquantes dans le fichier CSV."
 
-#: epl/apps/project/serializers/collection.py:130
+#: epl/apps/project/serializers/collection.py:131
 #, python-format
 msgid "Library with ID %(id)s does not exist."
 msgstr "La bibliothèque avec l'ID %(id)s n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:138
+#: epl/apps/project/serializers/collection.py:139
 #, python-format
 msgid "Project with ID %(id)s does not exist."
 msgstr "Le projet avec l'ID %(id)s n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:145
+#: epl/apps/project/serializers/collection.py:146
 msgid "An alternative storage site can't receive a collection"
 msgstr "Un lieu de conservation alternatif ne peut pas recevoir de collection"
 
-#: epl/apps/project/serializers/collection.py:151
+#: epl/apps/project/serializers/collection.py:152
 msgid "Position (rank) between 1 and 4"
 msgstr "Position (rang) entre 1 et 4"
 
-#: epl/apps/project/serializers/collection.py:215
+#: epl/apps/project/serializers/collection.py:216
 msgid "Invalid exclusion reason."
 msgstr "Motif d'exclusion non valide."
 
-#: epl/apps/project/serializers/collection.py:253
-#: epl/apps/project/serializers/collection.py:282
+#: epl/apps/project/serializers/collection.py:257
+#: epl/apps/project/serializers/collection.py:286
 #: epl/apps/project/views/collection.py:253
 #: epl/apps/project/views/collection.py:262
 msgid "Positioning comment"
@@ -549,6 +549,17 @@ msgstr "Collections supprimées avec succès pour cette bibliothèque"
 #: epl/apps/project/views/collection.py:180
 msgid "No collections found for this library in this project"
 msgstr "Aucune collection trouvée pour cette bibliothèque dans ce projet"
+
+#: epl/apps/project/tests/views/test_collection_positioning.py:305
+#: epl/apps/project/tests/views/test_collection_positioning.py:352
+msgid "The repositioning of your collection for the resource"
+msgstr "Le repositionnement de votre collection pour la ressource"
+
+#: epl/apps/project/tests/views/test_collection_positioning.py:310
+#: epl/apps/project/tests/views/test_collection_positioning.py:357
+#: epl/services/user/email.py:207
+msgid "arbitration"
+msgstr "Arbitrage"
 
 #: epl/apps/project/tests/views/test_project_status.py:173
 msgid "As a pilot, you can now launch or schedule"
@@ -1000,48 +1011,42 @@ msgstr ""
 "La vue n'est pas dans le contexte du sérialiseur ou n'est pas une "
 "GenericApiView"
 
-#: epl/services/user/email.py:25 epl/templates/emails/password_changed.txt:3
+#: epl/services/user/email.py:26 epl/templates/emails/password_changed.txt:3
 #: epl/tests/services/email/test_user_email.py:26
 msgid "Password Change"
 msgstr "Modification du mot de passe"
 
-#: epl/services/user/email.py:45 epl/templates/emails/password_reset.txt:3
+#: epl/services/user/email.py:46 epl/templates/emails/password_reset.txt:3
 #: epl/tests/services/email/test_user_email.py:53
 msgid "Password Reset"
 msgstr "Réinitialisation du mot de passe"
 
-#: epl/services/user/email.py:80 epl/templates/emails/invite_to_epl.txt:3
-msgid "Invitation"
-msgstr "Invitation"
+#: epl/services/user/email.py:86
+msgid "creating your account (pending)"
+msgstr "création de votre compte (en attente)"
 
-#: epl/services/user/email.py:110
+#: epl/services/user/email.py:116
 #, python-brace-format
 msgid "Creation of the {project_name} project"
 msgstr "Création du projet {project_name}"
 
-#: epl/services/user/email.py:142
+#: epl/services/user/email.py:148
 #, python-brace-format
 msgid "Availability of the {project_name} project for launch"
 msgstr "Disponibilité du projet {project_name} pour le lancement"
 
-#: epl/services/user/email.py:163
+#: epl/services/user/email.py:169
 msgid "now"
 msgstr "maintenant"
 
-#: epl/services/user/email.py:165
+#: epl/services/user/email.py:171
 msgid "at"
 msgstr "à"
 
-#: epl/services/user/email.py:174
+#: epl/services/user/email.py:180
 #, python-brace-format
 msgid "Launch of the {project_name} project"
 msgstr "Lancement du projet {project_name}"
-
-#: epl/services/user/email.py:200
-#, fuzzy
-#| msgid "Arbitration"
-msgid "arbitration"
-msgstr "Arbitrage"
 
 #: epl/templates/403.html:6
 msgid "You are not allowed to see this page"
@@ -1054,6 +1059,56 @@ msgstr "Page non trouvée"
 #: epl/templates/500.html:6
 msgid "Error"
 msgstr "Erreur"
+
+#: epl/templates/emails/confirm_account_creation.txt:3
+msgid "Invitation"
+msgstr "Invitation"
+
+#: epl/templates/emails/confirm_account_creation.txt:5
+#: epl/templates/emails/invite_to_epl.txt:3
+msgid "You have been invited to join Eplouribousse"
+msgstr "Vous avez été invité à rejoindre Eplouribousse"
+
+#: epl/templates/emails/confirm_account_creation.txt:8
+#: epl/templates/emails/invite_to_epl.txt:6
+msgid "To access the platform"
+msgstr "Pour accéder à la plateforme"
+
+#: epl/templates/emails/confirm_account_creation.txt:8
+#: epl/templates/emails/invite_to_epl.txt:6
+msgid "please click on the link below and complete your registration"
+msgstr ""
+"s'il vous plaît cliquez sur le lien ci-dessous et complétez votre "
+"enregistrement"
+
+#: epl/templates/emails/confirm_account_creation.txt:12
+#: epl/templates/emails/invite_project_admins_to_review.txt:10
+#: epl/templates/emails/invite_project_managers_to_launch.txt:13
+msgid "If you need any assistance"
+msgstr "Si vous avez besoin d'aide"
+
+#: epl/templates/emails/confirm_account_creation.txt:12
+#: epl/templates/emails/invite_project_admins_to_review.txt:10
+#: epl/templates/emails/invite_project_managers_to_launch.txt:13
+msgid "please contact the site administrator at the following address"
+msgstr "veuillez contacter l'administrateur du site à l'adresse suivante"
+
+#: epl/templates/emails/confirm_account_creation.txt:16
+#: epl/templates/emails/invite_to_epl.txt:14
+msgid "This invitation will expire in 7 days"
+msgstr "Cette invitation va expirer dans 7 jours"
+
+#: epl/templates/emails/confirm_account_creation.txt:20
+#: epl/templates/emails/invite_project_admins_to_review.txt:16
+#: epl/templates/emails/invite_project_managers_to_launch.txt:19
+#: epl/templates/emails/invite_to_epl.txt:18
+#: epl/templates/emails/notify_arbitration_type0.txt:8
+#: epl/templates/emails/notify_arbitration_type1.txt:8
+#: epl/templates/emails/password_changed.txt:17
+#: epl/templates/emails/password_reset.txt:14
+#: epl/templates/emails/project_launched.txt:13
+msgid "This is an automated message, please do not reply"
+msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:3
 #, python-format
@@ -1074,29 +1129,6 @@ msgstr ""
 "les paramètres et les réglages avant la mise en ligne du projet.\n"
 "Si vous pensez que ce message résulte d'une erreur, veuillez contacter le "
 "créateur du projet %(project_creator_email)s"
-
-#: epl/templates/emails/invite_project_admins_to_review.txt:10
-#: epl/templates/emails/invite_project_managers_to_launch.txt:13
-#: epl/templates/emails/invite_to_epl.txt:12
-msgid "If you need any assistance"
-msgstr "Si vous avez besoin d'aide"
-
-#: epl/templates/emails/invite_project_admins_to_review.txt:10
-#: epl/templates/emails/invite_project_managers_to_launch.txt:13
-#: epl/templates/emails/invite_to_epl.txt:12
-msgid "please contact the site administrator at the following address"
-msgstr "veuillez contacter l'administrateur du site à l'adresse suivante"
-
-#: epl/templates/emails/invite_project_admins_to_review.txt:16
-#: epl/templates/emails/invite_project_managers_to_launch.txt:19
-#: epl/templates/emails/invite_to_epl.txt:20
-#: epl/templates/emails/notify_arbitration_type0.txt:8
-#: epl/templates/emails/notify_arbitration_type1.txt:8
-#: epl/templates/emails/password_changed.txt:17
-#: epl/templates/emails/password_reset.txt:14
-#: epl/templates/emails/project_launched.txt:13
-msgid "This is an automated message, please do not reply"
-msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
 #: epl/templates/emails/invite_project_managers_to_launch.txt:3
 #, python-format
@@ -1123,29 +1155,14 @@ msgstr ""
 "Si vous pensez que ce message résulte d'une erreur, veuillez contacter "
 "l'administrateur qui a envoyé ce message %(action_user_email)s"
 
-#: epl/templates/emails/invite_to_epl.txt:5
-msgid "You have been invited to join Eplouribousse"
-msgstr "Vous avez été invité à rejoindre Eplouribousse"
-
-#: epl/templates/emails/invite_to_epl.txt:8
-msgid "To access the platform"
-msgstr "Pour accéder à la plateforme"
-
-#: epl/templates/emails/invite_to_epl.txt:8
-msgid "please click on the link below and complete your registration"
+#: epl/templates/emails/invite_to_epl.txt:10
+msgid ""
+"If you believe this is an error, please contact the creator of your account"
 msgstr ""
-"s'il vous plaît cliquez sur le lien ci-dessous et complétez votre "
-"enregistrement"
-
-#: epl/templates/emails/invite_to_epl.txt:16
-msgid "This invitation will expire in 7 days"
-msgstr "Cette invitation va expirer dans 7 jours"
+"Si vous pensez qu'il s'agit d'une erreur, veuillez contacter le créateur de votre compte."
 
 #: epl/templates/emails/notify_arbitration_type0.txt:3
-#, fuzzy, python-format
-#| msgid ""
-#| "The repositioning of your collection for the resource "
-#| "\"%(resource_title)s\" may resolve a type 0 arbitration case."
+#, python-format
 msgid ""
 "The repositioning of your collection for the resource \"%(resource_title)s\" "
 "may resolve a type 0 arbitration case:"
@@ -1154,16 +1171,13 @@ msgstr ""
 "\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 0."
 
 #: epl/templates/emails/notify_arbitration_type1.txt:3
-#, fuzzy, python-format
-#| msgid ""
-#| "The repositioning of your collection for the resource "
-#| "\"%(resource_title)s\" may resolve a type 0 arbitration case."
+#, python-format
 msgid ""
 "The repositioning of your collection for the resource \"%(resource_title)s\" "
 "may resolve a type 1 arbitration case:"
 msgstr ""
 "Le repositionnement de votre collection pour la ressource "
-"\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 0."
+"\"%(resource_title)s\" may resolve a type 0 arbitration case:"
 
 #: epl/templates/emails/password_changed.txt:5
 #: epl/tests/services/email/test_user_email.py:38
