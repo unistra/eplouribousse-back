@@ -14,6 +14,7 @@ from epl.apps.project.models.comment import Comment
 from epl.apps.project.permissions.collection import CollectionPermission
 from epl.libs.csv_import import handle_import
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
+from epl.services.project.notifications import notify_instructors_of_arbitration
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +194,9 @@ class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
         resource.arbitration = arbitration
         resource.save(update_fields=["arbitration"])
 
+        if resource.arbitration in [Arbitration.ONE, Arbitration.ZERO]:
+            notify_instructors_of_arbitration(resource, self.context["request"])
+
         self.move_to_instruction_if_possible(collections, resource)
 
         return collection
@@ -238,6 +242,9 @@ class ExclusionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
 
         resource.arbitration = arbitration
         resource.save(update_fields=["arbitration"])
+
+        if resource.arbitration == Arbitration.ZERO:
+            notify_instructors_of_arbitration(resource, self.context["request"])
 
         self.move_to_instruction_if_possible(collections, resource)
 

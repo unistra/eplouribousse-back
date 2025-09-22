@@ -16,6 +16,7 @@ from epl.apps.project.models import Project, ProjectStatus, Role
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.user.email import (
+    send_account_created_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_password_change_email,
@@ -317,6 +318,10 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
         try:
             with transaction.atomic():
                 user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
+
+                # send account creation confirmation email to a user
+                request = self.context["request"]
+                send_account_created_email(user, request)
 
                 # If there is a project_id and a role, we assign the user to the project with the specified role.
                 if self.project_id and self.role:

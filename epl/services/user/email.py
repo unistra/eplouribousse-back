@@ -8,7 +8,8 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from rest_framework.request import Request
 
-from epl.apps.project.models import Project
+from epl.apps.project.models import Project, Resource
+from epl.apps.project.models.collection import Arbitration
 from epl.apps.user.models import User
 from epl.services.tenant import get_front_domain
 
@@ -73,13 +74,40 @@ def send_invite_to_epl_email(
 
     email_content = render_to_string(
         "emails/invite_to_epl.txt",
-        {"email_support": settings.EMAIL_SUPPORT, "invitation_link": invitation_link},
+        {
+            "email_support": settings.EMAIL_SUPPORT,
+            "invitation_link": invitation_link,
+            "inviter": request.user.email,
+        },
     )
 
     send_mail(
-        subject=f"[eplouribousse] {_('Invitation')}",
+        subject=f"eplouribousse | {request.tenant.name} | " + _("creating your account (pending)"),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
+        fail_silently=False,
+        message=email_content,
+    )
+
+
+def send_account_created_email(user: User, request: Request) -> None:
+    front_domain = get_front_domain(request)
+    tenant_url = f"{front_domain}/"
+
+    email_content = render_to_string(
+        "emails/confirm_account_creation.txt",
+        {
+            "tenant_url": tenant_url,
+            "username": user.email,
+        },
+    )
+
+    subject = f"eplouribousse | {request.tenant.name} | {_('your account creation')}"
+
+    send_mail(
+        subject=subject,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
         fail_silently=False,
         message=email_content,
     )
@@ -174,6 +202,36 @@ def send_project_launched_email(
         + _("Launch of the {project_name} project").format(project_name=project.name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=project_users,
+        fail_silently=False,
+        message=email_content,
+    )
+
+
+def send_arbitration_notification_email(
+    email: str, request: Request, resource: Resource, library_code: str, arbitration_type: Arbitration
+) -> None:
+    front_domain = get_front_domain(request)
+    project = resource.project
+    tenant = request.tenant
+    project_url = f"{front_domain}/projects/{project.id}"
+
+    # Choisir le template en fonction du type d'arbitrage
+    template_name = f"emails/notify_arbitration_type{arbitration_type.value}.txt"
+
+    email_content = render_to_string(
+        template_name,
+        {
+            "resource_title": resource.title,
+            "project_url": project_url,
+        },
+    )
+
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('arbitration')} {arbitration_type.value}"
+
+    send_mail(
+        subject=subject,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
         fail_silently=False,
         message=email_content,
     )

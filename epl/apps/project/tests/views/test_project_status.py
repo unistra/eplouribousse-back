@@ -124,8 +124,8 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
         invitation_email = next(email for email in mail.outbox if email.to[0] == "new_project_admin@test.com")
         notification_email = next(email for email in mail.outbox if email.to[0] == self.project_admin.email)
 
-        self.assertIn("invitation", invitation_email.subject.lower())
-        self.assertIn("invited", invitation_email.body.lower())
+        self.assertIn(_("creating").lower(), invitation_email.subject.lower())
+        self.assertIn(_("invited").lower(), invitation_email.body.lower())
 
         self.assertIn(self.project.name, notification_email.subject)
         self.assertIn(
