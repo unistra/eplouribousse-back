@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -15,6 +16,7 @@ from epl.apps.project.models import (
 )
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
+from epl.libs.schema import load_json_schema
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
     invite_project_admins_to_review,
@@ -22,10 +24,20 @@ from epl.services.project.notifications import (
     invite_unregistered_users_to_epl,
     notify_project_launched,
 )
+from epl.validators import JSONSchemaValidator
+
+
+@extend_schema_field(load_json_schema("project_settings.schema.json"))
+class ProjectSettingsField(serializers.JSONField): ...
 
 
 class ProjectSerializer(AclSerializerMixin, serializers.ModelSerializer):
     acl = AclField()
+    settings = ProjectSettingsField(
+        required=False,
+        help_text=_("Project settings"),
+        validators=[JSONSchemaValidator("project_settings.schema.json")],
+    )
 
     class Meta:
         model = Project
@@ -35,7 +47,11 @@ class ProjectSerializer(AclSerializerMixin, serializers.ModelSerializer):
 
 class CreateProjectSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
-    settings = serializers.JSONField(read_only=True)
+    settings = ProjectSettingsField(
+        required=False,
+        help_text=_("Project settings"),
+        validators=[JSONSchemaValidator("project_settings.schema.json")],
+    )
 
     class Meta:
         model = Project
@@ -177,6 +193,11 @@ class ProjectDetailSerializer(AclSerializerMixin, serializers.ModelSerializer):
     libraries = ProjectLibraryDetailSerializer(many=True, source="projectlibrary_set", read_only=True)
     invitations = InvitationSerializer(many=True)
     acl = AclField(exclude=["users"])
+    settings = ProjectSettingsField(
+        required=False,
+        help_text=_("Project settings"),
+        validators=[JSONSchemaValidator("project_settings.schema.json")],
+    )
 
     class Meta:
         model = Project
