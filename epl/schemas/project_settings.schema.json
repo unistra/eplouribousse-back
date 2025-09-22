@@ -4,7 +4,7 @@
   "title": " settings",
   "type": "object",
   "properties": {
-    "exclusionReasons": {
+    "exclusion_reasons": {
       "type": "array"
     },
     "alerts": {
