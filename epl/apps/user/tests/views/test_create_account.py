@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from django.core import mail  # <-- 1. AJOUTEZ CET IMPORT
+from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from rest_framework import status
@@ -60,3 +62,28 @@ class TestCreateAccountView(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Invite token expired", str(response.content))
+
+    def test_account_creation_sends_confirmation_email(self):
+        signer = _get_invite_signer()
+        email = "new_user_for_email_test@example.com"
+        token = signer.sign_object({"email": email})
+        mail.outbox = []
+
+        response = self.post(
+            reverse("create_account"),
+            {"token": token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(len(mail.outbox), 1)
+
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, [email])
+        expected_subject_string = str(_("your account creation"))
+        expected_body_string = str(_("Your account has just been opened"))
+
+        self.assertIn(expected_subject_string, sent_email.subject)
+        self.assertIn(expected_body_string, sent_email.body)
+
+        self.assertIn(email, sent_email.body)
