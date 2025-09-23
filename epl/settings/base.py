@@ -1,7 +1,6 @@
 from os import path
 from pathlib import Path
 
-import saml2
 import saml2.saml
 
 SENTRY_DSN = "https://1ec47dc3f4a500ba87705bb8830b5549@sentry.app.unistra.fr/66"
@@ -244,6 +243,7 @@ SHARED_APPS = [
     # 'django.contrib.admindocs',
     # Shared third party apps
     "django_extensions",
+    "django_watchfiles",
     "rest_framework",
     "django_cas",
     "djangosaml2",
