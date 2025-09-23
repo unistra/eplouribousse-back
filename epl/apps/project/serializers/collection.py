@@ -319,16 +319,16 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
 
         turns = resource.instruction_turns.get(cycle, [])
         try:
-            turn = turns.pop(0)
-        except IndexError:
-            set_tag("project", str(resource.projet.id))
+            turn = turns["turns"].pop(0)
+        except (IndexError, AttributeError):
+            set_tag("project", str(resource.project.id))
             set_tag("collection", str(collection.id))
             set_tag("resource", str(resource.id))
             logger.error("No more turns left but finish_instruction_turn was called")
             turn = None
 
         if not isinstance(turn, dict):
-            set_tag("project", str(resource.projet.id))
+            set_tag("project", str(resource.project.id))
             set_tag("collection", str(collection.id))
             set_tag("resource", str(resource.id))
             logger.error("Instruction turn should be a dict, got: %s", type(turn))
@@ -338,7 +338,7 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
             raise PermissionDenied()
 
         # All seems OK
-        if len(turns):
+        if len(turns["turns"]):
             # There is a next turn
             resource.instruction_turns[cycle] = turns.copy()
             resource.save(update_fields=["instruction_turns"])
@@ -348,7 +348,7 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
             resource.status = (
                 ResourceStatus.CONTROL_BOUND if cycle == "bound_copies" else ResourceStatus.CONTROL_UNBOUND
             )
-            resource.instruction_turns[cycle] = []
+            resource.instruction_turns[cycle]["turns"] = []
             resource.save(update_fields=["instruction_turns", "status"])
             # TODO email notification
 
