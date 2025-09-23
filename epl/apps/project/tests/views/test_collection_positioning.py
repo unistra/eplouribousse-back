@@ -293,25 +293,32 @@ class ArbitrationNotificationTest(TestCase):
         self.assertEqual(self.collection_2.position, 1)
         self.assertEqual(self.resource.arbitration, Arbitration.ONE)
 
-        # 2 emails should be sent, one to each instructor.
-        self.assertEqual(len(mail.outbox), 2)
+        # 2 arbitration 0 emails should be sent, one to each instructor.
+        expected_string_in_subject = "arbitration 1"
+        arbitration_1_emails = [
+            email for email in mail.outbox if expected_string_in_subject.lower() in str(email.subject).lower()
+        ]
+
+        expected_recipients = {self.instructor_1.email, self.instructor_2.email}
+        actual_recipients = {email.to[0] for email in arbitration_1_emails}
+
+        # check number of emails
+        self.assertEqual(len(arbitration_1_emails), 2)
 
         # check recipient
-        all_recipients = [email.to[0] for email in mail.outbox]
-        self.assertIn(self.instructor_1.email, all_recipients)
-        self.assertIn(self.instructor_2.email, all_recipients)
+        self.assertEqual(actual_recipients, expected_recipients)
 
         # check body
-        expected_string_in_body = str(_("The repositioning of your collection for the resource"))
-        for email in mail.outbox:
+        expected_string_in_body = "The repositioning of your collection for the resource"
+        for email in arbitration_1_emails:
             self.assertIn(expected_string_in_body, email.body)
 
         # check subject
-        expected_arbitration_string_in_subject = str(_("arbitration"))
-        expected_subject_1 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_1.code} | {self.resource.code} | {expected_arbitration_string_in_subject} {Arbitration.ONE.value}"
-        expected_subject_2 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_2.code} | {self.resource.code} | {expected_arbitration_string_in_subject} {Arbitration.ONE.value}"
+        expected_subject_1 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_1.code} | {self.resource.code} | arbitration {Arbitration.ONE.value}"
+        expected_subject_2 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_2.code} | {self.resource.code} | arbitration {Arbitration.ONE.value}"
+
         expected_subjects = {expected_subject_1, expected_subject_2}
-        actual_subjects = {email.subject for email in mail.outbox}
+        actual_subjects = {email.subject for email in arbitration_1_emails}
         self.assertEqual(actual_subjects, expected_subjects)
 
     def test_arbitration_type_0_sends_notification(self):
@@ -322,7 +329,6 @@ class ArbitrationNotificationTest(TestCase):
             content_type="application/json",
             user=self.instructor_1,
         )
-        self.assertEqual(len(mail.outbox), 0)
 
         # Set the collection_2 rank to 3
         self.patch(
@@ -340,26 +346,32 @@ class ArbitrationNotificationTest(TestCase):
         self.assertEqual(self.collection_2.position, 3)
         self.assertEqual(self.resource.arbitration, Arbitration.ZERO)
 
-        # 2 emails should be sent, one to each instructor.
-        self.assertEqual(len(mail.outbox), 2)
+        # 2 arbitration 0 emails should be sent, one to each instructor.
+        expected_string_in_subject = "arbitration 0"
+        arbitration_0_emails = [
+            email for email in mail.outbox if expected_string_in_subject.lower() in str(email.subject).lower()
+        ]
 
-        # check recipients
-        actual_recipients = {email.to[0] for email in mail.outbox}
         expected_recipients = {self.instructor_1.email, self.instructor_2.email}
+        actual_recipients = {email.to[0] for email in arbitration_0_emails}
+
+        # check number of emails
+        self.assertEqual(len(arbitration_0_emails), 2)
+
+        # check recipient
         self.assertEqual(actual_recipients, expected_recipients)
 
         # check body
-        expected_string_in_body = str(_("The repositioning of your collection for the resource"))
-        for email in mail.outbox:
+        expected_string_in_body = "The repositioning of your collection for the resource"
+        for email in arbitration_0_emails:
             self.assertIn(expected_string_in_body, email.body)
 
         # check subject
-        arbitration_word = str(_("arbitration"))
-        expected_subject_1 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_1.code} | {self.resource.code} | {arbitration_word} {Arbitration.ZERO.value}"
-        expected_subject_2 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_2.code} | {self.resource.code} | {arbitration_word} {Arbitration.ZERO.value}"
+        expected_subject_1 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_1.code} | {self.resource.code} | arbitration {Arbitration.ZERO.value}"
+        expected_subject_2 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_2.code} | {self.resource.code} | arbitration {Arbitration.ZERO.value}"
 
         expected_subjects = {expected_subject_1, expected_subject_2}
-        actual_subjects = {email.subject for email in mail.outbox}
+        actual_subjects = {email.subject for email in arbitration_0_emails}
         self.assertEqual(actual_subjects, expected_subjects)
 
     def test_arbitration_1_notifies_only_rank_1_instructors(self):
@@ -390,7 +402,6 @@ class ArbitrationNotificationTest(TestCase):
 
         self.collection_1.refresh_from_db()
         self.assertEqual(self.collection_1.position, 1)
-        self.assertEqual(len(mail.outbox), 0)
 
         self.patch(
             reverse("collection-position", kwargs={"pk": self.collection_2.id}),
@@ -405,12 +416,17 @@ class ArbitrationNotificationTest(TestCase):
 
         self.assertEqual(self.resource.arbitration, Arbitration.ONE)
 
-        # only 2 emails should be sent (to rank 1 instructors)
-        self.assertEqual(len(mail.outbox), 2)
+        # only instructor 1 and 3 should receive arbitration 1 email
+        expected_string_in_subject = "arbitration 1"
+        arbitration_1_emails = [
+            email for email in mail.outbox if expected_string_in_subject.lower() in str(email.subject).lower()
+        ]
 
-        # check instructor 3 has not been notified
-        actual_recipients = {email.to[0] for email in mail.outbox}
-        self.assertNotIn(instructor_3.email, actual_recipients)
+        expected_recipients = {self.instructor_1.email, self.instructor_2.email}
+        actual_recipients = {email.to[0] for email in arbitration_1_emails}
+
+        self.assertEqual(len(arbitration_1_emails), 2)
+        self.assertEqual(actual_recipients, expected_recipients)
 
     def test_arbitration_0_notifies_only_positioned_instructors(self):
         """
@@ -434,7 +450,6 @@ class ArbitrationNotificationTest(TestCase):
             content_type="application/json",
             user=self.instructor_2,
         )
-        self.assertEqual(len(mail.outbox), 0)
 
         # collection 3 is excluded
         self.patch(
@@ -453,8 +468,87 @@ class ArbitrationNotificationTest(TestCase):
 
         self.assertEqual(self.resource.arbitration, Arbitration.ZERO)
 
-        self.assertEqual(len(mail.outbox), 2)
+        # Only instructor 1 and 2 should receive arbitration 0 email
+        expected_string_in_subject = "arbitration 0"
+        arbitration_0_emails = [
+            email for email in mail.outbox if expected_string_in_subject.lower() in str(email.subject).lower()
+        ]
 
-        # check instructor 3 has not been notified
-        actual_recipients = {email.to[0] for email in mail.outbox}
-        self.assertNotIn(instructor_3.email, actual_recipients)
+        expected_recipients = {self.instructor_1.email, self.instructor_2.email}
+        actual_recipients = {email.to[0] for email in arbitration_0_emails}
+
+        self.assertEqual(len(arbitration_0_emails), 2)
+        self.assertEqual(actual_recipients, expected_recipients)
+
+
+class PositioningNotificationTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project = ProjectFactory()
+            self.resource = ResourceFactory(project=self.project)
+            self.resource.arbitration = Arbitration.NONE
+
+            self.library_1 = LibraryFactory(project=self.project)
+            self.instructor_1 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_1)
+            self.collection_1 = CollectionFactory(library=self.library_1, project=self.project, resource=self.resource)
+
+            self.library_2 = LibraryFactory(project=self.project)
+            self.instructor_2 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_2)
+            self.collection_2 = CollectionFactory(library=self.library_2, project=self.project, resource=self.resource)
+
+            self.library_3 = LibraryFactory(project=self.project)
+            self.instructor_3 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_3)
+            self.collection_3 = CollectionFactory(library=self.library_3, project=self.project, resource=self.resource)
+
+    def test_positioning_sends_notification(self):
+        # Position the collection_1 to rank 2
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_1.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.collection_1.refresh_from_db()
+        self.assertEqual(self.collection_1.position, 2)
+
+        # instructors 2 and 3 should receive an email
+        self.assertEqual(len(mail.outbox), 2)
+        expected_string_in_subject = str(_("positioning"))
+        expected_recipients = {self.instructor_2.email, self.instructor_3.email}
+
+        positioning_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
+        self.assertEqual(len(positioning_emails), 2)
+
+        actual_recipients = {email.to[0] for email in positioning_emails}
+        self.assertEqual(actual_recipients, expected_recipients)
+
+    def test_positioning_sends_notification_even_when_arbitration_1(self):
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_1.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        mail.outbox = []
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.collection_1.refresh_from_db()
+        self.collection_2.refresh_from_db()
+
+        self.assertEqual(self.collection_1.position, 1)
+        self.assertEqual(self.collection_2.position, 1)
+        self.assertEqual(self.collection_3.position, None)
+
+        # only instructor_3 should receive a positioning email
+        expected_recipients = {self.instructor_3.email}
+        expected_string_in_subject = str(_("positioning"))
+        positioning_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
+        actual_recipients = {email.to[0] for email in positioning_emails}
+
+        self.assertEqual(len(positioning_emails), 1)
+        self.assertEqual(actual_recipients, expected_recipients)

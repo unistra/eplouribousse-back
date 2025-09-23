@@ -3,6 +3,7 @@ from epl.apps.project.models.collection import Arbitration
 from epl.apps.user.models import User
 from epl.services.user.email import (
     send_arbitration_notification_email,
+    send_collection_positioned_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
@@ -138,4 +139,40 @@ def notify_instructors_of_arbitration(resource: Resource, request):
             resource=resource,
             library_code=instructor.library.code,
             arbitration_type=arbitration_type,
+        )
+
+
+# ... (imports)
+
+
+def notify_other_instructors_of_positioning(resource: Resource, request, positioned_collection) -> None:
+    """
+    Notifies instructors who have not yet positioned their collection for a given resource.
+    It excludes:
+    - The user who performed the action.
+    - Any instructor who has already positioned their collection for this resource.
+    """
+    acting_user = request.user
+
+    unpositioned_library_ids = resource.collections.filter(position__isnull=True).values_list("library_id", flat=True)
+
+    instructors_to_notify = (
+        UserRole.objects.filter(
+            project=resource.project,
+            role=Role.INSTRUCTOR,
+            library_id__in=unpositioned_library_ids,
+        )
+        .select_related("user")
+        .distinct()
+    )
+
+    for instructor_role in instructors_to_notify:
+        if instructor_role.user == acting_user:  # double-check that the user is not already positioned.
+            continue
+
+        send_collection_positioned_email(
+            email=instructor_role.user.email,
+            request=request,
+            resource=resource,
+            positioned_collection=positioned_collection,
         )

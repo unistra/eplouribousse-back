@@ -235,3 +235,41 @@ def send_arbitration_notification_email(
         fail_silently=False,
         message=email_content,
     )
+
+
+def send_collection_positioned_email(
+    email: str,
+    request: Request,
+    resource: Resource,
+    positioned_collection,
+) -> None:
+    """
+    Notifies instructors that have not yet positionned their collections for a resource,
+    that another collection for the same resource has been positioned.
+    This message is sent only if at least one collection has not been positioned yet.
+    """
+    front_domain = get_front_domain(request)
+    project = resource.project
+    tenant = request.tenant
+    project_url = f"{front_domain}/projects/{project.id}"
+
+    email_content = render_to_string(
+        "emails/notify_positioning.txt",
+        {
+            "library_code": positioned_collection.library.code,
+            "project_url": project_url,
+        },
+    )
+
+    subject = (
+        f"eplouribousse | {tenant.name} | {project.name} | "
+        f"{positioned_collection.library.code} | {resource.code} | positioning"
+    )
+
+    send_mail(
+        subject=subject,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+        message=email_content,
+    )

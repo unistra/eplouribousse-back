@@ -14,7 +14,10 @@ from epl.apps.project.models.comment import Comment
 from epl.apps.project.permissions.collection import CollectionPermission
 from epl.libs.csv_import import handle_import
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
-from epl.services.project.notifications import notify_instructors_of_arbitration
+from epl.services.project.notifications import (
+    notify_instructors_of_arbitration,
+    notify_other_instructors_of_positioning,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -199,6 +202,12 @@ class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
 
         if resource.arbitration in [Arbitration.ONE, Arbitration.ZERO]:
             notify_instructors_of_arbitration(resource, self.context["request"])
+
+        # si au moins une autre collection n'a pas encore été positionnée, on envoie le message de positionnement
+        if any(c.position is None for c in collections):
+            notify_other_instructors_of_positioning(
+                resource=resource, request=self.context["request"], positioned_collection=collection
+            )
 
         self.move_to_instruction_if_possible(collections, resource)
 
