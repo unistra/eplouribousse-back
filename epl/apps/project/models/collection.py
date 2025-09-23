@@ -129,7 +129,10 @@ class Collection(models.Model):
     )
     comments = GenericRelation(Comment)
 
-    _extended_permissions = ["position"]
+    _extended_permissions = [
+        "position",
+        "finish_instruction_turn",
+    ]
 
     class Meta:
         verbose_name = _("Collection")

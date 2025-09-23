@@ -7,6 +7,8 @@ from django.db import transaction
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
+from sentry_sdk import set_tag
 
 from epl.apps.project.models import Collection, Library, Project, Resource, ResourceStatus
 from epl.apps.project.models.collection import Arbitration
@@ -294,3 +296,60 @@ class CollectionPositioningSerializer(AclSerializerMixin, serializers.ModelSeria
         if comment:
             return PositioningCommentSerializer(comment).data
         return None
+
+
+class FinishInstructionTurnSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Collection
+        fields = [
+            "id",
+        ]
+
+    def save(self):
+        collection = self.instance
+        resource = collection.resource
+        library_id = collection.library_id
+
+        if resource.status == ResourceStatus.INSTRUCTION_BOUND:
+            cycle = "bound_copies"
+        elif resource.status == ResourceStatus.INSTRUCTION_UNBOUND:
+            cycle = "unbound_copies"
+        else:
+            raise serializers.ValidationError(_("Resource is not in an instruction phase"))
+
+        turns = resource.instruction_turns.get(cycle, [])
+        try:
+            turn = turns.pop(0)
+        except IndexError:
+            set_tag("project", str(resource.projet.id))
+            set_tag("collection", str(collection.id))
+            set_tag("resource", str(resource.id))
+            logger.error("No more turns left but finish_instruction_turn was called")
+            turn = None
+
+        if not isinstance(turn, dict):
+            set_tag("project", str(resource.projet.id))
+            set_tag("collection", str(collection.id))
+            set_tag("resource", str(resource.id))
+            logger.error("Instruction turn should be a dict, got: %s", type(turn))
+            raise serializers.ValidationError(_("Invalid turn data"))
+
+        if str(turn.get("library", "")) != str(library_id) or turn["collection"] != str(collection.id):
+            raise PermissionDenied()
+
+        # All seems OK
+        if len(turns):
+            # There is a next turn
+            resource.instruction_turns[cycle] = turns.copy()
+            resource.save(update_fields=["instruction_turns"])
+            # TODO email notification
+        else:
+            # No next turn, move to control
+            resource.status = (
+                ResourceStatus.CONTROL_BOUND if cycle == "bound_copies" else ResourceStatus.CONTROL_UNBOUND
+            )
+            resource.instruction_turns[cycle] = []
+            resource.save(update_fields=["instruction_turns", "status"])
+            # TODO email notification
+
+        return collection

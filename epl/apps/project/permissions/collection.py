@@ -25,6 +25,7 @@ class CollectionPermission(permissions.BasePermission):
                 | "exclude"
                 | "comment_positioning"
                 | "position"
+                | "finish_instruction_turn"
             ):
                 return bool(request.user and self.user_has_permission(view.action, request.user, obj))
 
@@ -34,7 +35,13 @@ class CollectionPermission(permissions.BasePermission):
     def user_has_permission(action: str, user: User, obj: Collection) -> bool:
         match action:
             case "position":
-                return user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)
+                return bool(
+                    user and user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)
+                )
+            case "finish_instruction_turn":
+                return bool(
+                    user and user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)
+                )
             case "comment_positioning":
                 return bool(
                     user and user.is_authenticated and user.is_instructor(project=obj.project, library=obj.library)

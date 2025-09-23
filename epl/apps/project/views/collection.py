@@ -12,6 +12,7 @@ from epl.apps.project.permissions.collection import CollectionPermission
 from epl.apps.project.serializers.collection import (
     CollectionSerializer,
     ExclusionSerializer,
+    FinishInstructionTurnSerializer,
     ImportSerializer,
     PositioningCommentSerializer,
     PositionSerializer,
@@ -227,6 +228,34 @@ class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, Generic
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(ExclusionSerializer(collection).data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        tags=[
+            "collection",
+            "instruction",
+        ],
+        summary="Mark the instruction turn as finished for a collection",
+        request=None,
+        responses={
+            status.HTTP_200_OK: FinishInstructionTurnSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_403_FORBIDDEN: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_404_NOT_FOUND: {"type": "object", "properties": {"detail": {"type": "string"}}},
+        },
+    )
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="finish_turn",
+        serializer_class=FinishInstructionTurnSerializer,
+    )
+    def finish_instruction_turn(self, request, pk=None):
+        collection = self.get_object()
+        serializer = self.get_serializer(collection, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        _collection = serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
         tags=["collection"],
