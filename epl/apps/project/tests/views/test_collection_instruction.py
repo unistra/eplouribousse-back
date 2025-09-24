@@ -240,3 +240,66 @@ class SendNotificationToInstruct(TestCase):
 
         self.assertEqual(len(instruction_emails), 1)
         self.assertEqual(actual_recipients, expected_recipients)
+
+    def test_no_instruction_notification_for_excluded_collection(self):
+        """
+        Check that no notification is sent to instructors for excluded collections.
+        """
+        library_3 = LibraryFactory()
+        instructor_3 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=library_3)
+        collection_3 = CollectionFactory(resource=self.resource, library=library_3, project=self.project)
+
+        # Instructor 1 positions its collection in position 1.
+        self.collection_1.position = 1
+        self.collection_1.save()
+
+        # Instructor 2 excludes its collection.
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_2.id}),
+            data={"exclusion_reason": "Other"},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.collection_2.refresh_from_db()
+        self.assertTrue(self.collection_2.is_excluded)
+
+        mail.outbox = []
+
+        # Instructor 3 positions its collection in position 2.
+        # This should trigger instruction
+        self.patch(
+            reverse("collection-position", kwargs={"pk": collection_3.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=instructor_3,
+        )
+        self.resource.refresh_from_db()
+
+        self.assertEqual(self.resource.status, ResourceStatus.INSTRUCTION_BOUND)
+
+        # Turns list should contain 2 collections (1 and 3)
+        turns = self.resource.instruction_turns["bound_copies"]["turns"]
+        self.assertEqual(len(turns), 2)
+        turn_collection_ids = [turn["collection"] for turn in turns]
+        self.assertNotIn(str(self.collection_2.id), turn_collection_ids)
+
+        # Check turns order: 1 then 3
+        self.assertEqual(turn_collection_ids[0], str(self.collection_1.id))
+        self.assertEqual(turn_collection_ids[1], str(collection_3.id))
+
+        # Only 1 email should be sent: the one for instructor 1.
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.instructor_1.email])
+
+        mail.outbox = []
+
+        # instructor 1 finishes his turn
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_1.id}),
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+
+        # Only 1 email should be sent: the one for instructor 3.
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [instructor_3.email])
