@@ -1,9 +1,10 @@
 from epl.apps.project.models import Project, Resource, Role, UserRole
-from epl.apps.project.models.collection import Arbitration
+from epl.apps.project.models.collection import Arbitration, Collection
 from epl.apps.user.models import User
 from epl.services.user.email import (
     send_arbitration_notification_email,
     send_collection_positioned_email,
+    send_instruction_turn_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
@@ -142,9 +143,6 @@ def notify_instructors_of_arbitration(resource: Resource, request):
         )
 
 
-# ... (imports)
-
-
 def notify_other_instructors_of_positioning(resource: Resource, request, positioned_collection) -> None:
     """
     Notifies instructors who have not yet positioned their collection for a given resource.
@@ -175,4 +173,27 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
             request=request,
             resource=resource,
             positioned_collection=positioned_collection,
+        )
+
+
+def notify_instructors_of_instruction_turn(resource: Resource, collection: Collection, request):
+    """
+    Notifies the instructors of a library that it is their turn to instruct.
+    """
+    project = resource.project
+    library = collection.library
+
+    # Find the instructors of the collection that has to be instructed.
+    instructors_to_notify = (
+        UserRole.objects.filter(project=project, role=Role.INSTRUCTOR, library=library)
+        .select_related("user")
+        .distinct()
+    )
+
+    for instructor_to_notify in instructors_to_notify:
+        send_instruction_turn_email(
+            email=instructor_to_notify.user.email,
+            request=request,
+            resource=resource,
+            library_code=library.code,
         )

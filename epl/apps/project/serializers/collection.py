@@ -18,6 +18,7 @@ from epl.libs.csv_import import handle_import
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
     notify_instructors_of_arbitration,
+    notify_instructors_of_instruction_turn,
     notify_other_instructors_of_positioning,
 )
 
@@ -166,6 +167,12 @@ class MoveToInstructionMixin:
             resource.instruction_turns["bound_copies"]["turns"] = turns.copy()
             resource.instruction_turns["unbound_copies"]["turns"] = turns.copy()
             resource.save(update_fields=["status", "instruction_turns"])
+
+            # Send email to instructors of the first collection to be instructed
+            if turns:
+                collection_to_instruct_id = turns[0]["collection"]
+                collection_to_instruct = Collection.objects.get(pk=collection_to_instruct_id)
+                notify_instructors_of_instruction_turn(resource, collection_to_instruct, self.context["request"])
 
 
 class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
@@ -351,7 +358,11 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
             # There is a next turn
             resource.instruction_turns[cycle] = turns.copy()
             resource.save(update_fields=["instruction_turns"])
-            # TODO email notification
+
+            next_collection_id = turns["turns"][0]["collection"]
+            next_collection = Collection.objects.get(pk=next_collection_id)
+            notify_instructors_of_instruction_turn(resource, next_collection, self.context["request"])
+
         else:
             # No next turn, move to control
             resource.status = (

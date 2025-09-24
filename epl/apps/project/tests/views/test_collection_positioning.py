@@ -515,12 +515,12 @@ class PositioningNotificationTest(TestCase):
         # instructors 2 and 3 should receive an email
         self.assertEqual(len(mail.outbox), 2)
         expected_string_in_subject = str(_("positioning"))
-        expected_recipients = {self.instructor_2.email, self.instructor_3.email}
+        expected_recipients = [self.instructor_2.email, self.instructor_3.email]
 
         positioning_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
         self.assertEqual(len(positioning_emails), 2)
 
-        actual_recipients = {email.to[0] for email in positioning_emails}
+        actual_recipients = [email.to[0] for email in positioning_emails]
         self.assertEqual(actual_recipients, expected_recipients)
 
     def test_positioning_sends_notification_even_when_arbitration_1(self):
@@ -545,10 +545,10 @@ class PositioningNotificationTest(TestCase):
         self.assertEqual(self.collection_3.position, None)
 
         # only instructor_3 should receive a positioning email
-        expected_recipients = {self.instructor_3.email}
-        expected_string_in_subject = str(_("positioning"))
+        expected_recipients = [self.instructor_3.email]
+        expected_string_in_subject = "positioning"
         positioning_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
-        actual_recipients = {email.to[0] for email in positioning_emails}
+        actual_recipients = [email.to[0] for email in positioning_emails]
 
         self.assertEqual(len(positioning_emails), 1)
         self.assertEqual(actual_recipients, expected_recipients)

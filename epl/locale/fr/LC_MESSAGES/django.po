@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-22 15:45+0200\n"
+"POT-Creation-Date: 2025-09-24 14:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,13 +20,13 @@ msgstr ""
 
 #: epl/apps/project/filters/collection.py:11
 #: epl/apps/project/filters/resource.py:12
-#: epl/apps/project/views/collection.py:73
+#: epl/apps/project/views/collection.py:74
 msgid "Project ID to which the collection belongs"
 msgstr "ID du projet auquel la collection appartient"
 
 #: epl/apps/project/filters/collection.py:13
 #: epl/apps/project/filters/resource.py:14
-#: epl/apps/project/views/collection.py:68
+#: epl/apps/project/views/collection.py:69
 msgid "Library ID to which the collection belongs"
 msgstr "ID de la bibliothèque à laquelle appartient la collection"
 
@@ -231,7 +231,7 @@ msgid "Positioning rank of a collection"
 msgstr "Positionnement du rang d'une collection"
 
 #: epl/apps/project/models/collection.py:122
-#: epl/apps/project/serializers/collection.py:213
+#: epl/apps/project/serializers/collection.py:231
 msgid "Reason for excluding the collection from deduplication"
 msgstr "Raison de l'exclusion de la collection de la déduplication"
 
@@ -243,11 +243,11 @@ msgstr "Est la collection résultante"
 msgid "The collection is the result of a deduplication process"
 msgstr "La collection est le résultat d'une opération de déduplication"
 
-#: epl/apps/project/models/collection.py:135
+#: epl/apps/project/models/collection.py:138
 msgid "Collection"
 msgstr "Collection"
 
-#: epl/apps/project/models/collection.py:136
+#: epl/apps/project/models/collection.py:139
 msgid "Collections"
 msgstr "Collections"
 
@@ -391,62 +391,70 @@ msgstr "Segment de collection"
 msgid "Collection segments"
 msgstr "Segments de collection"
 
-#: epl/apps/project/serializers/collection.py:30
+#: epl/apps/project/serializers/collection.py:36
 msgid "Library to which the collection belongs"
 msgstr "Bibliothèque à laquelle appartient la collection"
 
-#: epl/apps/project/serializers/collection.py:35
+#: epl/apps/project/serializers/collection.py:41
 msgid "Project to which the collection belongs"
 msgstr "Projet auquel appartient la collection"
 
-#: epl/apps/project/serializers/collection.py:61
+#: epl/apps/project/serializers/collection.py:67
 msgid "CSV file to be imported."
 msgstr "Fichier CSV à importer."
 
-#: epl/apps/project/serializers/collection.py:62
+#: epl/apps/project/serializers/collection.py:68
 msgid "Library ID to which the collection belongs."
 msgstr "ID de la bibliothèque à laquelle appartient la collection."
 
-#: epl/apps/project/serializers/collection.py:63
+#: epl/apps/project/serializers/collection.py:69
 msgid "Project ID to which the collection belongs."
 msgstr "ID du projet auquel la collection appartient."
 
-#: epl/apps/project/serializers/collection.py:123
+#: epl/apps/project/serializers/collection.py:129
 #, python-format
 msgid "Column(s) %(column)s missing in the CSV file."
 msgstr "Colonne(s) %(column)s manquantes dans le fichier CSV."
 
-#: epl/apps/project/serializers/collection.py:132
+#: epl/apps/project/serializers/collection.py:138
 #, python-format
 msgid "Library with ID %(id)s does not exist."
 msgstr "La bibliothèque avec l'ID %(id)s n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:140
+#: epl/apps/project/serializers/collection.py:146
 #, python-format
 msgid "Project with ID %(id)s does not exist."
 msgstr "Le projet avec l'ID %(id)s n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:147
+#: epl/apps/project/serializers/collection.py:153
 msgid "An alternative storage site can't receive a collection"
 msgstr "Un lieu de conservation alternatif ne peut pas recevoir de collection"
 
-#: epl/apps/project/serializers/collection.py:167
+#: epl/apps/project/serializers/collection.py:179
 msgid "Position (rank) between 1 and 4"
 msgstr "Position (rang) entre 1 et 4"
 
-#: epl/apps/project/serializers/collection.py:226
+#: epl/apps/project/serializers/collection.py:244
 msgid "Invalid exclusion reason."
 msgstr "Motif d'exclusion non valide."
 
-#: epl/apps/project/serializers/collection.py:264
-#: epl/apps/project/serializers/collection.py:293
-#: epl/apps/project/views/collection.py:253
-#: epl/apps/project/views/collection.py:262
+#: epl/apps/project/serializers/collection.py:282
+#: epl/apps/project/serializers/collection.py:311
+#: epl/apps/project/views/collection.py:282
+#: epl/apps/project/views/collection.py:291
 msgid "Positioning comment"
 msgstr "Message de positionnement"
 
+#: epl/apps/project/serializers/collection.py:334
+msgid "Resource is not in an instruction phase"
+msgstr "La ressource n'est pas en phase d'instruction"
+
+#: epl/apps/project/serializers/collection.py:351
+msgid "Invalid turn data"
+msgstr "Données de tour non valides"
+
 #: epl/apps/project/serializers/common.py:6
-#: epl/apps/project/serializers/project.py:203
+#: epl/apps/project/serializers/project.py:224
 msgid "Project status"
 msgstr "Statut du projet"
 
@@ -454,61 +462,67 @@ msgstr "Statut du projet"
 msgid "Label"
 msgstr "Label"
 
-#: epl/apps/project/serializers/project.py:60 epl/apps/user/serializers.py:192
+#: epl/apps/project/serializers/project.py:38
+#: epl/apps/project/serializers/project.py:52
+#: epl/apps/project/serializers/project.py:198
+msgid "Project settings"
+msgstr "Paramètres du projet"
+
+#: epl/apps/project/serializers/project.py:76 epl/apps/user/serializers.py:192
 msgid "User's roles in this project"
 msgstr "Rôles de l'utilisateur dans ce projet"
 
-#: epl/apps/project/serializers/project.py:74
+#: epl/apps/project/serializers/project.py:90
 msgid "Role label"
 msgstr "Étiquette du rôle"
 
-#: epl/apps/project/serializers/project.py:94
+#: epl/apps/project/serializers/project.py:110
 msgid "Library should not be provided for this role."
 msgstr "La bibliothèque ne doit être renseignée pour ce rôle"
 
-#: epl/apps/project/serializers/project.py:97
-#: epl/apps/project/serializers/project.py:325
+#: epl/apps/project/serializers/project.py:113
+#: epl/apps/project/serializers/project.py:346
 msgid "Library is not attached to the project."
 msgstr "La bibliothèque n'est pas rattachée au projet"
 
-#: epl/apps/project/serializers/project.py:105 epl/apps/user/serializers.py:226
+#: epl/apps/project/serializers/project.py:121 epl/apps/user/serializers.py:226
 msgid "Project does not exist."
 msgstr "Le projet n'existe pas."
 
-#: epl/apps/project/serializers/project.py:109
+#: epl/apps/project/serializers/project.py:125
 msgid "Library must be provided for instructor role."
 msgstr "La bibliothèque doit être fournie pour le rôle d'instructeur."
 
-#: epl/apps/project/serializers/project.py:124
+#: epl/apps/project/serializers/project.py:140
 msgid "This invitation already exists."
 msgstr "Cette invitation existe déjà."
 
-#: epl/apps/project/serializers/project.py:146
+#: epl/apps/project/serializers/project.py:162
 msgid "Invitation not found."
 msgstr "Invitation non trouvée"
 
-#: epl/apps/project/serializers/project.py:260
+#: epl/apps/project/serializers/project.py:281
 msgid "User id"
 msgstr "Id de l'utilisateur"
 
-#: epl/apps/project/serializers/project.py:261
+#: epl/apps/project/serializers/project.py:282
 msgid "Library id"
 msgstr "Id de la Bibliothèque"
 
-#: epl/apps/project/serializers/project.py:267
+#: epl/apps/project/serializers/project.py:288
 msgid "User does not exist."
 msgstr "L'utilisateur n'existe pas."
 
-#: epl/apps/project/serializers/project.py:274
-#: epl/apps/project/serializers/project.py:320 epl/apps/user/serializers.py:231
+#: epl/apps/project/serializers/project.py:295
+#: epl/apps/project/serializers/project.py:341 epl/apps/user/serializers.py:231
 msgid "Library does not exist."
 msgstr "La bibliothèque n'existe pas."
 
-#: epl/apps/project/serializers/project.py:302
+#: epl/apps/project/serializers/project.py:323
 msgid "Role not found for this user in the project."
 msgstr "Rôle non trouvé pour cet utilisateur dans le projet."
 
-#: epl/apps/project/serializers/project.py:354
+#: epl/apps/project/serializers/project.py:375
 msgid "Exclusion reason to add or delete from the project"
 msgstr "Motifs d'exclusion à ajouter ou à supprimer du projet"
 
@@ -541,25 +555,19 @@ msgid "Segment is already at the bottom of the collection"
 msgstr "Le segment est déjà en bas de la collection"
 
 #: epl/apps/project/tests/views/test_collection.py:311
-#: epl/apps/project/views/collection.py:178
+#: epl/apps/project/views/collection.py:179
 msgid "Collections successfully deleted for this library"
 msgstr "Collections supprimées avec succès pour cette bibliothèque"
 
 #: epl/apps/project/tests/views/test_collection.py:324
-#: epl/apps/project/views/collection.py:180
+#: epl/apps/project/views/collection.py:181
 msgid "No collections found for this library in this project"
 msgstr "Aucune collection trouvée pour cette bibliothèque dans ce projet"
 
-#: epl/apps/project/tests/views/test_collection_positioning.py:305
-#: epl/apps/project/tests/views/test_collection_positioning.py:352
-msgid "The repositioning of your collection for the resource"
-msgstr "Le repositionnement de votre collection pour la ressource"
-
-#: epl/apps/project/tests/views/test_collection_positioning.py:310
-#: epl/apps/project/tests/views/test_collection_positioning.py:357
-#: epl/services/user/email.py:229
-msgid "arbitration"
-msgstr "Arbitrage"
+#: epl/apps/project/tests/views/test_collection_positioning.py:517
+#: epl/services/user/email.py:264
+msgid "positioning"
+msgstr "Positionnement"
 
 #: epl/apps/project/tests/views/test_project_status.py:127
 msgid "creating"
@@ -590,15 +598,15 @@ msgid ""
 "As an administrator, you must, in consultation with your co-administrators"
 msgstr ""
 
-#: epl/apps/project/views/collection.py:26
+#: epl/apps/project/views/collection.py:27
 msgid "List collections"
 msgstr "Liste des collections"
 
-#: epl/apps/project/views/collection.py:35
+#: epl/apps/project/views/collection.py:36
 msgid "Delete a collection"
 msgstr "Supprimer une collection"
 
-#: epl/apps/project/views/collection.py:36
+#: epl/apps/project/views/collection.py:37
 msgid ""
 "Delete a collection permanently. This action requires project creator "
 "permissions."
@@ -606,7 +614,7 @@ msgstr ""
 "Supprimer définitivement une collection. Cette action nécessite d'être "
 "créateur du projet "
 
-#: epl/apps/project/views/collection.py:85
+#: epl/apps/project/views/collection.py:86
 msgid ""
 "Key represents the number of duplicates (1=unique, 2=duplicate, "
 "3=triplicate, etc), value is the count"
@@ -614,11 +622,11 @@ msgstr ""
 "La clé représente le nombre de doublons (1=unique, 2=doublon, 3=triplon, "
 "etc.), la valeur est le nombre"
 
-#: epl/apps/project/views/collection.py:116
+#: epl/apps/project/views/collection.py:117
 msgid "Bulk delete collections by library and project"
 msgstr "Suppression en lot de collections par bibliothèque et par projet"
 
-#: epl/apps/project/views/collection.py:118
+#: epl/apps/project/views/collection.py:119
 msgid ""
 "Delete multiple collections belonging to a specific library within a "
 "specific project. Collections of the same library in other projects are not "
@@ -628,27 +636,27 @@ msgstr ""
 "sein d'un projet spécifique. Les collections de la même bibliothèque dans "
 "d'autres projets ne sont pas affectées."
 
-#: epl/apps/project/views/collection.py:125
+#: epl/apps/project/views/collection.py:126
 msgid "Library ID whose collections should be deleted"
 msgstr "ID de la bibliothèque dont les collections doivent être supprimées"
 
-#: epl/apps/project/views/collection.py:132
+#: epl/apps/project/views/collection.py:133
 msgid "Project ID to scope the deletion to"
 msgstr "ID du projet auquel restreindre la suppression"
 
-#: epl/apps/project/views/collection.py:140
+#: epl/apps/project/views/collection.py:141
 msgid "Number of collections deleted"
 msgstr "Nombre de collections supprimées"
 
-#: epl/apps/project/views/collection.py:141
+#: epl/apps/project/views/collection.py:142
 msgid "Success message"
 msgstr "Message de succès"
 
-#: epl/apps/project/views/collection.py:167
+#: epl/apps/project/views/collection.py:168
 msgid "library_id parameter is required"
 msgstr "Le paramètre library_id est requis"
 
-#: epl/apps/project/views/collection.py:170
+#: epl/apps/project/views/collection.py:171
 msgid "project_id parameter is required"
 msgstr "Le paramètre project_id est requis"
 
@@ -1077,6 +1085,14 @@ msgstr "à"
 msgid "Launch of the {project_name} project"
 msgstr "Lancement du projet {project_name}"
 
+#: epl/services/user/email.py:229
+msgid "arbitration"
+msgstr "arbitrage"
+
+#: epl/services/user/email.py:289
+msgid "instruction"
+msgstr "instruction"
+
 #: epl/templates/403.html:6
 msgid "You are not allowed to see this page"
 msgstr "Vous n'êtes pas autorisé à accéder à cette page"
@@ -1098,6 +1114,8 @@ msgid "For the record, your username is:"
 msgstr "Pour mémoire, votre identifiant est : "
 
 #: epl/templates/emails/confirm_account_creation.txt:7
+#: epl/templates/emails/notify_instruction_turn.txt:5
+#: epl/templates/emails/notify_positioning.txt:6
 msgid "This is an automated message, please do not reply."
 msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
@@ -1210,6 +1228,15 @@ msgstr ""
 "Le repositionnement de votre collection pour la ressource "
 "\"%(resource_title)s\" may resolve a type 0 arbitration case:"
 
+#: epl/templates/emails/notify_instruction_turn.txt:3
+#, python-format
+msgid ""
+"Your turn has come to instruct the resulting collection for the resource "
+"%(resource_title)s: %(project_url)s"
+msgstr ""
+"Votre tour est venu d'instruire la collection résultante pour la ressource "
+"%(resource_title)s : %(project_url)s"
+
 #: epl/templates/emails/password_changed.txt:5
 #: epl/tests/services/email/test_user_email.py:38
 msgid ""
@@ -1303,6 +1330,9 @@ msgstr ""
 #: epl/validators.py:45
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
+
+#~ msgid "The repositioning of your collection for the resource"
+#~ msgstr "Le repositionnement de votre collection pour la ressource"
 
 #~ msgid "Invitation"
 #~ msgstr "Invitation"
