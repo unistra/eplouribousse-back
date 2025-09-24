@@ -21,7 +21,7 @@ class TestUserInfosView(TestCase):
         """
         Test the successful retrieval of user information.
         """
-        url = reverse("user-profile")
+        url = reverse("user_profile")
         response = self.get(url, user=self.user)
 
         self.response_ok(response)
