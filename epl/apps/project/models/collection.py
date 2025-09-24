@@ -67,7 +67,6 @@ class Resource(models.Model):
         return f"{self.code} - {self.project_id}"
 
     def save(self, *args, **kwargs):
-        # del self.next_turn
         return super().save(*args, **kwargs)
 
     @property
