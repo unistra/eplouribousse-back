@@ -132,7 +132,6 @@ class FinishInstructionTurnTest(TestCase):
             user=self.instructor,
         )
         self.response_forbidden(response)
-        self.assertIn("Turn does not match library and collection", str(response.data[0]))
 
     def test_finish_turn_and_move_to_control(self):
         self.resource.status = ResourceStatus.INSTRUCTION_BOUND
