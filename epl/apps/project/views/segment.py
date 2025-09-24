@@ -10,7 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 from epl.apps.project.models import Resource, ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.permissions.segment import SegmentPermissions
-from epl.apps.project.serializers.segment import SegmentCreateSerializer, SegmentOrderSerializer, SegmentSerializer
+from epl.apps.project.serializers.segment import SegmentOrderSerializer, SegmentSerializer
 from epl.schema_serializers import UnauthorizedSerializer
 
 
@@ -36,9 +36,9 @@ from epl.schema_serializers import UnauthorizedSerializer
     create=extend_schema(
         tags=["segment"],
         summary=_("Create a segment"),
-        request=SegmentCreateSerializer,
+        request=SegmentSerializer,
         responses={
-            status.HTTP_201_CREATED: SegmentCreateSerializer,
+            status.HTTP_201_CREATED: SegmentSerializer,
             status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
@@ -73,11 +73,6 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
 
     def get_segment_type(self, resource: Resource):
         return SegmentType.BOUND if resource.status <= ResourceStatus.INSTRUCTION_BOUND else SegmentType.UNBOUND
-
-    def get_serializer_class(self):
-        if self.action == "create":
-            return SegmentCreateSerializer
-        return SegmentSerializer
 
     def get_queryset(self):
         if self.action != "list":
