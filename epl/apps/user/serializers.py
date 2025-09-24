@@ -171,6 +171,7 @@ class UserSerializer(ModelSerializer):
             "email",
             "can_authenticate_locally",
             "is_project_creator",
+            "is_superuser",
             "settings",
             "projects",
         ]
@@ -194,7 +195,7 @@ class ProjectUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "roles"]
+        fields = ["id", "username", "email", "first_name", "last_name", "roles", "is_superuser"]
 
 
 class NestedUserSerializer(serializers.ModelSerializer):
