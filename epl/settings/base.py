@@ -243,7 +243,6 @@ SHARED_APPS = [
     # 'django.contrib.admindocs',
     # Shared third party apps
     "django_extensions",
-    "django_watchfiles",
     "rest_framework",
     "django_cas",
     "djangosaml2",

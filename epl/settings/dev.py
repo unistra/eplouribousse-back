@@ -70,6 +70,7 @@ for logger in LOGGING["loggers"]:
 INSTALLED_APPS += [
     "coverage",
     "debug_toolbar",
+    "django_watchfiles",
 ]
 
 
