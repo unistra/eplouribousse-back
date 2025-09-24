@@ -1,3 +1,4 @@
+from django.core import mail
 from django_tenants.urlresolvers import reverse
 from parameterized import parameterized
 
@@ -175,3 +176,67 @@ class FinishInstructionTurnTest(TestCase):
                 },
             },
         )
+
+
+class SendNotificationToInstruct(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.project = ProjectFactory()
+        self.library_1 = LibraryFactory()
+        self.instructor_1 = UserWithRoleFactory(
+            role=Role.INSTRUCTOR,
+            project=self.project,
+            library=self.library_1,
+        )
+        self.resource = ResourceFactory(project=self.project)
+        self.collection_1 = CollectionFactory(resource=self.resource, library=self.library_1, project=self.project)
+
+        self.library_2 = LibraryFactory()
+        self.instructor_2 = UserWithRoleFactory(
+            role=Role.INSTRUCTOR,
+            project=self.project,
+            library=self.library_2,
+        )
+        self.collection_2 = CollectionFactory(resource=self.resource, library=self.library_2, project=self.project)
+
+    def test_send_notification_to_instruct(self):
+        self.collection_1.position = 1
+        self.collection_1.save()
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+
+        self.collection_2.refresh_from_db()
+        self.resource.refresh_from_db()
+
+        # instructor_1 should receive an invitation to instruct
+        expected_recipients = [self.instructor_1.email]
+        expected_string_in_subject = "instruction"
+        instruction_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
+        actual_recipients = [email.to[0] for email in instruction_emails]
+
+        self.assertEqual(len(instruction_emails), 1)
+        self.assertEqual(actual_recipients, expected_recipients)
+        mail.outbox = []
+
+        # instructor 1 finishes his turn
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_1.id}),
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.resource.refresh_from_db()
+        self.assertNotIn(self.collection_1.id, self.resource.instruction_turns["bound_copies"]["turns"])
+
+        # instructor_2 should receive an invitation to instruct
+        expected_recipients = [self.instructor_2.email]
+        expected_string_in_subject = "instruction"
+        instruction_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
+        actual_recipients = [email.to[0] for email in instruction_emails]
+
+        self.assertEqual(len(instruction_emails), 1)
+        self.assertEqual(actual_recipients, expected_recipients)

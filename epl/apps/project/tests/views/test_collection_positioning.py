@@ -546,7 +546,7 @@ class PositioningNotificationTest(TestCase):
 
         # only instructor_3 should receive a positioning email
         expected_recipients = {self.instructor_3.email}
-        expected_string_in_subject = str(_("positioning"))
+        expected_string_in_subject = "positioning"
         positioning_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
         actual_recipients = {email.to[0] for email in positioning_emails}
 

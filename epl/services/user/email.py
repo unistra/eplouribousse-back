@@ -261,13 +261,43 @@ def send_collection_positioned_email(
         },
     )
 
-    subject = (
-        f"eplouribousse | {tenant.name} | {project.name} | "
-        f"{positioned_collection.library.code} | {resource.code} | positioning"
-    )
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {positioned_collection.library.code} | {resource.code} | {_('positioning')}"
 
     send_mail(
         subject=subject,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+        message=email_content,
+    )
+
+
+def send_instruction_turn_email(
+    email: str,
+    request: Request,
+    resource: Resource,
+    library_code: str,
+) -> None:
+    """
+    Notifies an instructor that it's their turn to instruct their collection.
+    """
+    front_domain = get_front_domain(request)
+    project = resource.project
+    tenant = request.tenant
+    project_url = f"{front_domain}/project/{project.id}"
+
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('instruction')}"
+
+    email_content = render_to_string(
+        "emails/notify_instruction_turn.txt",
+        {
+            "resource_title": resource.title,
+            "project_url": project_url,
+        },
+    )
+
+    send_mail(
+        subject=str(subject),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
