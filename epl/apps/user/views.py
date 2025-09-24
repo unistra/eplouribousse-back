@@ -206,19 +206,25 @@ def _get_handshake_signer() -> signing.TimestampSigner:
 @extend_schema(
     tags=["user"],
     summary=_("User profile"),
+    request=UserSerializer,
     responses={
         status.HTTP_200_OK: UserSerializer,
         status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
     },
 )
-@api_view(["GET"])
+@api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
     """
-    Retrieve user profile
+    Retrieve or update user profile
     """
     current_user = request.user
-    serializer = UserSerializer(current_user, context={"request": request})
+    if request.method == "PATCH":
+        serializer = UserSerializer(current_user, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    else:
+        serializer = UserSerializer(current_user, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

@@ -175,6 +175,15 @@ class UserSerializer(ModelSerializer):
             "settings",
             "projects",
         ]
+        read_only_fields = [
+            "id",
+            "username",
+            "email",
+            "can_authenticate_locally",
+            "is_project_creator",
+            "is_superuser",
+            "projects",
+        ]
 
     def get_projects(self, user: User):
         """
