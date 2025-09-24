@@ -12,27 +12,6 @@ from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
     acl = AclField(exclude=["retrieve", "update"])
-
-    class Meta:
-        model = Segment
-        fields = [
-            "id",
-            "segment_type",
-            "content",
-            "improvable_elements",
-            "exception",
-            "improved_segment",
-            "collection",
-            "order",
-            "retained",
-            "created_by",
-            "created_at",
-            "acl",
-        ]
-        read_only_fields = ["id", "segment_type", "order", "retained", "created_at", "created_by"]
-
-
-class SegmentCreateSerializer(serializers.ModelSerializer):
     after_segment = serializers.UUIDField(required=False, write_only=True)
 
     class Meta:
@@ -50,8 +29,16 @@ class SegmentCreateSerializer(serializers.ModelSerializer):
             "created_by",
             "created_at",
             "after_segment",
+            "acl",
         ]
-        read_only_fields = ["id", "segment_type", "order", "retained", "created_at", "created_by"]
+        read_only_fields = [
+            "id",
+            "segment_type",
+            "order",
+            "retained",
+            "created_by",
+            "created_at",
+        ]
 
     def create(self, validated_data):
         after_segment_id = validated_data.pop("after_segment", None)
