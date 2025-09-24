@@ -161,7 +161,7 @@ class MoveToInstructionMixin:
             resource.status = ResourceStatus.INSTRUCTION_BOUND
             turns: list[dict[str, str]] = [
                 {"library": str(_collection.library_id), "collection": str(_collection.id)}
-                for _collection in collections.order_by("position")
+                for _collection in collections.filter(position__gt=0).order_by("position")
             ]
             resource.instruction_turns["bound_copies"]["turns"] = turns.copy()
             resource.instruction_turns["unbound_copies"]["turns"] = turns.copy()
