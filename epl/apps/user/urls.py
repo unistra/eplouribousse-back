@@ -20,4 +20,9 @@ urlpatterns += [
     path("invite-handshake/", views.invite_handshake, name="invite_handshake"),
     path("create-account/", views.create_account, name="create_account"),
     path("profile/", views.user_profile, name="user"),
+    path(
+        "user-alert-settings/",
+        views.UserAlertSettingsViewSet.as_view({"get": "retrieve", "put": "update"}),
+        name="user-alert-settings",
+    ),
 ]

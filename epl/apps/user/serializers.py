@@ -403,3 +403,17 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
             return user
         except (IntegrityError, ObjectDoesNotExist) as e:
             raise serializers.ValidationError(str(e))
+
+
+class UserAlertSettingsSerializer(serializers.Serializer):
+    project_id = serializers.UUIDField()
+    alert_type = serializers.CharField()
+    enabled = serializers.BooleanField()
+
+    def update(self, instance, validated_data):
+        alerts = instance.settings.setdefault("alerts", {})
+        project_alerts = alerts.setdefault(str(validated_data["project_id"]), {})
+        project_alerts[validated_data["alert_type"]] = validated_data["enabled"]
+        instance.settings["alerts"] = alerts
+        instance.save(update_fields=["settings"])
+        return instance

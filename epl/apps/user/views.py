@@ -24,6 +24,7 @@ from epl.apps.user.serializers import (
     PasswordChangeSerializer,
     PasswordResetSerializer,
     TokenObtainSerializer,
+    UserAlertSettingsSerializer,
     UserListSerializer,
     UserSerializer,
 )
@@ -381,3 +382,63 @@ def create_account(request: Request) -> Response:
     serializer.save()
 
     return Response({"detail": _("Account created successfully.")}, status=status.HTTP_201_CREATED)
+
+
+@extend_schema_view(
+    retrieve=extend_schema(
+        tags=["user"],
+        summary="Obtenir la préférence d’alerte utilisateur pour un projet",
+        description="Récupère la préférence d’alerte (activée/désactivée) pour un projet et un type d’alerte donnés.",
+        parameters=[
+            OpenApiParameter(
+                name="project_id",
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="UUID du projet",
+            ),
+            OpenApiParameter(
+                name="alert_type",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Type d’alerte",
+            ),
+        ],
+        responses={200: UserAlertSettingsSerializer},
+    ),
+    update=extend_schema(
+        tags=["user"],
+        summary="Mettre à jour la préférence d’alerte utilisateur pour un projet",
+        description="Met à jour la préférence d’alerte (activée/désactivée) pour un projet et un type d’alerte donnés.",
+        request=UserAlertSettingsSerializer,
+        responses={200: UserAlertSettingsSerializer},
+    ),
+)
+class UserAlertSettingsViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserAlertSettingsSerializer
+
+    def get_object(self):
+        return self.request.user
+
+    def retrieve(self, request, *args, **kwargs):
+        project_id = request.query_params.get("project_id")
+        alert_type = request.query_params.get("alert_type")
+        if not project_id or not alert_type:
+            return Response({"detail": "project_id and alert_type are required."}, status=400)
+        alerts = request.user.settings.get("alerts", {})
+        project_alerts = alerts.get(str(project_id), {})
+        enabled = project_alerts.get(alert_type, True)
+        data = {
+            "project_id": project_id,
+            "alert_type": alert_type,
+            "enabled": enabled,
+        }
+        return Response(data)
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.update(request.user, serializer.validated_data)
+        return Response(serializer.data, status=status.HTTP_200_OK)

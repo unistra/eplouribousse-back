@@ -1,12 +1,13 @@
 from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema, extend_schema_view
 from ipware import get_client_ip
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from epl.apps.project.filters.project import ProjectFilter
 from epl.apps.project.models import ActionLog, Project, ProjectStatus, Role, UserRole
@@ -19,6 +20,7 @@ from epl.apps.project.serializers.project import (
     ExclusionReasonSerializer,
     InvitationSerializer,
     LaunchProjectSerializer,
+    ProjectAlertSettingsSerializer,
     ProjectDetailSerializer,
     ProjectLibrarySerializer,
     ProjectSerializer,
@@ -407,4 +409,41 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         ActionLog.log("Project has been launched", actor=request.user, obj=project, ip=get_client_ip(request)[0])
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=["project"],
+    summary="Récupérer ou mettre à jour les alert-settings d’un projet",
+    description="Récupère ou met à jour la configuration des alertes pour chaque type d’alerte sur ce projet. Le champ `alerts` doit être un dictionnaire dont la clé est l’UUID du projet et la valeur un objet avec les types d’alertes.",
+    request=ProjectAlertSettingsSerializer,
+    responses={200: ProjectAlertSettingsSerializer},
+    examples=[
+        OpenApiExample(
+            "Exemple d’alert-settings",
+            value={
+                "alerts": {
+                    "b7e6c2e2-1c2a-4b7a-9e2e-1c2a4b7a9e2e": {"results": False, "positioning": True},
+                    "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6": {"results": True, "positioning": True},
+                }
+            },
+            request_only=False,
+            response_only=True,
+        )
+    ],
+)
+class ProjectAlertSettingsAPIView(APIView):
+    def get_project(self, project_pk):
+        return Project.objects.get(pk=project_pk)
+
+    def get(self, request, project_pk):
+        project = self.get_project(project_pk)
+        alerts = project.settings.get("alerts", {})
+        return Response({"alerts": alerts})
+
+    def put(self, request, project_pk):
+        project = self.get_project(project_pk)
+        serializer = ProjectAlertSettingsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.update(project, serializer.validated_data)
         return Response(serializer.data, status=status.HTTP_200_OK)
