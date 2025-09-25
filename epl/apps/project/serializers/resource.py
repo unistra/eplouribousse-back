@@ -1,17 +1,24 @@
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from epl.apps.project.models import Collection, Resource
+from epl.apps.project.models import Collection, Resource, ResourceStatus
 from epl.apps.project.models.collection import TurnType
 from epl.apps.project.serializers.collection import CollectionPositioningSerializer
 from epl.apps.user.models import User
+from epl.libs.schema import load_json_schema
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
+
+
+@extend_schema_field(load_json_schema("resource_instruction_turns.schema.json"))
+class InstructionTurnsField(serializers.JSONField): ...
 
 
 class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
     acl = AclField()
     count = serializers.IntegerField(read_only=True)
     call_numbers = serializers.CharField(read_only=True)
+    instruction_turns = InstructionTurnsField(read_only=True)
     should_instruct = serializers.SerializerMethodField(
         read_only=True, help_text=_("Indicates if the user should instruct this resource")
     )
@@ -63,3 +70,38 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
 class ResourceWithCollectionsSerializer(serializers.Serializer):
     resource = ResourceSerializer()
     collections = CollectionPositioningSerializer(many=True)
+
+
+class ValidateControlSerializer(serializers.ModelSerializer):
+    validate = serializers.BooleanField(
+        write_only=True, help_text=_("Indicates if the controller validates the instruction phase")
+    )
+    status = serializers.CharField(read_only=True, help_text=_("The new status of the resource after validation"))
+    instruction_turns = InstructionTurnsField(
+        read_only=True, help_text=_("The updated instruction turns of the resource after validation")
+    )
+
+    class Meta:
+        model = Resource
+        fields = [
+            "id",
+            "validate",
+            "status",
+            "instruction_turns",
+        ]
+        read_only_fields = [
+            "id",
+            "status",
+            "instruction_turns",
+        ]
+
+    def save(self, **kwargs) -> Resource:
+        if self.validated_data.get("validate"):
+            # The controller validates the instruction phase
+            if self.instance.status == ResourceStatus.CONTROL_BOUND:
+                self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
+            elif self.instance.status == ResourceStatus.CONTROL_UNBOUND:
+                self.instance.status = ResourceStatus.EDITION
+            self.instance.save(update_fields=["status"])
+
+        return self.instance

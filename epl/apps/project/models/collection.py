@@ -53,7 +53,11 @@ class Resource(models.Model):
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     comments = GenericRelation(Comment)
 
-    _extended_permissions = ["list_statuses", "collections"]
+    _extended_permissions = [
+        "list_statuses",
+        "collections",
+        "validate_control",
+    ]
 
     class Meta:
         verbose_name = _("Resource")
