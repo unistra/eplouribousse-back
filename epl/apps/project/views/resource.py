@@ -132,4 +132,5 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         resource = self.get_object()
         serializer = ValidateControlSerializer(resource, data=request.data, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data)

@@ -73,7 +73,7 @@ class ResourceWithCollectionsSerializer(serializers.Serializer):
 
 
 class ValidateControlSerializer(serializers.ModelSerializer):
-    validate = serializers.BooleanField(
+    validation = serializers.BooleanField(
         write_only=True, help_text=_("Indicates if the controller validates the instruction phase")
     )
     status = serializers.CharField(read_only=True, help_text=_("The new status of the resource after validation"))
@@ -85,7 +85,7 @@ class ValidateControlSerializer(serializers.ModelSerializer):
         model = Resource
         fields = [
             "id",
-            "validate",
+            "validation",
             "status",
             "instruction_turns",
         ]
@@ -95,8 +95,17 @@ class ValidateControlSerializer(serializers.ModelSerializer):
             "instruction_turns",
         ]
 
+    def validate(self, attrs):
+        if self.instance.status not in [ResourceStatus.CONTROL_BOUND, ResourceStatus.CONTROL_UNBOUND]:
+            raise serializers.ValidationError(
+                {
+                    "status": _("The resource is not in control status"),
+                }
+            )
+        return super().validate(attrs)
+
     def save(self, **kwargs) -> Resource:
-        if self.validated_data.get("validate"):
+        if self.validated_data.get("validation"):
             # The controller validates the instruction phase
             if self.instance.status == ResourceStatus.CONTROL_BOUND:
                 self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
