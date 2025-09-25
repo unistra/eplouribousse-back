@@ -1,10 +1,10 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 
-from epl.apps.project.models import Library, Project, ResourceStatus
+from epl.apps.project.models import Library, Project, Resource, ResourceStatus
 
 
 class ResourceFilter(filters.BaseFilterBackend):
@@ -58,8 +58,13 @@ class ResourceFilter(filters.BaseFilterBackend):
         if status == ResourceStatus.POSITIONING:
             # If a Resource is in Instruction or Control positioning status but does
             # not have any segments assigned yet, we consider it can still be positioned.
-            queryset = queryset.filter(
-                Q(collections__library=library) & Q(Q(status=status) | Q(collections__segments__isnull=True))
+            has_segments = Exists(Resource.objects.filter(id=OuterRef("id"), collections__segments__isnull=False))
+
+            queryset = (
+                queryset.filter(collections__library=library)
+                .annotate(has_segments=has_segments)
+                .filter(Q(status=status) | Q(has_segments=False))
+                .distinct()
             )
 
         elif status == ResourceStatus.INSTRUCTION_BOUND:
