@@ -99,7 +99,7 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
 
         instance.delete()
 
-        segments_to_update = Segment.objects.filter(collection=collection).order_by("order")
+        segments_to_update = Segment.objects.filter(collection__resource=collection.resource).order_by("order")
 
         for index, segment in enumerate(segments_to_update):
             new_order = index + 1

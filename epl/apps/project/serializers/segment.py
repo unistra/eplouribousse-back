@@ -50,11 +50,9 @@ class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
                 try:
                     after_segment = Segment.objects.get(id=after_segment_id)
 
-                    if after_segment.collection != validated_data["collection"]:
-                        raise ValidationError(_("Referenced segment belongs to a different collection"))
                     new_order = after_segment.order + 1
 
-                    Segment.objects.filter(collection=validated_data["collection"], order__gte=new_order).update(
+                    Segment.objects.filter(collection__resource=resource, order__gte=new_order).update(
                         order=F("order") + 1
                     )
                 except Segment.DoesNotExist:
