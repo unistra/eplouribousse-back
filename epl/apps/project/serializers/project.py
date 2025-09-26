@@ -401,10 +401,15 @@ class ExclusionReasonSerializer(serializers.Serializer):
 
 class ProjectAlertSettingsSerializer(serializers.Serializer):
     alerts = serializers.DictField(
-        child=serializers.BooleanField(), help_text="Key = alert type, value = alert activated or not (True/False)"
+        child=serializers.BooleanField(),
+        help_text="Key = alert type, value = alert activated or not (True/False)",
+        source="settings.alerts",
+        required=False,
+        default=dict,
     )
 
     def update(self, instance: Project, validated_data: dict) -> Project:
-        instance.settings["alerts"] = validated_data["alerts"]
+        alerts = validated_data.get("settings", {}).get("alerts", {})
+        instance.settings["alerts"] = alerts
         instance.save(update_fields=["settings"])
         return instance
