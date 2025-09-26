@@ -1,7 +1,8 @@
 from django.contrib.postgres.aggregates import StringAgg
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import filters
+from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.permissions import AllowAny
@@ -12,7 +13,11 @@ from epl.apps.project.filters.resource import ResourceFilter
 from epl.apps.project.models import Resource, ResourceStatus
 from epl.apps.project.permissions.resource import ResourcePermission
 from epl.apps.project.serializers.common import StatusListSerializer
-from epl.apps.project.serializers.resource import ResourceSerializer, ResourceWithCollectionsSerializer
+from epl.apps.project.serializers.resource import (
+    ResourceSerializer,
+    ResourceWithCollectionsSerializer,
+    ValidateControlSerializer,
+)
 from epl.libs.pagination import PageNumberPagination
 
 
@@ -108,4 +113,24 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
             },
             context=self.get_serializer_context(),
         )
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Controller validates the instruction of the resource"),
+        request=ValidateControlSerializer(),
+        responses={
+            status.HTTP_200_OK: ValidateControlSerializer(),
+        },
+        tags=["instruction", "resource"],
+    )
+    @action(detail=True, methods=["post"], url_path="control")
+    def validate_control(self, request, pk=None):
+        """
+        Controller validates the current instruction phase (bound copies or unbound copies)
+        for the resource
+        """
+        resource = self.get_object()
+        serializer = ValidateControlSerializer(resource, data=request.data, context=self.get_serializer_context())
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data)

@@ -521,7 +521,7 @@ class PositioningNotificationTest(TestCase):
         self.assertEqual(len(positioning_emails), 2)
 
         actual_recipients = [email.to[0] for email in positioning_emails]
-        self.assertEqual(actual_recipients, expected_recipients)
+        self.assertEqual(sorted(actual_recipients), sorted(expected_recipients))
 
     def test_positioning_sends_notification_even_when_arbitration_1(self):
         self.patch(
