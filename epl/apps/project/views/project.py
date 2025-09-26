@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from epl.apps.project.filters.project import ProjectFilter
 from epl.apps.project.models import ActionLog, Project, ProjectStatus, Role, UserRole
-from epl.apps.project.permissions.project import ProjectPermissions
+from epl.apps.project.permissions.project import ProjectAlertSettingsPermissions, ProjectPermissions
 from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
@@ -433,4 +433,5 @@ class ProjectViewSet(viewsets.ModelViewSet):
 )
 class ProjectAlertSettingsViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     serializer_class = ProjectAlertSettingsSerializer
+    permission_classes = [ProjectAlertSettingsPermissions]
     queryset = Project.objects.all()

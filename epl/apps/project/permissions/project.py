@@ -109,3 +109,11 @@ class ProjectPermissions(BasePermission):
                 return user.is_project_manager(project=project)
             case _:
                 return False
+
+
+class ProjectAlertSettingsPermissions(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if view.action in ["update", "partial_update"]:
+            return request.user.is_project_admin(project=obj)
+        # Read is authorized to everyone who has access to the project
+        return True
