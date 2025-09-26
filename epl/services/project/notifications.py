@@ -12,18 +12,20 @@ from epl.services.user.email import (
 )
 
 
-def should_send_alert(user, project, alert_type):
+def should_send_alert(user: User, project: Project, alert_type: str) -> bool:
     """
-    Checks if an alert should be sent to a user, according to their settings and the project's settings.
+    Checks if an alert should be sent to a user, according to their own settings and the project's settings.
+    If the alert is deactivated in the project, it is not sent to the user.
+    If the alert is activated in the project, the user can deactivate it in their settings.
     """
     # checks alert settings in Project model
     admin_alerts = project.settings.get("alerts", {})
-    if not admin_alerts.get(alert_type, True):
+    if admin_alerts.get(alert_type, True) is False:
         return False
     # checks alert settings in User model
     user_alerts = user.settings.get("alerts", {})
-    project_alerts = user_alerts.get(str(project.id), {})
-    return project_alerts.get(alert_type, True)
+    user_alerts_for_project = user_alerts.get(str(project.id), {})
+    return user_alerts_for_project.get(alert_type, True)
 
 
 def invite_unregistered_users_to_epl(project: Project, request):

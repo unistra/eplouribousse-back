@@ -410,7 +410,7 @@ class UserAlertSettingsSerializer(serializers.Serializer):
     alert_type = serializers.CharField()
     enabled = serializers.BooleanField()
 
-    def update(self, instance, validated_data):
+    def update(self, instance: User, validated_data: dict) -> User:
         alerts = instance.settings.setdefault("alerts", {})
         project_alerts = alerts.setdefault(str(validated_data["project_id"]), {})
         project_alerts[validated_data["alert_type"]] = validated_data["enabled"]
