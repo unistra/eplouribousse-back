@@ -19,8 +19,9 @@ def initialize_project_settings(sender, instance, **kwargs):
             "positioning": False,
             "arbitration0": False,
             "arbitration1": False,
-            "instructions": False,
-            "results": False,
+            "instruction": False,
+            "control": False,
+            "edition": False,
             "transferTracking": False,
             "treatmentTracking": False,
         }
