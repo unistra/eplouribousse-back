@@ -10,6 +10,17 @@ from epl.apps.project.models.choices import SegmentType
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 
+class NestedSegmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Segment
+        fields = [
+            "id",
+            "segment_type",
+            "content",
+            "order",
+        ]
+
+
 class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
     acl = AclField(exclude=["retrieve", "update"])
     after_segment = serializers.UUIDField(required=False, write_only=True)

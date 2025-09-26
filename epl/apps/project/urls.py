@@ -1,6 +1,7 @@
 from django.urls import path
 from rest_framework_nested.routers import NestedSimpleRouter, SimpleRouter
 
+from epl.apps.project.views.anomaly import AnomalyViewSet
 from epl.apps.project.views.collection import CollectionViewSet
 from epl.apps.project.views.library import LibraryViewset
 from epl.apps.project.views.project import ProjectAlertSettingsViewSet, ProjectViewSet
@@ -14,6 +15,7 @@ router.register(r"libraries", LibraryViewset, basename="library")
 router.register(r"collections", CollectionViewSet, basename="collection")
 router.register(r"resources", ResourceViewSet, basename="resource")
 router.register(r"segments", SegmentViewSet, basename="segment")
+router.register(r"anomalies", AnomalyViewSet, basename="anomaly")
 
 
 projects_router = NestedSimpleRouter(router, r"projects", lookup="project")
