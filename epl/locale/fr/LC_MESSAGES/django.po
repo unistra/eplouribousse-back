@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-25 14:51+0200\n"
+"POT-Creation-Date: 2025-09-29 11:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -235,7 +235,7 @@ msgid "Positioning rank of a collection"
 msgstr "Positionnement du rang d'une collection"
 
 #: epl/apps/project/models/collection.py:125
-#: epl/apps/project/serializers/collection.py:231
+#: epl/apps/project/serializers/collection.py:232
 msgid "Reason for excluding the collection from deduplication"
 msgstr "Raison de l'exclusion de la collection de la déduplication"
 
@@ -395,65 +395,65 @@ msgstr "Segment de collection"
 msgid "Collection segments"
 msgstr "Segments de collection"
 
-#: epl/apps/project/serializers/collection.py:36
+#: epl/apps/project/serializers/collection.py:37
 msgid "Library to which the collection belongs"
 msgstr "Bibliothèque à laquelle appartient la collection"
 
-#: epl/apps/project/serializers/collection.py:41
+#: epl/apps/project/serializers/collection.py:42
 msgid "Project to which the collection belongs"
 msgstr "Projet auquel appartient la collection"
 
-#: epl/apps/project/serializers/collection.py:67
+#: epl/apps/project/serializers/collection.py:68
 msgid "CSV file to be imported."
 msgstr "Fichier CSV à importer."
 
-#: epl/apps/project/serializers/collection.py:68
+#: epl/apps/project/serializers/collection.py:69
 msgid "Library ID to which the collection belongs."
 msgstr "ID de la bibliothèque à laquelle appartient la collection."
 
-#: epl/apps/project/serializers/collection.py:69
+#: epl/apps/project/serializers/collection.py:70
 msgid "Project ID to which the collection belongs."
 msgstr "ID du projet auquel la collection appartient."
 
-#: epl/apps/project/serializers/collection.py:129
+#: epl/apps/project/serializers/collection.py:130
 #, python-format
 msgid "Column(s) %(column)s missing in the CSV file."
 msgstr "Colonne(s) %(column)s manquantes dans le fichier CSV."
 
-#: epl/apps/project/serializers/collection.py:138
+#: epl/apps/project/serializers/collection.py:139
 #, python-format
 msgid "Library with ID %(id)s does not exist."
 msgstr "La bibliothèque avec l'ID %(id)s n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:146
+#: epl/apps/project/serializers/collection.py:147
 #, python-format
 msgid "Project with ID %(id)s does not exist."
 msgstr "Le projet avec l'ID %(id)s n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:153
+#: epl/apps/project/serializers/collection.py:154
 msgid "An alternative storage site can't receive a collection"
 msgstr "Un lieu de conservation alternatif ne peut pas recevoir de collection"
 
-#: epl/apps/project/serializers/collection.py:179
+#: epl/apps/project/serializers/collection.py:180
 msgid "Position (rank) between 1 and 4"
 msgstr "Position (rang) entre 1 et 4"
 
-#: epl/apps/project/serializers/collection.py:244
+#: epl/apps/project/serializers/collection.py:245
 msgid "Invalid exclusion reason."
 msgstr "Motif d'exclusion non valide."
 
-#: epl/apps/project/serializers/collection.py:282
-#: epl/apps/project/serializers/collection.py:311
+#: epl/apps/project/serializers/collection.py:283
+#: epl/apps/project/serializers/collection.py:312
 #: epl/apps/project/views/collection.py:282
 #: epl/apps/project/views/collection.py:291
 msgid "Positioning comment"
 msgstr "Message de positionnement"
 
-#: epl/apps/project/serializers/collection.py:334
+#: epl/apps/project/serializers/collection.py:335
 msgid "Resource is not in an instruction phase"
 msgstr "La ressource n'est pas en phase d'instruction"
 
-#: epl/apps/project/serializers/collection.py:351
+#: epl/apps/project/serializers/collection.py:352
 msgid "Invalid turn data"
 msgstr "Données de tour non valides"
 
@@ -530,47 +530,43 @@ msgstr "Rôle non trouvé pour cet utilisateur dans le projet."
 msgid "Exclusion reason to add or delete from the project"
 msgstr "Motifs d'exclusion à ajouter ou à supprimer du projet"
 
-#: epl/apps/project/serializers/resource.py:23
+#: epl/apps/project/serializers/resource.py:24
 msgid "Indicates if the user should instruct this resource"
 msgstr "Indique si l'utilisateur doit instruire cette ressource"
 
-#: epl/apps/project/serializers/resource.py:26
+#: epl/apps/project/serializers/resource.py:27
 msgid "Indicates if the user should position this resource"
 msgstr "Indique si l'utilisateur doit positionner cette ressource"
 
-#: epl/apps/project/serializers/resource.py:77
+#: epl/apps/project/serializers/resource.py:78
 msgid "Indicates if the controller validates the instruction phase"
 msgstr "Indique si l'utilisateur valide la phase d'instruction"
 
-#: epl/apps/project/serializers/resource.py:79
+#: epl/apps/project/serializers/resource.py:80
 msgid "The new status of the resource after validation"
 msgstr "Le nouveau statut de la ressource après validation"
 
-#: epl/apps/project/serializers/resource.py:81
+#: epl/apps/project/serializers/resource.py:82
 msgid "The updated instruction turns of the resource after validation"
 msgstr "Les tours d'instruction mis à jour de la ressource après validation"
 
-#: epl/apps/project/serializers/resource.py:102
+#: epl/apps/project/serializers/resource.py:103
 msgid "The resource is not in control status"
 msgstr "La resource n'est pas en phase de contrôle"
 
-#: epl/apps/project/serializers/segment.py:54
-msgid "Referenced segment belongs to a different collection"
-msgstr "Le segment référencé appartient à une autre collection"
-
-#: epl/apps/project/serializers/segment.py:61
+#: epl/apps/project/serializers/segment.py:59
 msgid "Referenced segment does not exist"
 msgstr "Le segment référencé n'existe pas"
 
-#: epl/apps/project/serializers/segment.py:110
+#: epl/apps/project/serializers/segment.py:108
 msgid "Segment is already at the top of the collection"
 msgstr "Le segment est déjà au sommet de la collection"
 
-#: epl/apps/project/serializers/segment.py:115
+#: epl/apps/project/serializers/segment.py:113
 msgid "Previous segment not found"
 msgstr "Le segment précédent n'a pas été trouvé"
 
-#: epl/apps/project/serializers/segment.py:131
+#: epl/apps/project/serializers/segment.py:129
 msgid "Segment is already at the bottom of the collection"
 msgstr "Le segment est déjà en bas de la collection"
 
@@ -1141,6 +1137,7 @@ msgid "For the record, your username is:"
 msgstr "Pour mémoire, votre identifiant est : "
 
 #: epl/templates/emails/confirm_account_creation.txt:7
+#: epl/templates/emails/notify_control.txt:4
 #: epl/templates/emails/notify_instruction_turn.txt:5
 #: epl/templates/emails/notify_positioning.txt:6
 msgid "This is an automated message, please do not reply."
@@ -1243,8 +1240,8 @@ msgid ""
 "The repositioning of your collection for the resource \"%(resource_title)s\" "
 "may resolve a type 0 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource \"%(resource_title)s\" "
-"peut trancher un cas d'arbitrage de type 0."
+"Le repositionnement de votre collection pour la ressource "
+"\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 0."
 
 #: epl/templates/emails/notify_arbitration_type1.txt:3
 #, python-format
@@ -1252,8 +1249,17 @@ msgid ""
 "The repositioning of your collection for the resource \"%(resource_title)s\" "
 "may resolve a type 1 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource \"%(resource_title)s\" "
-"peut trancher un cas d'arbitrage de type 1."
+"Le repositionnement de votre collection pour la ressource "
+"\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 1."
+
+#: epl/templates/emails/notify_control.txt:2
+#, fuzzy, python-format
+msgid ""
+"The time has come for the end-of-cycle check of the %(cycle)s elements for "
+"the %(resource_title)s resource: %(project_url)s."
+msgstr ""
+"Le moment est venu du contrôle de fin de cycle des éléments %(cycle)s pour "
+"la resource %(resource_title)s : %(project_url)s."
 
 #: epl/templates/emails/notify_instruction_turn.txt:3
 #, python-format
@@ -1357,6 +1363,9 @@ msgstr ""
 #: epl/validators.py:45
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
+
+#~ msgid "Referenced segment belongs to a different collection"
+#~ msgstr "Le segment référencé appartient à une autre collection"
 
 #~ msgid "The repositioning of your collection for the resource"
 #~ msgstr "Le repositionnement de votre collection pour la ressource"
