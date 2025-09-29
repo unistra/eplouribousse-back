@@ -4,6 +4,7 @@ from epl.apps.user.models import User
 from epl.services.user.email import (
     send_arbitration_notification_email,
     send_collection_positioned_email,
+    send_control_notification_email,
     send_instruction_turn_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
@@ -212,4 +213,20 @@ def notify_instructors_of_instruction_turn(resource: Resource, collection: Colle
             request=request,
             resource=resource,
             library_code=library.code,
+        )
+
+
+def notify_controllers_of_control(resource, request, cycle):
+    """
+    Notifies controllers (role CONTROLLER) at the end of the instruction cycle.
+    """
+    project = resource.project
+    controllers = UserRole.objects.filter(project=project, role=Role.CONTROLLER).select_related("user").distinct()
+
+    for controller in controllers:
+        send_control_notification_email(
+            email=controller.user.email,
+            request=request,
+            resource=resource,
+            cycle=cycle,
         )
