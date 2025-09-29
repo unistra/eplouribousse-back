@@ -14,6 +14,7 @@ from epl.apps.project.models import (
     Role,
     UserRole,
 )
+from epl.apps.project.models.choices import AlertType
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
 from epl.libs.schema import load_json_schema
@@ -413,3 +414,10 @@ class ProjectAlertSettingsSerializer(serializers.Serializer):
         instance.settings["alerts"] = alerts
         instance.save(update_fields=["settings"])
         return instance
+
+    def validate_alerts(self, alert):
+        alert_types = [alert_type[0] for alert_type in AlertType.choices]
+        for key, value in alert.items():
+            if key not in alert_types:
+                raise serializers.ValidationError(f"Invalid alert type: {key}")
+        return alert

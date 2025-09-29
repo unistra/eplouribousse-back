@@ -13,6 +13,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as Ba
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 
 from epl.apps.project.models import Project, ProjectStatus, Role
+from epl.apps.project.models.choices import AlertType
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.user.email import (
@@ -407,7 +408,7 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
 
 class UserAlertSettingsSerializer(serializers.Serializer):
     project_id = serializers.UUIDField()
-    alert_type = serializers.CharField()
+    alert_type = serializers.ChoiceField(choices=AlertType.choices)
     enabled = serializers.BooleanField()
 
     def update(self, instance: User, validated_data: dict) -> User:
