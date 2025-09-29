@@ -1243,8 +1243,8 @@ msgid ""
 "The repositioning of your collection for the resource \"%(resource_title)s\" "
 "may resolve a type 0 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource "
-"\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 0."
+"Le repositionnement de votre collection pour la ressource \"%(resource_title)s\" "
+"peut trancher un cas d'arbitrage de type 0."
 
 #: epl/templates/emails/notify_arbitration_type1.txt:3
 #, python-format
@@ -1252,8 +1252,8 @@ msgid ""
 "The repositioning of your collection for the resource \"%(resource_title)s\" "
 "may resolve a type 1 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource "
-"\"%(resource_title)s\" may resolve a type 0 arbitration case:"
+"Le repositionnement de votre collection pour la ressource \"%(resource_title)s\" "
+"peut trancher un cas d'arbitrage de type 1."
 
 #: epl/templates/emails/notify_instruction_turn.txt:3
 #, python-format
