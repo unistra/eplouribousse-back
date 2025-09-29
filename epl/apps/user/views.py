@@ -345,7 +345,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             project_id = request.query_params.get("project_id")
             alert_type = request.query_params.get("alert_type")
             if not project_id or not alert_type:
-                return Response({"detail": "project_id and alert_type are required."}, status=400)
+                return Response({"detail": "project_id and alert_type are required."}, status.HTTP_400_BAD_REQUEST)
             alerts = request.user.settings.get("alerts", {})
             project_alerts = alerts.get(str(project_id), {})
             enabled = project_alerts.get(alert_type, True)
