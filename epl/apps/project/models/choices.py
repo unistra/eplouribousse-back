@@ -32,5 +32,5 @@ class AlertType(models.TextChoices):
     INSTRUCTION = "instruction", _("Instruction")
     CONTROL = "control", _("Control")
     EDITION = "edition", _("Edition")
-    CONSERVATION = "conservation", _("Conservation")
+    PRESERVATION = "preservation", _("Preservation")
     TRANSFER = "transfer", _("Transfer")
