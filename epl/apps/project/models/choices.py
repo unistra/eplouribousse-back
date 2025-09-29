@@ -30,6 +30,7 @@ class AlertType(models.TextChoices):
     POSITIONING = "position", _("Position")
     ARBITRATION = "arbitration", _("Arbitration")
     INSTRUCTION = "instruction", _("Instruction")
+    CONTROL = "control", _("Control")
     EDITION = "edition", _("Edition")
     CONSERVATION = "conservation", _("Conservation")
     TRANSFER = "transfer", _("Transfer")

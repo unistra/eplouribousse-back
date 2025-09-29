@@ -35,24 +35,24 @@ class ProjectAlertSettingsViewSetTest(TestCase):
     )
     def test_update_alert_settings_roles(self, role, should_succeed, expected_status):
         project = ProjectFactory()
-        project.settings = {"alerts": {"results": True, "positioning": False}}
+        project.settings = {"alerts": {"edition": True, "position": False}}
         project.save()
         library = LibraryFactory()
         user = UserWithRoleFactory(role=role, project=project, library=library)
         url = reverse("project-alerts", args=[project.id])
         data = {
             "alerts": {
-                "results": False,
-                "positioning": True,
-                "new_alert": True,
+                "edition": False,
+                "position": True,
+                "instruction": True,
             }
         }
         response = self.patch(url, user=user, data=data, content_type="application/json")
         self.assertEqual(response.status_code, expected_status)
         project.refresh_from_db()
         if should_succeed:
-            self.assertEqual(project.settings["alerts"]["results"], False)
-            self.assertEqual(project.settings["alerts"]["positioning"], True)
-            self.assertEqual(project.settings["alerts"]["new_alert"], True)
+            self.assertEqual(project.settings["alerts"]["edition"], False)
+            self.assertEqual(project.settings["alerts"]["position"], True)
+            self.assertEqual(project.settings["alerts"]["instruction"], True)
         else:
             self.assertNotEqual(project.settings["alerts"].get("results"), False)
