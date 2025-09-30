@@ -417,7 +417,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
     description=(
         "Retrieves or updates the alert configuration for each alert type on this project. "
         "The `alerts` field must be a dictionary whose key is the project UUID and whose value is an object with the alert types. "
-        "Allowed alert types: position, arbitration, instruction, edition, preservation, transfer."
     ),
     request=ProjectAlertSettingsSerializer,
     responses={status.HTTP_200_OK: ProjectAlertSettingsSerializer},
@@ -426,14 +425,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
             "Example of alert settings",
             value={
                 "alerts": {
-                    "b7e6c2e2-1c2a-4b7a-9e2e-1c2a4b7a9e2e": {
-                        "position": True,
-                        "arbitration": False,
-                        "instruction": True,
-                        "edition": False,
-                        "preservation": True,
-                        "transfer": False,
-                    }
+                    "control": False,
+                    "edition": False,
+                    "position": False,
+                    "transfer": False,
+                    "arbitration": False,
+                    "instruction": False,
+                    "preservation": False,
                 }
             },
             request_only=False,

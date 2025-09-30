@@ -1,3 +1,6 @@
+from typing import Any
+
+from django.db.models import Model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -6,7 +9,7 @@ from .models.project import DEFAULT_EXCLUSION_REASONS, Project
 
 
 @receiver(post_save, sender=Project)
-def initialize_project_settings(sender, instance, **kwargs):
+def initialize_project_settings(sender: type[Model], instance: Project, **kwargs: Any) -> None:
     """
     Initialize default project settings on creation.
     Add default exclusion reasons if not already set.
