@@ -49,7 +49,6 @@ class AnomalyViewSet(ModelViewSet):
     queryset = Anomaly.objects.all()
     serializer_class = AnomalySerializer
     permission_classes = [AnomalyPermissions]
-    pagination_class = PageNumberPagination
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
