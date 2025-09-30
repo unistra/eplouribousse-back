@@ -31,7 +31,7 @@ class TestAnomalyList(TestCase):
             user=self.instructor,
         )
         self.response_ok(response)
-        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(len(response.data), 2)
 
     def test_list_anomaly_filter_by_segment(self):
         _anomaly1 = AnomalyFactory(resource=self.resource, segment=self.segment1)
@@ -41,8 +41,8 @@ class TestAnomalyList(TestCase):
             user=self.instructor,
         )
         self.response_ok(response)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["id"], str(_anomaly1.id))
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], str(_anomaly1.id))
 
     def test_list_anomaly_filter_by_resource(self):
         _anomaly1 = AnomalyFactory(resource=self.resource, segment=self.segment1)
@@ -53,8 +53,8 @@ class TestAnomalyList(TestCase):
             user=self.instructor,
         )
         self.response_ok(response)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["id"], str(_anomaly1.id))
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], str(_anomaly1.id))
 
     def test_list_anomaly_filter_by_project(self):
         _anomaly1 = AnomalyFactory(resource=self.resource, segment=self.segment1)
@@ -68,5 +68,5 @@ class TestAnomalyList(TestCase):
             user=self.instructor,
         )
         self.response_ok(response)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["id"], str(_anomaly1.id))
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], str(_anomaly1.id))
