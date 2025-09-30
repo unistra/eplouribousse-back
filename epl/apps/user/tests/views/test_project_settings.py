@@ -31,8 +31,6 @@ class ProjectSettingsViewTest(TestCase):
             content_type="application/json",
         )
         self.user.refresh_from_db()
-        print(self.user.settings)
-        print(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["alert_type"], "control")
         self.assertEqual(response.data["enabled"], True)

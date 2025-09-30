@@ -18,15 +18,17 @@ class InstructionControlTest(TestCase):
         self.project = ProjectFactory()
         self.user = UserWithRoleFactory(role=Role.CONTROLLER, project=self.project)
         self.library = LibraryFactory(project=self.project)
-        self.collection = CollectionFactory(project=self.project, library=self.library)
         self.resource = ResourceFactory(
             project=self.project,
             status=ResourceStatus.CONTROL_BOUND,
-            instruction_turns={
-                "bound_copies": {"turns": [{"library": str(self.library.id), "collection": str(self.collection.id)}]},
-                "unbound_copies": {"turns": [{"library": str(self.library.id), "collection": str(self.collection.id)}]},
-            },
         )
+        self.collection = CollectionFactory(project=self.project, library=self.library, resource=self.resource)
+
+        self.resource.instruction_turns = {
+            "bound_copies": {"turns": [{"library": str(self.library.id), "collection": str(self.collection.id)}]},
+            "unbound_copies": {"turns": [{"library": str(self.library.id), "collection": str(self.collection.id)}]},
+        }
+        self.resource.save(update_fields=["instruction_turns"])
 
     def test_anonymous_access_is_forbidden(self):
         response = self.post(
@@ -52,8 +54,7 @@ class InstructionControlTest(TestCase):
             data={"validation": True},
             user=non_controller_user,
         )
-        if role == Role.CONTROLLER:
-            print(response.data, response.status_code)
+
         self.assertEqual(expected_status, response.status_code)
 
     @parameterized.expand(
@@ -75,8 +76,7 @@ class InstructionControlTest(TestCase):
             data={"validation": True},
             user=self.user,
         )
-        if response.status_code != expected_status:
-            print(response.data)
+
         self.assertEqual(expected_status, response.status_code)
 
     def test_status_is_updated_to_instruction_unbound_after_control_bound_validation(self):
