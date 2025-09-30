@@ -4,7 +4,7 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 
-from epl.apps.project.models import Anomaly
+from epl.apps.project.models import Anomaly, Segment
 from epl.apps.project.permissions.anomaly import AnomalyPermissions
 from epl.apps.project.serializers.anomaly import AnomalySerializer
 from epl.schema_serializers import UnauthorizedSerializer
@@ -42,7 +42,18 @@ from epl.schema_serializers import UnauthorizedSerializer
             status.HTTP_200_OK: AnomalySerializer(many=True),
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
-    )
+    ),
+    create=extend_schema(
+        tags=["anomaly", "instruction"],
+        summary="Create anomaly",
+        description="Create a new anomaly",
+        request=AnomalySerializer,
+        responses={
+            status.HTTP_201_CREATED: AnomalySerializer,
+            status.HTTP_400_BAD_REQUEST: None,
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+        },
+    ),
 )
 class AnomalyViewSet(ModelViewSet):
     queryset = Anomaly.objects.all()
@@ -62,3 +73,13 @@ class AnomalyViewSet(ModelViewSet):
                 return queryset.filter(segment__id=segment)
 
         return queryset
+
+    def check_permissions(self, request):
+        if self.action == "create":
+            _segment = Segment.objects.get(pk=request.data.get("segment_id"))
+            if not AnomalyPermissions.user_can_create_anomaly(request.user, _segment):
+                self.permission_denied(
+                    request,
+                    message=_("You do not have permission to create an anomaly for this segment."),
+                )
+        return super().check_permissions(request)
