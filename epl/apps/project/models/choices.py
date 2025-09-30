@@ -24,3 +24,13 @@ class ResourceStatus(models.IntegerChoices):
 class SegmentType(models.TextChoices):
     BOUND = "bound", _("Bound")
     UNBOUND = "unbound", _("Unbound")
+
+
+class AlertType(models.TextChoices):
+    POSITIONING = "position", _("Position")
+    ARBITRATION = "arbitration", _("Arbitration")
+    INSTRUCTION = "instruction", _("Instruction")
+    CONTROL = "control", _("Control")
+    EDITION = "edition", _("Edition")
+    PRESERVATION = "preservation", _("Preservation")
+    TRANSFER = "transfer", _("Transfer")

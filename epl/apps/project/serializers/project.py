@@ -14,6 +14,7 @@ from epl.apps.project.models import (
     Role,
     UserRole,
 )
+from epl.apps.project.models.choices import AlertType
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
 from epl.libs.schema import load_json_schema
@@ -397,3 +398,26 @@ class ExclusionReasonSerializer(serializers.Serializer):
 
             project.settings["exclusion_reasons"].remove(exclusion_reason)
             project.save(update_fields=["settings"])
+
+
+class ProjectAlertSettingsSerializer(serializers.Serializer):
+    alerts = serializers.DictField(
+        child=serializers.BooleanField(),
+        help_text="Key = alert type, value = alert activated or not (True/False)",
+        source="settings.alerts",
+        required=False,
+        default=dict,
+    )
+
+    def update(self, instance: Project, validated_data: dict) -> Project:
+        alerts = validated_data.get("settings", {}).get("alerts", {})
+        instance.settings["alerts"] = alerts
+        instance.save(update_fields=["settings"])
+        return instance
+
+    def validate_alerts(self, alert):
+        alert_types = [alert_type[0] for alert_type in AlertType.choices]
+        for key, value in alert.items():
+            if key not in alert_types:
+                raise serializers.ValidationError(f"Invalid alert type: {key}")
+        return alert

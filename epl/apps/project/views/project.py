@@ -1,16 +1,16 @@
 from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema, extend_schema_view
 from ipware import get_client_ip
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from epl.apps.project.filters.project import ProjectFilter
 from epl.apps.project.models import ActionLog, Project, ProjectStatus, Role, UserRole
-from epl.apps.project.permissions.project import ProjectPermissions
+from epl.apps.project.permissions.project import ProjectAlertSettingsPermissions, ProjectPermissions
 from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
@@ -19,6 +19,7 @@ from epl.apps.project.serializers.project import (
     ExclusionReasonSerializer,
     InvitationSerializer,
     LaunchProjectSerializer,
+    ProjectAlertSettingsSerializer,
     ProjectDetailSerializer,
     ProjectLibrarySerializer,
     ProjectSerializer,
@@ -408,3 +409,39 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         ActionLog.log("Project has been launched", actor=request.user, obj=project, ip=get_client_ip(request)[0])
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    tags=["project"],
+    summary="Retrieve or update a project's alert settings",
+    description=(
+        "Retrieves or updates the alert configuration for each alert type on this project. "
+        "The `alerts` field must be a dictionary whose key is the project UUID and whose value is an object with the alert types. "
+        "Allowed alert types: position, arbitration, instruction, edition, preservation, transfer."
+    ),
+    request=ProjectAlertSettingsSerializer,
+    responses={status.HTTP_200_OK: ProjectAlertSettingsSerializer},
+    examples=[
+        OpenApiExample(
+            "Example of alert settings",
+            value={
+                "alerts": {
+                    "b7e6c2e2-1c2a-4b7a-9e2e-1c2a4b7a9e2e": {
+                        "position": True,
+                        "arbitration": False,
+                        "instruction": True,
+                        "edition": False,
+                        "preservation": True,
+                        "transfer": False,
+                    }
+                }
+            },
+            request_only=False,
+            response_only=True,
+        )
+    ],
+)
+class ProjectAlertSettingsViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+    serializer_class = ProjectAlertSettingsSerializer
+    permission_classes = [ProjectAlertSettingsPermissions]
+    queryset = Project.objects.all()
