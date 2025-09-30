@@ -7,7 +7,6 @@ from rest_framework.viewsets import ModelViewSet
 from epl.apps.project.models import Anomaly
 from epl.apps.project.permissions.anomaly import AnomalyPermissions
 from epl.apps.project.serializers.anomaly import AnomalySerializer
-from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer
 
 
@@ -49,6 +48,7 @@ class AnomalyViewSet(ModelViewSet):
     queryset = Anomaly.objects.all()
     serializer_class = AnomalySerializer
     permission_classes = [AnomalyPermissions]
+    pagination_class = None
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
