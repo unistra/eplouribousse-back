@@ -303,3 +303,124 @@ class SendNotificationToInstruct(TestCase):
         # Only 1 email should be sent: the one for instructor 3.
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [instructor_3.email])
+
+
+class ControlPhaseTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.project = ProjectFactory()
+        self.library_1 = LibraryFactory()
+        self.instructor_1 = UserWithRoleFactory(
+            role=Role.INSTRUCTOR,
+            project=self.project,
+            library=self.library_1,
+        )
+        self.resource = ResourceFactory(project=self.project)
+        self.collection_1 = CollectionFactory(resource=self.resource, library=self.library_1, project=self.project)
+
+        self.library_2 = LibraryFactory()
+        self.instructor_2 = UserWithRoleFactory(
+            role=Role.INSTRUCTOR,
+            project=self.project,
+            library=self.library_2,
+        )
+        self.collection_2 = CollectionFactory(resource=self.resource, library=self.library_2, project=self.project)
+
+        self.controller = UserWithRoleFactory(
+            role=Role.CONTROLLER,
+            project=self.project,
+        )
+
+    def test_send_notifications_to_control(self):
+        self.collection_1.position = 1
+        self.collection_1.save()
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+
+        self.collection_2.refresh_from_db()
+        self.resource.refresh_from_db()
+
+        # instructor 1 finishes his turn
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_1.id}),
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.resource.refresh_from_db()
+        self.assertNotIn(self.collection_1.id, self.resource.instruction_turns["bound_copies"]["turns"])
+
+        mail.outbox = []
+
+        # instructor 2 finishes his turn
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_2.id}),
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.resource.refresh_from_db()
+        self.assertNotIn(self.collection_2.id, self.resource.instruction_turns["bound_copies"]["turns"])
+
+        # This should trigger control phase
+        # The controller is notified
+        self.assertEqual(self.resource.status, ResourceStatus.CONTROL_BOUND)
+        self.assertEqual(mail.outbox[0].to, [self.controller.email])
+        self.assertIn("control", str(mail.outbox[0].subject))
+
+        # The controller gives his approval
+        mail.outbox = []
+        self.post(
+            reverse("resource-validate-control", kwargs={"pk": self.resource.id}),
+            data={"validation": True},
+            content_type="application/json",
+            user=self.controller,
+        )
+        self.resource.refresh_from_db()
+        # Status should move from CONTROL_BOUND to INSTRUCTION_UNBOUND
+        self.assertEqual(self.resource.status, ResourceStatus.INSTRUCTION_UNBOUND)
+        # Instructor 1 should be notified
+        self.assertEqual(mail.outbox[0].to, [self.instructor_1.email])
+        self.assertIn("instruction", str(mail.outbox[0].subject))
+        self.assertEqual(mail.outbox[0].to, [self.instructor_1.email])
+
+        # instructor 1 finishes his turn
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_1.id}),
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.resource.refresh_from_db()
+        self.assertNotIn(self.collection_1.id, self.resource.instruction_turns["unbound_copies"]["turns"])
+
+        mail.outbox = []
+
+        # instructor 2 finishes his turn
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_2.id}),
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.resource.refresh_from_db()
+        self.assertNotIn(self.collection_2.id, self.resource.instruction_turns["unbound_copies"]["turns"])
+
+        # This should trigger control phase
+        # The controller is notified
+        self.assertEqual(self.resource.status, ResourceStatus.CONTROL_UNBOUND)
+        self.assertEqual(mail.outbox[0].to, [self.controller.email])
+        self.assertIn("control", str(mail.outbox[0].subject))
+
+        # The controller gives his approval
+        mail.outbox = []
+        self.post(
+            reverse("resource-validate-control", kwargs={"pk": self.resource.id}),
+            data={"validation": True},
+            content_type="application/json",
+            user=self.controller,
+        )
+        self.resource.refresh_from_db()
+        # Status should move from INSTRUCTION_UNBOUND to EDITION
+        self.assertEqual(self.resource.status, ResourceStatus.EDITION)

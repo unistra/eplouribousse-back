@@ -303,3 +303,33 @@ def send_instruction_turn_email(
         fail_silently=False,
         message=email_content,
     )
+
+
+def send_control_notification_email(
+    email: str,
+    request,
+    resource,
+    cycle: str,  # "reliés" ou "non-reliés"
+):
+    front_domain = get_front_domain(request)
+    project = resource.project
+    tenant = request.tenant
+    project_url = f"{front_domain}/project/{project.id}"
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | control"
+
+    email_content = render_to_string(
+        "emails/notify_control.txt",
+        {
+            "cycle": cycle,
+            "resource_title": resource.title,
+            "project_url": project_url,
+        },
+    )
+
+    send_mail(
+        subject=subject,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+        message=email_content,
+    )

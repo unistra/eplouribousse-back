@@ -8,6 +8,7 @@ from epl.apps.project.serializers.collection import CollectionPositioningSeriali
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
+from epl.services.project.notifications import notify_instructors_of_instruction_turn
 
 
 @extend_schema_field(load_json_schema("resource_instruction_turns.schema.json"))
@@ -109,8 +110,15 @@ class ValidateControlSerializer(serializers.ModelSerializer):
             # The controller validates the instruction phase
             if self.instance.status == ResourceStatus.CONTROL_BOUND:
                 self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
+                library_id = self.instance.next_turn["library"] if self.instance.next_turn else None
+                collection = Collection.objects.get(library_id=library_id, resource=self.instance)
+                notify_instructors_of_instruction_turn(self.instance, collection, self.context["request"])
             elif self.instance.status == ResourceStatus.CONTROL_UNBOUND:
                 self.instance.status = ResourceStatus.EDITION
+                # todo send email to all instructors (notify them that a resulting report is available)
+                # https://gitlab.unistra.fr/di/eplouribousse/eplouribousse/-/issues/22
+                # https://gitlab.unistra.fr/di/eplouribousse/eplouribousse/-/issues/80
+
             self.instance.save(update_fields=["status"])
 
         return self.instance

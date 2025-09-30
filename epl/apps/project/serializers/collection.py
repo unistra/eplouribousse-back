@@ -17,6 +17,7 @@ from epl.apps.project.permissions.collection import CollectionPermission
 from epl.libs.csv_import import handle_import
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
+    notify_controllers_of_control,
     notify_instructors_of_arbitration,
     notify_instructors_of_instruction_turn,
     notify_other_instructors_of_positioning,
@@ -370,6 +371,6 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
             )
             resource.instruction_turns[cycle]["turns"] = []
             resource.save(update_fields=["instruction_turns", "status"])
-            # TODO email notification
+            notify_controllers_of_control(resource, self.context["request"], cycle)
 
         return collection
