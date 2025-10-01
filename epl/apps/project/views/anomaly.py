@@ -1,8 +1,10 @@
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
-from rest_framework import status
-from rest_framework.viewsets import ModelViewSet
+from rest_framework import mixins, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from epl.apps.project.models import Anomaly, Segment
 from epl.apps.project.permissions.anomaly import AnomalyPermissions
@@ -55,8 +57,8 @@ from epl.schema_serializers import UnauthorizedSerializer
         },
     ),
 )
-class AnomalyViewSet(ModelViewSet):
-    queryset = Anomaly.objects.all()
+class AnomalyViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
+    queryset = Anomaly.objects.all().select_related("segment", "created_by", "fixed_by")
     serializer_class = AnomalySerializer
     permission_classes = [AnomalyPermissions]
     pagination_class = None
@@ -72,6 +74,7 @@ class AnomalyViewSet(ModelViewSet):
             if segment := self.request.query_params.get("segment"):
                 return queryset.filter(segment__id=segment)
 
+        print(queryset.query)
         return queryset
 
     def check_permissions(self, request):
@@ -83,3 +86,22 @@ class AnomalyViewSet(ModelViewSet):
                     message=_("You do not have permission to create an anomaly for this segment."),
                 )
         return super().check_permissions(request)
+
+    @extend_schema(
+        tags=["anomaly", "instruction"],
+        summary=_("Fix an anomaly"),
+        description=_("Mark an anomaly as fixed"),
+        request=None,
+        responses={
+            status.HTTP_200_OK: AnomalySerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: None,
+        },
+    )
+    @action(detail=True, methods=["patch"], url_path="fix", permission_classes=[AnomalyPermissions])
+    def fix(self, request, pk):
+        anomaly = self.get_object()
+        serializer = self.get_serializer(anomaly)
+        serializer.fix()
+        return Response(serializer.data)

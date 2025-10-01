@@ -70,3 +70,10 @@ class AnomalySerializer(serializers.ModelSerializer):
             **validated_data,
         )
         return anomaly
+
+    def fix(self):
+        user = self.context["request"].user
+        self.instance.fixed = True
+        self.instance.fixed_by = user
+        self.instance.save(update_fields=["fixed", "fixed_by", "fixed_at"])
+        return self.instance

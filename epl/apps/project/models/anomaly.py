@@ -37,6 +37,10 @@ class Anomaly(models.Model):
         null=True,
     )
 
+    _extended_permissions = [
+        "fix",
+    ]
+
     class Meta:
         verbose_name = _("Anomaly")
         verbose_name_plural = _("Anomalies")

@@ -13,13 +13,33 @@ class AnomalyPermissions(BasePermission):
             # In fact, it's more complicated, we just check if the user is authenticated here.
             # More detailed permission check is done in the viewset's create method.
             return bool(request.user and request.user.is_authenticated)
-        return False
+        return True
 
     def has_object_permission(self, request, view, obj: Anomaly) -> bool:
+        if view.action == "fix":
+            return self.user_has_permission("fix", request.user, obj)
         return False
 
     @staticmethod
     def user_has_permission(action: str, user: User, anomaly: Anomaly = None) -> bool:
+        if action == "fix":
+            if not user.is_authenticated:
+                return False
+            # user must be an admin in the project
+            # or instructor in the collection's library
+            return UserRole.objects.filter(
+                Q(
+                    user=user,
+                    role=Role.PROJECT_ADMIN,
+                    project=anomaly.segment.collection.project,
+                )
+                | Q(
+                    user=user,
+                    role=Role.INSTRUCTOR,
+                    project=anomaly.segment.collection.project,
+                    library=anomaly.segment.collection.library,
+                )
+            ).exists()
         return False
 
     @staticmethod
@@ -30,11 +50,12 @@ class AnomalyPermissions(BasePermission):
         if user.is_superuser:
             return True
         # user must be a controller in the project
-        # or instructor in another library of the same project as the segment's collection
+        # or instructor in the project for another library as the segment's collection library
         return UserRole.objects.filter(
             Q(
                 user=user,
                 role=Role.INSTRUCTOR,
+                project=segment.collection.project,
                 library__in=Subquery(
                     Library.objects.filter(
                         Q(project=segment.collection.project) & ~Q(id=segment.collection.library_id)

@@ -1,4 +1,4 @@
-from epl.apps.project.models import Role
+from epl.apps.project.models import AnomalyType, Role
 from epl.apps.project.permissions.anomaly import AnomalyPermissions
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
@@ -64,3 +64,42 @@ class AnomalyPermissionTests(TestCase):
         instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=project1, library=library2)
 
         self.assertTrue(AnomalyPermissions.user_can_create_anomaly(instructor, segment1))
+
+    def test_instructor_of_the_library_can_fix_anomaly(self):
+        library = LibraryFactory()
+        project = ProjectFactory()
+        project.libraries.add(library)
+        resource = ResourceFactory(project=project)
+        collection = CollectionFactory(project=project, library=library, resource=resource)
+        segment = SegmentFactory(collection=collection)
+        instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=project, library=library)
+
+        anomaly = segment.anomalies.create(
+            type=AnomalyType.SEGMENT_OVERLAP,
+            resource=resource,
+            created_by=instructor,
+        )
+
+        self.assertTrue(AnomalyPermissions.user_has_permission("fix", instructor, anomaly))
+
+    def test_instructor_of_another_library_cannot_fix_anomaly(self):
+        library1 = LibraryFactory()
+        library2 = LibraryFactory()
+
+        project1 = ProjectFactory()
+        project1.libraries.add(library1, library2)
+
+        resource1 = ResourceFactory(project=project1)
+        collection1 = CollectionFactory(project=project1, library=library1, resource=resource1)
+        segment1 = SegmentFactory(collection=collection1)
+        instructor1 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=project1, library=library1)
+
+        anomaly = segment1.anomalies.create(
+            type=AnomalyType.SEGMENT_OVERLAP,
+            resource=resource1,
+            created_by=instructor1,
+        )
+
+        instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=project1, library=library2)
+
+        self.assertFalse(AnomalyPermissions.user_has_permission("fix", instructor, anomaly))
