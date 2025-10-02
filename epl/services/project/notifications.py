@@ -130,14 +130,14 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     """
     Notifie les instructeurs concernés par un cas d'arbitrage (type 0 ou 1).
     """
-    arbitration_type = resource.arbitration
-    library_ids_to_notify = []
-
     # check project settings to see if arbitration emails should be sent
     # to avoid unnecessary queries if arbitration is disabled
     project_alerts = resource.project.settings.get("alerts", {})
     if project_alerts.get("arbitration", True) is False:
         return
+
+    arbitration_type = resource.arbitration
+    library_ids_to_notify = []
 
     match arbitration_type:
         case Arbitration.ONE:
@@ -174,6 +174,12 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
     - The user who performed the action.
     - Any instructor who has already positioned their collection for this resource.
     """
+    # check project settings to see if arbitration emails should be sent
+    # to avoid unnecessary queries if arbitration is disabled
+    project_alerts = resource.project.settings.get("alerts", {})
+    if project_alerts.get("positioning", True) is False:
+        return
+
     acting_user = request.user
 
     unpositioned_library_ids = resource.collections.filter(position__isnull=True).values_list("library_id", flat=True)
@@ -192,12 +198,13 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
         if instructor_role.user == acting_user:  # double-check that the user is not already positioned.
             continue
 
-        send_collection_positioned_email(
-            email=instructor_role.user.email,
-            request=request,
-            resource=resource,
-            positioned_collection=positioned_collection,
-        )
+        if should_send_alert(instructor_role.user, resource.project, "positioning"):
+            send_collection_positioned_email(
+                email=instructor_role.user.email,
+                request=request,
+                resource=resource,
+                positioned_collection=positioned_collection,
+            )
 
 
 def notify_instructors_of_instruction_turn(resource: Resource, collection: Collection, request):

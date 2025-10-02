@@ -605,6 +605,9 @@ class PositioningNotificationTest(TestCase):
             self.instructor_3 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_3)
             self.collection_3 = CollectionFactory(library=self.library_3, project=self.project, resource=self.resource)
 
+            self.project.settings["alerts"]["positioning"] = True
+            self.project.save()
+
     def test_positioning_sends_notification(self):
         # Position the collection_1 to rank 2
         self.patch(
@@ -656,3 +659,21 @@ class PositioningNotificationTest(TestCase):
 
         self.assertEqual(len(positioning_emails), 1)
         self.assertEqual(actual_recipients, expected_recipients)
+
+    def test_no_email_sent_if_user_positioning_alert_disabled(self):
+        # Deactivate the user alert positioning
+        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["positioning"] = False
+        self.instructor_2.save()
+        self.instructor_2.refresh_from_db()
+        self.instructor_3.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["positioning"] = False
+        self.instructor_3.save()
+        self.instructor_3.refresh_from_db()
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_1.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.collection_1.refresh_from_db()
+        self.assertEqual(self.collection_1.position, 2)
+        self.assertEqual(len(mail.outbox), 0)
