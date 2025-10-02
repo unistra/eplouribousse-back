@@ -133,6 +133,12 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     arbitration_type = resource.arbitration
     library_ids_to_notify = []
 
+    # check project settings to see if arbitration emails should be sent
+    # to avoid unnecessary queries if arbitration is disabled
+    project_alerts = resource.project.settings.get("alerts", {})
+    if project_alerts.get("arbitration", True) is False:
+        return
+
     match arbitration_type:
         case Arbitration.ONE:
             library_ids_to_notify = resource.collections.filter(position=1).values_list("library_id", flat=True)
