@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import F
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
 
@@ -10,9 +11,21 @@ from epl.apps.project.models.choices import SegmentType
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 
+class NestedSegmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Segment
+        fields = [
+            "id",
+            "segment_type",
+            "content",
+            "order",
+        ]
+
+
 class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
     acl = AclField(exclude=["retrieve", "update"])
     after_segment = serializers.UUIDField(required=False, write_only=True)
+    anomalies = serializers.SerializerMethodField()
 
     class Meta:
         model = Segment
@@ -29,6 +42,7 @@ class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "created_by",
             "created_at",
             "after_segment",
+            "anomalies",
             "acl",
         ]
         read_only_fields = [
@@ -36,9 +50,26 @@ class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "segment_type",
             "order",
             "retained",
+            "acl",
+            "anomalies",
             "created_by",
             "created_at",
         ]
+
+    @extend_schema_field(
+        inline_serializer(
+            "NestedAnomaliesSerializer",
+            fields={
+                "fixed": serializers.IntegerField(help_text=_("Number of fixed anomalies")),
+                "unfixed": serializers.IntegerField(help_text=_("Number of unfixed anomalies")),
+            },
+        )
+    )
+    def get_anomalies(self, obj):
+        return {
+            "fixed": getattr(obj, "fixed_anomalies", 0),
+            "unfixed": getattr(obj, "unfixed_anomalies", 0),
+        }
 
     def create(self, validated_data):
         after_segment_id = validated_data.pop("after_segment", None)

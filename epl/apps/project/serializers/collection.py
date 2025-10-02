@@ -6,6 +6,7 @@ from collections import Counter
 from django.db import transaction
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from sentry_sdk import set_tag
@@ -293,6 +294,7 @@ class CollectionPositioningSerializer(AclSerializerMixin, serializers.ModelSeria
 
     acl = AclField(permission_classes=[CollectionPermission])
     comment_positioning = serializers.SerializerMethodField()
+    anomalies = serializers.SerializerMethodField()
 
     class Meta:
         model = Collection
@@ -305,6 +307,7 @@ class CollectionPositioningSerializer(AclSerializerMixin, serializers.ModelSeria
             "is_excluded",
             "exclusion_reason",
             "comment_positioning",
+            "anomalies",
             "acl",
         ]
 
@@ -313,6 +316,21 @@ class CollectionPositioningSerializer(AclSerializerMixin, serializers.ModelSeria
         if comment:
             return PositioningCommentSerializer(comment).data
         return None
+
+    @extend_schema_field(
+        inline_serializer(
+            "NestedAnomaliesSerializer",
+            fields={
+                "fixed": serializers.IntegerField(help_text=_("Number of fixed anomalies")),
+                "unfixed": serializers.IntegerField(help_text=_("Number of unfixed anomalies")),
+            },
+        )
+    )
+    def get_anomalies(self, obj) -> dict[str, int]:
+        return {
+            "fixed": obj.fixed_anomalies,
+            "unfixed": obj.unfixed_anomalies,
+        }
 
 
 class FinishInstructionTurnSerializer(serializers.ModelSerializer):

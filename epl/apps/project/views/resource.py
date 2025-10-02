@@ -52,6 +52,9 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         context = super().get_serializer_context()
         if self.action == "list":
             context.update({"library": self.request.query_params.get("library")})
+        if self.action == "collections":
+            # The resources won't have anomalies counts, only the collections will have them
+            context.update({"hide_anomalies": True})
 
         return context
 
@@ -72,6 +75,18 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
                     delimiter=", ",
                     filter=models.Q(collections__call_number__isnull=False) & ~models.Q(collections__call_number=""),
                     output_field=models.CharField(),
+                ),
+                fixed_anomalies=models.Count(
+                    "collections__segments__anomalies",
+                    filter=models.Q(
+                        collections__segments__anomalies__fixed=True,
+                    ),
+                ),
+                unfixed_anomalies=models.Count(
+                    "collections__segments__anomalies",
+                    filter=models.Q(
+                        collections__segments__anomalies__fixed=False,
+                    ),
                 ),
             )
         return queryset
@@ -105,7 +120,20 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
     @action(detail=True, methods=["get"], url_path="collections")
     def collections(self, request, pk=None):
         resource = self.get_object()
-        collections = resource.collections.all()
+        collections = resource.collections.annotate(
+            fixed_anomalies=models.Count(
+                "segments__anomalies",
+                filter=models.Q(
+                    segments__anomalies__fixed=True,
+                ),
+            ),
+            unfixed_anomalies=models.Count(
+                "segments__anomalies",
+                filter=models.Q(
+                    segments__anomalies__fixed=False,
+                ),
+            ),
+        ).all()
         serializer = ResourceWithCollectionsSerializer(
             {
                 "resource": resource,
