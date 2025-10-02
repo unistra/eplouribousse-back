@@ -5,9 +5,10 @@ from rest_framework import serializers
 from epl.apps.project.models import Anomaly, AnomalyType
 from epl.apps.project.serializers.segment import NestedSegmentSerializer
 from epl.apps.user.serializers import NestedUserSerializer
+from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 
-class AnomalySerializer(serializers.ModelSerializer):
+class AnomalySerializer(AclSerializerMixin, serializers.ModelSerializer):
     segment = NestedSegmentSerializer(read_only=True)
     segment_id = serializers.UUIDField(write_only=True)
     description = serializers.CharField(
@@ -17,6 +18,7 @@ class AnomalySerializer(serializers.ModelSerializer):
     )
     fixed_by = NestedUserSerializer(read_only=True, help_text=_("The user who fixed the anomaly"))
     created_by = NestedUserSerializer(read_only=True, help_text=_("The user who created the anomaly"))
+    acl = AclField(include=["fix"])
 
     class Meta:
         model = Anomaly
@@ -31,6 +33,7 @@ class AnomalySerializer(serializers.ModelSerializer):
             "fixed_by",
             "created_at",
             "created_by",
+            "acl",
         ]
         read_only_fields = [
             "id",
@@ -39,6 +42,7 @@ class AnomalySerializer(serializers.ModelSerializer):
             "fixed_at",
             "created_at",
             "created_by",
+            "acl",
         ]
 
     def validate(self, attrs):
