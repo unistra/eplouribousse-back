@@ -61,5 +61,5 @@ class Anomaly(models.Model):
         super().clean()
         if self.type == AnomalyType.OTHER and not self.description.strip():
             raise ValidationError(_("Description is required for 'Other' anomaly type."))
-        else:
+        elif self.type != AnomalyType.OTHER and self.description:
             self.description = ""
