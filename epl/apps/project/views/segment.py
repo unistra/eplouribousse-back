@@ -76,8 +76,11 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         return SegmentType.BOUND if resource.status <= ResourceStatus.INSTRUCTION_BOUND else SegmentType.UNBOUND
 
     def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.annotate(fixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=True)))
+
         if self.action != "list":
-            return super().get_queryset()
+            return queryset
 
         resource_id = self.request.query_params.get("resource_id")
         if not resource_id:
@@ -87,10 +90,7 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             queryset = resource.segments
         except Resource.DoesNotExist:
             raise exceptions.NotFound({"detail": _("Resource does not exist")})
-        queryset = queryset.annotate(
-            unfixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=False))
-        )
-        queryset = queryset.annotate(fixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=True)))
+
         return queryset.order_by("order")
 
     def create(self, request, *args, **kwargs):

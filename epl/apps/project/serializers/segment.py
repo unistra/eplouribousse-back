@@ -67,8 +67,8 @@ class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
     )
     def get_anomalies(self, obj):
         return {
-            "fixed": obj.fixed_anomalies,
-            "unfixed": obj.unfixed_anomalies,
+            "fixed": getattr(obj, "fixed_anomalies", 0),
+            "unfixed": getattr(obj, "unfixed_anomalies", 0),
         }
 
     def create(self, validated_data):
