@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
 
 from epl.apps.project.models import Collection, Resource, ResourceStatus
@@ -26,6 +26,7 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
     should_position = serializers.SerializerMethodField(
         read_only=True, help_text=_("Indicates if the user should position this resource")
     )
+    anomalies = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Resource
@@ -40,6 +41,7 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "should_position",
             "status",
             "arbitration",
+            "anomalies",
             "acl",
         ]
 
@@ -66,6 +68,21 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
             ).exists()
 
         return False
+
+    @extend_schema_field(
+        inline_serializer(
+            "NestedAnomaliesSerializer",
+            fields={
+                "fixed": serializers.IntegerField(help_text=_("Number of fixed anomalies")),
+                "unfixed": serializers.IntegerField(help_text=_("Number of unfixed anomalies")),
+            },
+        )
+    )
+    def get_anomalies(self, obj: Resource) -> dict[str, int]:
+        return {
+            "fixed": obj.fixed_anomalies,
+            "unfixed": obj.unfixed_anomalies,
+        }
 
 
 class ResourceWithCollectionsSerializer(serializers.Serializer):

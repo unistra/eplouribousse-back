@@ -73,6 +73,18 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
                     filter=models.Q(collections__call_number__isnull=False) & ~models.Q(collections__call_number=""),
                     output_field=models.CharField(),
                 ),
+                fixed_anomalies=models.Count(
+                    "collections__segments__anomalies",
+                    filter=models.Q(
+                        collections__segments__anomalies__fixed=True,
+                    ),
+                ),
+                unfixed_anomalies=models.Count(
+                    "collections__segments__anomalies",
+                    filter=models.Q(
+                        collections__segments__anomalies__fixed=False,
+                    ),
+                ),
             )
         return queryset
 
