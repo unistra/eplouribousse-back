@@ -69,6 +69,14 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
 
         return False
 
+    def to_representation(self, instance):
+        # In this particular case, resources don't have anomalies counts
+        # only the collections have them
+        representation = super().to_representation(instance)
+        if self.context.get("hide_anomalies"):
+            representation.pop("anomalies", None)
+        return representation
+
     @extend_schema_field(
         inline_serializer(
             "NestedAnomaliesSerializer",
@@ -80,8 +88,8 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
     )
     def get_anomalies(self, obj: Resource) -> dict[str, int]:
         return {
-            "fixed": obj.fixed_anomalies,
-            "unfixed": obj.unfixed_anomalies,
+            "fixed": getattr(obj, "fixed_anomalies", 0) or 0,
+            "unfixed": getattr(obj, "unfixed_anomalies", 0) or 0,
         }
 
 

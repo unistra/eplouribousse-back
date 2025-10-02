@@ -52,6 +52,9 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         context = super().get_serializer_context()
         if self.action == "list":
             context.update({"library": self.request.query_params.get("library")})
+        if self.action == "collections":
+            # The resources won't have anomalies counts, only the collections will have them
+            context.update({"hide_anomalies": True})
 
         return context
 
