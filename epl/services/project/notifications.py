@@ -1,4 +1,5 @@
 from epl.apps.project.models import Project, Resource, Role, UserRole
+from epl.apps.project.models.choices import AlertType
 from epl.apps.project.models.collection import Arbitration, Collection
 from epl.apps.user.models import User
 from epl.services.user.email import (
@@ -13,7 +14,7 @@ from epl.services.user.email import (
 )
 
 
-def should_send_alert(user: User, project: Project, alert_type: str) -> bool:
+def should_send_alert(user: User, project: Project, alert_type: AlertType) -> bool:
     """
     Checks if an alert should be sent to a user, according to their own settings and the project's settings.
     If the alert is deactivated in the project, it is not sent to the user.
@@ -21,12 +22,12 @@ def should_send_alert(user: User, project: Project, alert_type: str) -> bool:
     """
     # checks alert settings in Project model
     admin_alerts = project.settings.get("alerts", {})
-    if admin_alerts.get(alert_type, True) is False:
+    if admin_alerts.get(alert_type.value, True) is False:
         return False
     # checks alert settings in User model
     user_alerts = user.settings.get("alerts", {})
     user_alerts_for_project = user_alerts.get(str(project.id), {})
-    return user_alerts_for_project.get(alert_type, True)
+    return user_alerts_for_project.get(alert_type.value, True)
 
 
 def invite_unregistered_users_to_epl(project: Project, request):
@@ -133,7 +134,7 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     # check project settings to see if arbitration emails should be sent
     # to avoid unnecessary queries if arbitration is disabled
     project_alerts = resource.project.settings.get("alerts", {})
-    if project_alerts.get("arbitration", True) is False:
+    if project_alerts.get(AlertType.ARBITRATION.value, True) is False:
         return
 
     arbitration_type = resource.arbitration
@@ -157,7 +158,7 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     )
 
     for instructor in instructors_to_notify:
-        if should_send_alert(instructor.user, resource.project, "arbitration"):
+        if should_send_alert(instructor.user, resource.project, AlertType.ARBITRATION):
             send_arbitration_notification_email(
                 email=instructor.user.email,
                 request=request,
@@ -177,7 +178,7 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
     # check project settings to see if arbitration emails should be sent
     # to avoid unnecessary queries if arbitration is disabled
     project_alerts = resource.project.settings.get("alerts", {})
-    if project_alerts.get("positioning", True) is False:
+    if project_alerts.get(AlertType.POSITIONING.value, True) is False:
         return
 
     acting_user = request.user
@@ -198,7 +199,7 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
         if instructor_role.user == acting_user:  # double-check that the user is not already positioned.
             continue
 
-        if should_send_alert(instructor_role.user, resource.project, "positioning"):
+        if should_send_alert(instructor_role.user, resource.project, AlertType.POSITIONING):
             send_collection_positioned_email(
                 email=instructor_role.user.email,
                 request=request,
@@ -217,7 +218,7 @@ def notify_instructors_of_instruction_turn(resource: Resource, collection: Colle
     # check project settings to see if arbitration emails should be sent
     # to avoid unnecessary queries if arbitration is disabled
     project_alerts = resource.project.settings.get("alerts", {})
-    if project_alerts.get("instruction", True) is False:
+    if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
     # Find the instructors of the collection that has to be instructed.
@@ -228,7 +229,7 @@ def notify_instructors_of_instruction_turn(resource: Resource, collection: Colle
     )
 
     for instructor_to_notify in instructors_to_notify:
-        if should_send_alert(instructor_to_notify.user, resource.project, "instruction"):
+        if should_send_alert(instructor_to_notify.user, resource.project, AlertType.INSTRUCTION):
             send_instruction_turn_email(
                 email=instructor_to_notify.user.email,
                 request=request,
@@ -245,12 +246,12 @@ def notify_controllers_of_control(resource, request, cycle):
     # check project settings to see if arbitration emails should be sent
     # to avoid unnecessary queries if arbitration is disabled
     project_alerts = resource.project.settings.get("alerts", {})
-    if project_alerts.get("control", True) is False:
+    if project_alerts.get(AlertType.CONTROL.value, True) is False:
         return
     controllers = UserRole.objects.filter(project=project, role=Role.CONTROLLER).select_related("user").distinct()
 
     for controller in controllers:
-        if should_send_alert(controller.user, resource.project, "control"):
+        if should_send_alert(controller.user, resource.project, AlertType.CONTROL):
             send_control_notification_email(
                 email=controller.user.email,
                 request=request,

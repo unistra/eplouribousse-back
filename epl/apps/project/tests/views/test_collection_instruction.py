@@ -3,6 +3,7 @@ from django_tenants.urlresolvers import reverse
 from parameterized import parameterized
 
 from epl.apps.project.models import ResourceStatus, Role
+from epl.apps.project.models.choices import AlertType
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
@@ -182,7 +183,7 @@ class SendNotificationToInstruct(TestCase):
     def setUp(self):
         super().setUp()
         self.project = ProjectFactory()
-        self.project.settings["alerts"]["instruction"] = True
+        self.project.settings["alerts"][AlertType.INSTRUCTION.value] = True
         self.project.save()
 
         self.library_1 = LibraryFactory()
@@ -309,7 +310,9 @@ class SendNotificationToInstruct(TestCase):
 
     def test_no_instruction_notification_if_user_alert_false(self):
         # Deactivate instruction alerts for instructor_1
-        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["instruction"] = False
+        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.INSTRUCTION.value
+        ] = False
         self.instructor_1.save()
         self.instructor_1.refresh_from_db()
 
@@ -339,8 +342,8 @@ class ControlPhaseTest(TestCase):
     def setUp(self):
         super().setUp()
         self.project = ProjectFactory()
-        self.project.settings["alerts"]["control"] = True
-        self.project.settings["alerts"]["instruction"] = True
+        self.project.settings["alerts"][AlertType.CONTROL.value] = True
+        self.project.settings["alerts"][AlertType.INSTRUCTION.value] = True
         self.project.save()
 
         self.library_1 = LibraryFactory()
@@ -460,7 +463,9 @@ class ControlPhaseTest(TestCase):
         self.assertEqual(self.resource.status, ResourceStatus.EDITION)
 
     def test_no_control_notification_if_user_alert_false(self):
-        self.controller.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["control"] = False
+        self.controller.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.CONTROL.value
+        ] = False
         self.controller.save()
         self.controller.refresh_from_db()
 

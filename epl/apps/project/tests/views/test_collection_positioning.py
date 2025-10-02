@@ -1,12 +1,12 @@
 from uuid import uuid4
 
 from django.core import mail
-from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
 
 from epl.apps.project.models import ResourceStatus, Role, UserRole
+from epl.apps.project.models.choices import AlertType
 from epl.apps.project.models.collection import Arbitration
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
@@ -268,7 +268,7 @@ class ArbitrationNotificationTest(TestCase):
             self.instructor_2 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_2)
             self.collection_2 = CollectionFactory(library=self.library_2, project=self.project, resource=self.resource)
 
-            self.project.settings["alerts"]["arbitration"] = True
+            self.project.settings["alerts"][AlertType.ARBITRATION.value] = True
             self.project.save()
 
     def test_arbitration_type_1_sends_notification_user_alerts_settings_by_default(self):
@@ -329,8 +329,12 @@ class ArbitrationNotificationTest(TestCase):
 
     def test_arbitration_type_1_sends_notification_user_alert_arbitration_true(self):
         # set the user alert arbitration to true
-        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["arbitration"] = False
-        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["arbitration"] = False
+        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.ARBITRATION.value
+        ] = False
+        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.ARBITRATION.value
+        ] = False
         # Set the collection_1 rank to 1
         self.patch(
             reverse("collection-position", kwargs={"pk": self.collection_1.id}),
@@ -385,10 +389,14 @@ class ArbitrationNotificationTest(TestCase):
 
     def test_arbitration_type_1_does_not_send_notification_if_user_alert_arbitration_false(self):
         # set the user alert arbitration to false
-        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["arbitration"] = False
+        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.ARBITRATION.value
+        ] = False
         self.instructor_1.save()
         self.instructor_1.refresh_from_db()
-        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["arbitration"] = False
+        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.ARBITRATION.value
+        ] = False
         self.instructor_2.save()
         self.instructor_2.refresh_from_db()
 
@@ -605,7 +613,7 @@ class PositioningNotificationTest(TestCase):
             self.instructor_3 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_3)
             self.collection_3 = CollectionFactory(library=self.library_3, project=self.project, resource=self.resource)
 
-            self.project.settings["alerts"]["positioning"] = True
+            self.project.settings["alerts"][AlertType.POSITIONING.value] = True
             self.project.save()
 
     def test_positioning_sends_notification(self):
@@ -621,7 +629,7 @@ class PositioningNotificationTest(TestCase):
 
         # instructors 2 and 3 should receive an email
         self.assertEqual(len(mail.outbox), 2)
-        expected_string_in_subject = str(_("positioning"))
+        expected_string_in_subject = "positioning"
         expected_recipients = [self.instructor_2.email, self.instructor_3.email]
 
         positioning_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
@@ -662,10 +670,14 @@ class PositioningNotificationTest(TestCase):
 
     def test_no_email_sent_if_user_positioning_alert_disabled(self):
         # Deactivate the user alert positioning
-        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["positioning"] = False
+        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.POSITIONING.value
+        ] = False
         self.instructor_2.save()
         self.instructor_2.refresh_from_db()
-        self.instructor_3.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["positioning"] = False
+        self.instructor_3.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.POSITIONING.value
+        ] = False
         self.instructor_3.save()
         self.instructor_3.refresh_from_db()
         self.patch(
