@@ -151,13 +151,14 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     )
 
     for instructor in instructors_to_notify:
-        send_arbitration_notification_email(
-            email=instructor.user.email,
-            request=request,
-            resource=resource,
-            library_code=instructor.library.code,
-            arbitration_type=arbitration_type,
-        )
+        if should_send_alert(instructor.user, resource.project, "arbitration"):
+            send_arbitration_notification_email(
+                email=instructor.user.email,
+                request=request,
+                resource=resource,
+                library_code=instructor.library.code,
+                arbitration_type=arbitration_type,
+            )
 
 
 def notify_other_instructors_of_positioning(resource: Resource, request, positioned_collection) -> None:
