@@ -77,7 +77,6 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.annotate(fixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=True)))
 
         if self.action != "list":
             return queryset
@@ -87,7 +86,10 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             raise exceptions.ValidationError({"detail": _("Missing required query parameter: resource_id")})
         try:
             resource = Resource.objects.get(id=resource_id)
-            queryset = resource.segments
+            queryset = resource.segments.annotate(
+                fixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=True)),
+                unfixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=False)),
+            )
         except Resource.DoesNotExist:
             raise exceptions.NotFound({"detail": _("Resource does not exist")})
 
