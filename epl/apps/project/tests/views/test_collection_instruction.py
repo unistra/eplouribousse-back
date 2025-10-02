@@ -3,6 +3,7 @@ from django_tenants.urlresolvers import reverse
 from parameterized import parameterized
 
 from epl.apps.project.models import ResourceStatus, Role
+from epl.apps.project.models.choices import AlertType
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
@@ -182,6 +183,9 @@ class SendNotificationToInstruct(TestCase):
     def setUp(self):
         super().setUp()
         self.project = ProjectFactory()
+        self.project.settings["alerts"][AlertType.INSTRUCTION.value] = True
+        self.project.save()
+
         self.library_1 = LibraryFactory()
         self.instructor_1 = UserWithRoleFactory(
             role=Role.INSTRUCTOR,
@@ -304,11 +308,44 @@ class SendNotificationToInstruct(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [instructor_3.email])
 
+    def test_no_instruction_notification_if_user_alert_false(self):
+        # Deactivate instruction alerts for instructor_1
+        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.INSTRUCTION.value
+        ] = False
+        self.instructor_1.save()
+        self.instructor_1.refresh_from_db()
+
+        self.collection_1.position = 1
+        self.collection_1.save()
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+
+        self.collection_2.refresh_from_db()
+        self.resource.refresh_from_db()
+
+        # Check that no email was sent to instructor_1
+        expected_string_in_subject = "instruction"
+        instruction_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
+        actual_recipients = [email.to[0] for email in instruction_emails]
+
+        self.assertNotIn(self.instructor_1.email, actual_recipients)
+        self.assertEqual(len(instruction_emails), 0)
+
 
 class ControlPhaseTest(TestCase):
     def setUp(self):
         super().setUp()
         self.project = ProjectFactory()
+        self.project.settings["alerts"][AlertType.CONTROL.value] = True
+        self.project.settings["alerts"][AlertType.INSTRUCTION.value] = True
+        self.project.save()
+
         self.library_1 = LibraryFactory()
         self.instructor_1 = UserWithRoleFactory(
             role=Role.INSTRUCTOR,
@@ -424,3 +461,40 @@ class ControlPhaseTest(TestCase):
         self.resource.refresh_from_db()
         # Status should move from INSTRUCTION_UNBOUND to EDITION
         self.assertEqual(self.resource.status, ResourceStatus.EDITION)
+
+    def test_no_control_notification_if_user_alert_false(self):
+        self.controller.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.CONTROL.value
+        ] = False
+        self.controller.save()
+        self.controller.refresh_from_db()
+
+        self.collection_1.position = 1
+        self.collection_1.save()
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.collection_2.refresh_from_db()
+        self.resource.refresh_from_db()
+
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_1.id}),
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.resource.refresh_from_db()
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_2.id}),
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.resource.refresh_from_db()
+
+        # No email should be sent to the controller
+        control_emails = [email for email in mail.outbox if "control" in str(email.subject)]
+        actual_recipients = [email.to[0] for email in control_emails]
+        self.assertNotIn(self.controller.email, actual_recipients)
+        self.assertEqual(len(control_emails), 0)

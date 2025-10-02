@@ -1,12 +1,12 @@
 from uuid import uuid4
 
 from django.core import mail
-from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
 
 from epl.apps.project.models import ResourceStatus, Role, UserRole
+from epl.apps.project.models.choices import AlertType
 from epl.apps.project.models.collection import Arbitration
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
@@ -268,7 +268,14 @@ class ArbitrationNotificationTest(TestCase):
             self.instructor_2 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_2)
             self.collection_2 = CollectionFactory(library=self.library_2, project=self.project, resource=self.resource)
 
-    def test_arbitration_type_1_sends_notification(self):
+            self.project.settings["alerts"][AlertType.ARBITRATION.value] = True
+            self.project.save()
+
+    def test_arbitration_type_1_sends_notification_user_alerts_settings_by_default(self):
+        """
+        project.settings['alerts']['arbitration'] = True
+        user.settings by default
+        """
         # Set the collection_1 rank to 1
         self.patch(
             reverse("collection-position", kwargs={"pk": self.collection_1.id}),
@@ -286,7 +293,6 @@ class ArbitrationNotificationTest(TestCase):
             content_type="application/json",
             user=self.instructor_2,
         )
-
         self.collection_2.refresh_from_db()
         self.resource.refresh_from_db()
 
@@ -320,6 +326,112 @@ class ArbitrationNotificationTest(TestCase):
         expected_subjects = {expected_subject_1, expected_subject_2}
         actual_subjects = {email.subject for email in arbitration_1_emails}
         self.assertEqual(actual_subjects, expected_subjects)
+
+    def test_arbitration_type_1_sends_notification_user_alert_arbitration_true(self):
+        # set the user alert arbitration to true
+        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.ARBITRATION.value
+        ] = False
+        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.ARBITRATION.value
+        ] = False
+        # Set the collection_1 rank to 1
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_1.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.collection_1.refresh_from_db()
+        self.assertEqual(self.collection_1.position, 1)
+
+        # Set the collection_2 rank to 1
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+
+        self.collection_2.refresh_from_db()
+        self.resource.refresh_from_db()
+
+        self.assertEqual(self.collection_2.position, 1)
+        self.assertEqual(self.resource.arbitration, Arbitration.ONE)
+
+        # 2 arbitration 1 emails should be sent, one to each instructor.
+        expected_string_in_subject = "arbitration 1"
+        arbitration_1_emails = [
+            email for email in mail.outbox if expected_string_in_subject.lower() in str(email.subject).lower()
+        ]
+
+        expected_recipients = {self.instructor_1.email, self.instructor_2.email}
+        actual_recipients = {email.to[0] for email in arbitration_1_emails}
+
+        # check number of emails
+        self.assertEqual(len(arbitration_1_emails), 2)
+
+        # check recipient
+        self.assertEqual(actual_recipients, expected_recipients)
+
+        # check body
+        expected_string_in_body = "The repositioning of your collection for the resource"
+        for email in arbitration_1_emails:
+            self.assertIn(expected_string_in_body, email.body)
+
+        # check subject
+        expected_subject_1 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_1.code} | {self.resource.code} | arbitration {Arbitration.ONE.value}"
+        expected_subject_2 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_2.code} | {self.resource.code} | arbitration {Arbitration.ONE.value}"
+
+        expected_subjects = {expected_subject_1, expected_subject_2}
+        actual_subjects = {email.subject for email in arbitration_1_emails}
+        self.assertEqual(actual_subjects, expected_subjects)
+
+    def test_arbitration_type_1_does_not_send_notification_if_user_alert_arbitration_false(self):
+        # set the user alert arbitration to false
+        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.ARBITRATION.value
+        ] = False
+        self.instructor_1.save()
+        self.instructor_1.refresh_from_db()
+        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.ARBITRATION.value
+        ] = False
+        self.instructor_2.save()
+        self.instructor_2.refresh_from_db()
+
+        # Set the collection_1 rank to 1
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_1.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.collection_1.refresh_from_db()
+        self.assertEqual(self.collection_1.position, 1)
+
+        # Set the collection_2 rank to 1
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+
+        self.collection_2.refresh_from_db()
+        self.resource.refresh_from_db()
+
+        self.assertEqual(self.collection_2.position, 1)
+        self.assertEqual(self.resource.arbitration, Arbitration.ONE)
+
+        # No arbitration 1 emails should be sent
+        non_expected_subject_1 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_1.code} | {self.resource.code} | arbitration {Arbitration.ONE.value}"
+        non_expected_subject_2 = f"eplouribousse | {self.tenant.name} | {self.project.name} | {self.library_2.code} | {self.resource.code} | arbitration {Arbitration.ONE.value}"
+
+        all_subjects = [email.subject for email in mail.outbox]
+
+        self.assertNotIn(non_expected_subject_1, all_subjects)
+        self.assertNotIn(non_expected_subject_2, all_subjects)
 
     def test_arbitration_type_0_sends_notification(self):
         # Set the collection_1 rank to 2
@@ -501,6 +613,9 @@ class PositioningNotificationTest(TestCase):
             self.instructor_3 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_3)
             self.collection_3 = CollectionFactory(library=self.library_3, project=self.project, resource=self.resource)
 
+            self.project.settings["alerts"][AlertType.POSITIONING.value] = True
+            self.project.save()
+
     def test_positioning_sends_notification(self):
         # Position the collection_1 to rank 2
         self.patch(
@@ -514,7 +629,7 @@ class PositioningNotificationTest(TestCase):
 
         # instructors 2 and 3 should receive an email
         self.assertEqual(len(mail.outbox), 2)
-        expected_string_in_subject = str(_("positioning"))
+        expected_string_in_subject = "positioning"
         expected_recipients = [self.instructor_2.email, self.instructor_3.email]
 
         positioning_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
@@ -552,3 +667,25 @@ class PositioningNotificationTest(TestCase):
 
         self.assertEqual(len(positioning_emails), 1)
         self.assertEqual(actual_recipients, expected_recipients)
+
+    def test_no_email_sent_if_user_positioning_alert_disabled(self):
+        # Deactivate the user alert positioning
+        self.instructor_2.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.POSITIONING.value
+        ] = False
+        self.instructor_2.save()
+        self.instructor_2.refresh_from_db()
+        self.instructor_3.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})[
+            AlertType.POSITIONING.value
+        ] = False
+        self.instructor_3.save()
+        self.instructor_3.refresh_from_db()
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_1.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.collection_1.refresh_from_db()
+        self.assertEqual(self.collection_1.position, 2)
+        self.assertEqual(len(mail.outbox), 0)

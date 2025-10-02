@@ -5,7 +5,7 @@ from django.utils.translation import gettext as _
 
 
 class AlertType(models.TextChoices):
-    POSITIONING = "position", _("Position")
+    POSITIONING = "positioning", _("Positioning")
     ARBITRATION = "arbitration", _("Arbitration")
     INSTRUCTION = "instruction", _("Instruction")
     CONTROL = "control", _("Control")
@@ -40,7 +40,6 @@ class ResourceStatus(models.IntegerChoices):
     INSTRUCTION_UNBOUND = 40, _("Instruction Unbound Copies")
     CONTROL_UNBOUND = 50, _("Control Unbound Copies")
     EDITION = 60, _("Edition")
-
 
 
 class SegmentType(models.TextChoices):
