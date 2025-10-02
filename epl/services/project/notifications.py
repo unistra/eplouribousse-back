@@ -214,6 +214,12 @@ def notify_instructors_of_instruction_turn(resource: Resource, collection: Colle
     project = resource.project
     library = collection.library
 
+    # check project settings to see if arbitration emails should be sent
+    # to avoid unnecessary queries if arbitration is disabled
+    project_alerts = resource.project.settings.get("alerts", {})
+    if project_alerts.get("instruction", True) is False:
+        return
+
     # Find the instructors of the collection that has to be instructed.
     instructors_to_notify = (
         UserRole.objects.filter(project=project, role=Role.INSTRUCTOR, library=library)
@@ -222,12 +228,13 @@ def notify_instructors_of_instruction_turn(resource: Resource, collection: Colle
     )
 
     for instructor_to_notify in instructors_to_notify:
-        send_instruction_turn_email(
-            email=instructor_to_notify.user.email,
-            request=request,
-            resource=resource,
-            library_code=library.code,
-        )
+        if should_send_alert(instructor_to_notify.user, resource.project, "instruction"):
+            send_instruction_turn_email(
+                email=instructor_to_notify.user.email,
+                request=request,
+                resource=resource,
+                library_code=library.code,
+            )
 
 
 def notify_controllers_of_control(resource, request, cycle):

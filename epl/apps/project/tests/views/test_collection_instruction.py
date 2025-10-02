@@ -182,6 +182,9 @@ class SendNotificationToInstruct(TestCase):
     def setUp(self):
         super().setUp()
         self.project = ProjectFactory()
+        self.project.settings["alerts"]["instruction"] = True
+        self.project.save()
+
         self.library_1 = LibraryFactory()
         self.instructor_1 = UserWithRoleFactory(
             role=Role.INSTRUCTOR,
@@ -303,6 +306,33 @@ class SendNotificationToInstruct(TestCase):
         # Only 1 email should be sent: the one for instructor 3.
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [instructor_3.email])
+
+    def test_no_instruction_notification_if_user_alert_false(self):
+        # Deactivate instruction alerts for instructor_1
+        self.instructor_1.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["instruction"] = False
+        self.instructor_1.save()
+        self.instructor_1.refresh_from_db()
+
+        self.collection_1.position = 1
+        self.collection_1.save()
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+
+        self.collection_2.refresh_from_db()
+        self.resource.refresh_from_db()
+
+        # Check that no email was sent to instructor_1
+        expected_string_in_subject = "instruction"
+        instruction_emails = [email for email in mail.outbox if expected_string_in_subject in str(email.subject)]
+        actual_recipients = [email.to[0] for email in instruction_emails]
+
+        self.assertNotIn(self.instructor_1.email, actual_recipients)
+        self.assertEqual(len(instruction_emails), 0)
 
 
 class ControlPhaseTest(TestCase):
