@@ -1,3 +1,4 @@
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
@@ -16,7 +17,7 @@ from epl.schema_serializers import UnauthorizedSerializer
 
 @extend_schema_view(
     list=extend_schema(
-        tags=["segment"],
+        tags=["segment", "instruction"],
         summary=_("List segments"),
         description=_("List segments for a specific resource"),
         parameters=[
@@ -34,7 +35,7 @@ from epl.schema_serializers import UnauthorizedSerializer
         },
     ),
     create=extend_schema(
-        tags=["segment"],
+        tags=["segment", "instruction"],
         summary=_("Create a segment"),
         request=SegmentSerializer,
         responses={
@@ -44,7 +45,7 @@ from epl.schema_serializers import UnauthorizedSerializer
         },
     ),
     partial_update=extend_schema(
-        tags=["segment"],
+        tags=["segment", "instruction"],
         summary=_("Partially update a segment"),
         request=SegmentSerializer,
         responses={
@@ -54,7 +55,7 @@ from epl.schema_serializers import UnauthorizedSerializer
         },
     ),
     destroy=extend_schema(
-        tags=["segment"],
+        tags=["segment", "instruction"],
         summary=_("Delete a segment"),
         description=_("Delete a segment permanently"),
         responses={
@@ -86,6 +87,10 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             queryset = resource.segments
         except Resource.DoesNotExist:
             raise exceptions.NotFound({"detail": _("Resource does not exist")})
+        queryset = queryset.annotate(
+            unfixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=False))
+        )
+        queryset = queryset.annotate(fixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=True)))
         return queryset.order_by("order")
 
     def create(self, request, *args, **kwargs):
