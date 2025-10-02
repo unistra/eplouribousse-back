@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -39,9 +40,6 @@ class AnomalySerializer(serializers.ModelSerializer):
             "created_at",
             "created_by",
         ]
-        write_only_fields = [
-            "segment_id",
-        ]
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -75,5 +73,6 @@ class AnomalySerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         self.instance.fixed = True
         self.instance.fixed_by = user
+        self.instance.fixed_at = timezone.now()
         self.instance.save(update_fields=["fixed", "fixed_by", "fixed_at"])
         return self.instance
