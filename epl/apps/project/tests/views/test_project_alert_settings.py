@@ -43,7 +43,7 @@ class ProjectAlertSettingsViewSetTest(TestCase):
         data = {
             "alerts": {
                 "edition": False,
-                "position": True,
+                "positioning": True,
                 "instruction": True,
             }
         }
@@ -52,7 +52,7 @@ class ProjectAlertSettingsViewSetTest(TestCase):
         project.refresh_from_db()
         if should_succeed:
             self.assertEqual(project.settings["alerts"]["edition"], False)
-            self.assertEqual(project.settings["alerts"]["position"], True)
+            self.assertEqual(project.settings["alerts"]["positioning"], True)
             self.assertEqual(project.settings["alerts"]["instruction"], True)
         else:
             self.assertNotEqual(project.settings["alerts"].get("results"), False)

@@ -339,6 +339,10 @@ class ControlPhaseTest(TestCase):
     def setUp(self):
         super().setUp()
         self.project = ProjectFactory()
+        self.project.settings["alerts"]["control"] = True
+        self.project.settings["alerts"]["instruction"] = True
+        self.project.save()
+
         self.library_1 = LibraryFactory()
         self.instructor_1 = UserWithRoleFactory(
             role=Role.INSTRUCTOR,
@@ -454,3 +458,38 @@ class ControlPhaseTest(TestCase):
         self.resource.refresh_from_db()
         # Status should move from INSTRUCTION_UNBOUND to EDITION
         self.assertEqual(self.resource.status, ResourceStatus.EDITION)
+
+    def test_no_control_notification_if_user_alert_false(self):
+        self.controller.settings.setdefault("alerts", {}).setdefault(str(self.project.id), {})["control"] = False
+        self.controller.save()
+        self.controller.refresh_from_db()
+
+        self.collection_1.position = 1
+        self.collection_1.save()
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_2.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.collection_2.refresh_from_db()
+        self.resource.refresh_from_db()
+
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_1.id}),
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.resource.refresh_from_db()
+        self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection_2.id}),
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.resource.refresh_from_db()
+
+        # No email should be sent to the controller
+        control_emails = [email for email in mail.outbox if "control" in str(email.subject)]
+        actual_recipients = [email.to[0] for email in control_emails]
+        self.assertNotIn(self.controller.email, actual_recipients)
+        self.assertEqual(len(control_emails), 0)

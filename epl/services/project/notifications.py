@@ -242,12 +242,18 @@ def notify_controllers_of_control(resource, request, cycle):
     Notifies controllers (role CONTROLLER) at the end of the instruction cycle.
     """
     project = resource.project
+    # check project settings to see if arbitration emails should be sent
+    # to avoid unnecessary queries if arbitration is disabled
+    project_alerts = resource.project.settings.get("alerts", {})
+    if project_alerts.get("control", True) is False:
+        return
     controllers = UserRole.objects.filter(project=project, role=Role.CONTROLLER).select_related("user").distinct()
 
     for controller in controllers:
-        send_control_notification_email(
-            email=controller.user.email,
-            request=request,
-            resource=resource,
-            cycle=cycle,
-        )
+        if should_send_alert(controller.user, resource.project, "control"):
+            send_control_notification_email(
+                email=controller.user.email,
+                request=request,
+                resource=resource,
+                cycle=cycle,
+            )
