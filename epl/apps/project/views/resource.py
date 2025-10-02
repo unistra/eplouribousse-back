@@ -105,7 +105,20 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
     @action(detail=True, methods=["get"], url_path="collections")
     def collections(self, request, pk=None):
         resource = self.get_object()
-        collections = resource.collections.all()
+        collections = resource.collections.annotate(
+            fixed_anomalies=models.Count(
+                "segments__anomalies",
+                filter=models.Q(
+                    segments__anomalies__fixed=True,
+                ),
+            ),
+            unfixed_anomalies=models.Count(
+                "segments__anomalies",
+                filter=models.Q(
+                    segments__anomalies__fixed=False,
+                ),
+            ),
+        ).all()
         serializer = ResourceWithCollectionsSerializer(
             {
                 "resource": resource,
