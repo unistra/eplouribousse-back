@@ -156,11 +156,8 @@ class ReportAnomaliesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Resource
-        read_only_fields = [
-            "id",
-            "status",
-            "instruction_turns",
-        ]
+        fields = ["id", "status", "instruction_turns"]
+        read_only_fields = ["id", "status", "instruction_turns"]
 
     def report(self):
         # 1 Change status to ANOMALY
