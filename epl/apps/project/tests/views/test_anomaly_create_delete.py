@@ -2,7 +2,8 @@ from unittest.mock import patch
 
 from django_tenants.urlresolvers import reverse
 
-from epl.apps.project.models import AnomalyType, Role
+from epl.apps.project.models import Anomaly, AnomalyType, Role
+from epl.apps.project.tests.factories.anomaly import AnomalyFactory
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
@@ -73,3 +74,42 @@ class CreateAnomalyTest(TestCase):
             )
             self.response_forbidden(response)
             mock_permission.assert_called_once_with(self.instructor, self.segment)
+
+    def test_anonymous_user_cannot_delete_anomaly(self):
+        anomaly = AnomalyFactory(segment=self.segment, resource=self.resource)
+        response = self.delete(
+            reverse("anomaly-detail", kwargs={"pk": anomaly.id}),
+            user=None,
+        )
+        self.response_unauthorized(response)
+
+    def test_creator_can_delete_anomaly(self):
+        anomaly = AnomalyFactory(segment=self.segment, resource=self.resource, created_by=self.instructor)
+        response = self.delete(
+            reverse("anomaly-detail", kwargs={"pk": anomaly.id}),
+            user=self.instructor,
+        )
+        self.response_no_content(response)
+        with self.assertRaises(Anomaly.DoesNotExist):
+            anomaly.refresh_from_db()
+
+    def test_admin_can_delete_anomaly(self):
+        admin = UserWithRoleFactory(role=Role.PROJECT_ADMIN, project=self.project)
+        anomaly = AnomalyFactory(segment=self.segment, resource=self.resource, created_by=self.instructor)
+        response = self.delete(
+            reverse("anomaly-detail", kwargs={"pk": anomaly.id}),
+            user=admin,
+        )
+        self.response_no_content(response)
+        with self.assertRaises(Anomaly.DoesNotExist):
+            anomaly.refresh_from_db()
+
+    def test_instructor_cannot_delete_others_anomaly(self):
+        other_instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library)
+        anomaly = AnomalyFactory(segment=self.segment, resource=self.resource, created_by=other_instructor)
+        response = self.delete(
+            reverse("anomaly-detail", kwargs={"pk": anomaly.id}),
+            user=self.instructor,
+        )
+        self.response_forbidden(response)
+        anomaly.refresh_from_db()  # Should not raise

@@ -16,30 +16,40 @@ class AnomalyPermissions(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj: Anomaly) -> bool:
-        if view.action == "fix":
-            return self.user_has_permission("fix", request.user, obj)
+        match view.action:
+            case "destroy":
+                return self.user_has_permission("destroy", request.user, obj)
+            case "fix":
+                return self.user_has_permission("fix", request.user, obj)
         return False
 
     @staticmethod
     def user_has_permission(action: str, user: User, anomaly: Anomaly = None) -> bool:
-        if action == "fix":
-            if not user.is_authenticated:
-                return False
-            # user must be an admin in the project
-            # or instructor in the collection's library
-            return UserRole.objects.filter(
-                Q(
-                    user=user,
-                    role=Role.PROJECT_ADMIN,
-                    project=anomaly.segment.collection.project,
+        match action:
+            case "fix":
+                if not user.is_authenticated:
+                    return False
+                # user must be an admin in the project
+                # or instructor in the collection's library
+                return UserRole.objects.filter(
+                    Q(
+                        user=user,
+                        role=Role.PROJECT_ADMIN,
+                        project=anomaly.segment.collection.project,
+                    )
+                    | Q(
+                        user=user,
+                        role=Role.INSTRUCTOR,
+                        project=anomaly.segment.collection.project,
+                        library=anomaly.segment.collection.library,
+                    )
+                ).exists()
+            case "destroy":
+                return bool(
+                    user
+                    and user.is_authenticated
+                    and (anomaly.created_by.id == user.id or user.is_project_admin(anomaly.resource.project))
                 )
-                | Q(
-                    user=user,
-                    role=Role.INSTRUCTOR,
-                    project=anomaly.segment.collection.project,
-                    library=anomaly.segment.collection.library,
-                )
-            ).exists()
         return False
 
     @staticmethod

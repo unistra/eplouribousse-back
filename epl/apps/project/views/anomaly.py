@@ -56,8 +56,20 @@ from epl.schema_serializers import UnauthorizedSerializer
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
     ),
+    destroy=extend_schema(
+        tags=["anomaly", "instruction"],
+        summary="Delete an anomaly",
+        description="Delete an anomaly",
+        request=None,
+        responses={
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_403_FORBIDDEN: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_404_NOT_FOUND: None,
+        },
+    ),
 )
-class AnomalyViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
+class AnomalyViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     queryset = Anomaly.objects.all().select_related("segment", "created_by", "fixed_by")
     serializer_class = AnomalySerializer
     permission_classes = [AnomalyPermissions]
@@ -74,7 +86,6 @@ class AnomalyViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, GenericView
             if segment := self.request.query_params.get("segment"):
                 return queryset.filter(segment__id=segment)
 
-        print(queryset.query)
         return queryset
 
     def check_permissions(self, request):
