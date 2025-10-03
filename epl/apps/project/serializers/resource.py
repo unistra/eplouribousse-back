@@ -147,3 +147,31 @@ class ValidateControlSerializer(serializers.ModelSerializer):
             self.instance.save(update_fields=["status"])
 
         return self.instance
+
+
+class ReportAnomaliesSerializer(serializers.ModelSerializer):
+    instruction_turns = InstructionTurnsField(
+        read_only=True, help_text=_("The updated instruction turns of the resource")
+    )
+
+    class Meta:
+        model = Resource
+        fields = ["id", "status", "instruction_turns"]
+        read_only_fields = ["id", "status", "instruction_turns"]
+
+    def report(self):
+        # 1 Change status to ANOMALY
+        match self.instance.status:
+            case ResourceStatus.INSTRUCTION_BOUND | ResourceStatus.CONTROL_BOUND:
+                self.instance.status = ResourceStatus.ANOMALY_BOUND
+            case ResourceStatus.INSTRUCTION_UNBOUND | ResourceStatus.CONTROL_UNBOUND:
+                self.instance.status = ResourceStatus.ANOMALY_UNBOUND
+            case _:
+                raise serializers.ValidationError(
+                    {
+                        "status": _("The resource is not in instruction or control status"),
+                    }
+                )
+        self.instance.save(update_fields=["status"])
+        # 2 Send notifications TODO
+        return self.instance

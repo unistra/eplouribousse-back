@@ -36,8 +36,10 @@ class ProjectStatus(models.IntegerChoices):
 class ResourceStatus(models.IntegerChoices):
     POSITIONING = 10, _("Positioning")
     INSTRUCTION_BOUND = 20, _("Instruction Bound Copies")
+    ANOMALY_BOUND = 25, _("Anomaly Bound Copies")
     CONTROL_BOUND = 30, _("Control Bound Copies")
     INSTRUCTION_UNBOUND = 40, _("Instruction Unbound Copies")
+    ANOMALY_UNBOUND = 45, _("Anomaly Unbound Copies")
     CONTROL_UNBOUND = 50, _("Control Unbound Copies")
     EDITION = 60, _("Edition")
 

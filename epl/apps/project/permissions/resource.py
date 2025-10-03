@@ -20,6 +20,7 @@ class ResourcePermission(BasePermission):
             "list_statuses",
             "collections",
             "validate_control",
+            "report_anomalies",
         ]:
             return self.user_has_permission(view.action, request.user, obj)
 
@@ -42,5 +43,12 @@ class ResourcePermission(BasePermission):
                 return True
             case "validate_control":
                 return bool(user and user.is_authenticated and user.is_controller(resource.project))
+            case "report_anomalies":
+                # user is controller or instructor for the project
+                return bool(
+                    user
+                    and user.is_authenticated
+                    and (user.is_controller(resource.project) or user.is_instructor(resource.project))
+                )
 
         return False

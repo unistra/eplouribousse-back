@@ -14,6 +14,7 @@ from epl.apps.project.models import Resource, ResourceStatus
 from epl.apps.project.permissions.resource import ResourcePermission
 from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.resource import (
+    ReportAnomaliesSerializer,
     ResourceSerializer,
     ResourceWithCollectionsSerializer,
     ValidateControlSerializer,
@@ -162,3 +163,26 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    @extend_schema(
+        summary=_("Report anomalies"),
+        request=None,
+        responses={
+            status.HTTP_200_OK: ReportAnomaliesSerializer,
+        },
+        tags=["resource", "anomaly", "instruction"],
+    )
+    @action(detail=True, methods=["PATCH"], url_path="report-anomalies")
+    def report_anomalies(self, request, pk) -> Response:
+        """
+        Allows controllers or instructors to report anomalies for a specific resource.
+        This closes the anomaly creation, sends the notifications and updates the resource status if needed.
+        """
+        resource = self.get_object()
+        serializer = ReportAnomaliesSerializer(
+            instance=resource,
+            context=self.get_serializer_context(),
+            partial=True,
+        )
+        serializer.report()
+        return Response(serializer.data, status=status.HTTP_200_OK)
