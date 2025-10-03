@@ -5,6 +5,7 @@ from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 
 from epl.apps.project.models import Library, Project, Resource, ResourceStatus
+from epl.apps.project.models.collection import Arbitration
 
 
 class ResourceFilter(filters.BaseFilterBackend):
@@ -16,6 +17,8 @@ class ResourceFilter(filters.BaseFilterBackend):
     against_param_description = _("ID of the library to compare against")
     status_param = "status"
     status_param_description = _("Filter by resource status")
+    arbitration_param = "arbitration"
+    arbitration_param_description = _("Filter by arbitration status")
 
     def filter_queryset(self, request, queryset, view):
         if view.action == "list":
@@ -51,6 +54,14 @@ class ResourceFilter(filters.BaseFilterBackend):
                 # Resources having collections in the specified library
                 # optionally in common with another library
                 queryset = self.filter_for_library(queryset, status, library, against_library)
+
+            if arbitration_param_value := request.query_params.get(self.arbitration_param, ""):
+                if arbitration_param_value.lower() == "1":
+                    queryset = queryset.filter(arbitration=Arbitration.ONE)
+                elif arbitration_param_value.lower() == "0":
+                    queryset = queryset.filter(arbitration=Arbitration.ZERO)
+                else:
+                    raise ValidationError({"arbitration": _("Invalid arbitration param, must be '0' or '1'")})
 
         return queryset
 
@@ -149,6 +160,17 @@ class ResourceFilter(filters.BaseFilterBackend):
                         ResourceStatus.INSTRUCTION_UNBOUND,
                         ResourceStatus.CONTROL_UNBOUND,
                     ],
+                },
+            },
+            {
+                "name": self.arbitration_param,
+                "required": False,
+                "in": "query",
+                "description": str(self.arbitration_param_description),
+                "schema": {
+                    "type": "string",
+                    "enum": ["0", "1"],
+                    "description": _("'0' for arbitration type 0, '1' for arbitration type 1"),
                 },
             },
         ]
