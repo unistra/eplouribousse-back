@@ -57,6 +57,7 @@ class Resource(models.Model):
         "list_statuses",
         "collections",
         "validate_control",
+        "report_anomalies",
     ]
 
     class Meta:
