@@ -152,5 +152,5 @@ class Collection(models.Model):
         return super().save(*args, **kwargs)
 
     @property
-    def is_excluded(self):
+    def is_excluded(self) -> bool:
         return self.position == 0

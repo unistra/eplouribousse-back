@@ -14,7 +14,7 @@ class AclSerializerMixin(serializers.Serializer):
     ]
     extended_permissions = []
 
-    def get_acl(self, instance):
+    def get_acl(self, instance) -> dict[str, bool]:
         acl_field = self.fields["acl"]
         custom_permission_classes = getattr(acl_field, "permission_classes", None)
         exclude = getattr(acl_field, "exclude", [])

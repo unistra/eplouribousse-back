@@ -311,6 +311,7 @@ class CollectionPositioningSerializer(AclSerializerMixin, serializers.ModelSeria
             "acl",
         ]
 
+    @extend_schema_field(PositioningCommentSerializer(many=True))
     def get_comment_positioning(self, obj):
         comment = obj.comments.filter(subject=_("Positioning comment")).order_by("-created_at").first()
         if comment:
