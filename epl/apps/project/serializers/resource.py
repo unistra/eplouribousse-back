@@ -8,7 +8,7 @@ from epl.apps.project.serializers.collection import CollectionPositioningSeriali
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
-from epl.services.project.notifications import notify_instructors_of_instruction_turn
+from epl.services.project.notifications import notify_anomaly_reported, notify_instructors_of_instruction_turn
 
 
 @extend_schema_field(load_json_schema("resource_instruction_turns.schema.json"))
@@ -173,5 +173,7 @@ class ReportAnomaliesSerializer(serializers.ModelSerializer):
                     }
                 )
         self.instance.save(update_fields=["status"])
-        # 2 Send notifications TODO
+        # 2 Send notifications
+        notify_anomaly_reported(self.instance, self.context["request"], self.context["request"].user)
+
         return self.instance

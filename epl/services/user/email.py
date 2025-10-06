@@ -8,7 +8,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from rest_framework.request import Request
 
-from epl.apps.project.models import Project, Resource
+from epl.apps.project.models import Project, Resource, Role
 from epl.apps.project.models.collection import Arbitration
 from epl.apps.user.models import User
 from epl.services.tenant import get_front_domain
@@ -322,6 +322,46 @@ def send_control_notification_email(
         {
             "cycle": cycle,
             "resource_title": resource.title,
+            "project_url": project_url,
+        },
+    )
+
+    send_mail(
+        subject=subject,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+        message=email_content,
+    )
+
+
+def send_anomaly_notification_email(
+    email: str,
+    request: Request,
+    resource: Resource,
+    reporter_user: User,
+) -> None:
+    front_domain = get_front_domain(request)
+    project = resource.project
+    tenant = request.tenant
+    project_url = f"{front_domain}/project/{project.id}"
+
+    # Get the request user role label in the project and verify authorization
+    reporter_role_display = None
+    if reporter_user.is_controller(project):
+        reporter_role_display = Role.CONTROLLER.label
+    elif reporter_user.is_instructor(project):
+        reporter_role_display = Role.INSTRUCTOR.label
+
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('anomaly')}"
+
+    email_content = render_to_string(
+        "emails/notify_anomalies.txt",
+        {
+            "resource_title": resource.title,
+            "reporter_role": reporter_role_display,
+            "reporter_identifier": reporter_user.username,
+            "reporter_email": reporter_user.email,
             "project_url": project_url,
         },
     )

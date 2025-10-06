@@ -12,6 +12,7 @@ class AlertType(models.TextChoices):
     EDITION = "edition", _("Edition")
     PRESERVATION = "preservation", _("Preservation")
     TRANSFER = "transfer", _("Transfer")
+    ANOMALY = "anomaly", _("Anomaly")
 
 
 class AnomalyType(models.TextChoices):
