@@ -1,8 +1,10 @@
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
 
-from epl.apps.project.models import Collection, Resource, ResourceStatus
+from epl.apps.project.models import Collection, Resource, ResourceStatus, Segment
+from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.models.collection import TurnType
 from epl.apps.project.serializers.collection import CollectionPositioningSerializer
 from epl.apps.user.models import User
@@ -20,6 +22,7 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
     count = serializers.IntegerField(read_only=True)
     call_numbers = serializers.CharField(read_only=True)
     instruction_turns = InstructionTurnsField(read_only=True)
+
     should_instruct = serializers.SerializerMethodField(
         read_only=True, help_text=_("Indicates if the user should instruct this resource")
     )
@@ -177,3 +180,53 @@ class ReportAnomaliesSerializer(serializers.ModelSerializer):
         notify_anomaly_reported(self.instance, self.context["request"], self.context["request"].user)
 
         return self.instance
+
+
+class ResetInstructionSerializer(serializers.ModelSerializer):
+    instruction_turns = InstructionTurnsField(
+        read_only=True, help_text=_("The updated instruction turns of the resource after reset")
+    )
+
+    class Meta:
+        model = Resource
+        fields = [
+            "id",
+            "status",
+            "instruction_turns",
+        ]
+        read_only_fields = [
+            "id",
+            "status",
+            "instruction_turns",
+        ]
+
+    def reset(self) -> Resource:
+        collections = self.instance.collections.all()
+
+        match self.instance.status:
+            case ResourceStatus.ANOMALY_BOUND:
+                Segment.objects.filter(collection__in=collections).delete()
+                self.instance.status = ResourceStatus.INSTRUCTION_BOUND
+                self.instance.instruction_turns["bound_copies"] = self._get_turns(collections)
+            case ResourceStatus.ANOMALY_UNBOUND:
+                Segment.objects.filter(collection__in=collections, segment_type=SegmentType.UNBOUND).delete()
+                self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
+                self.instance.instruction_turns["unbound_copies"] = self._get_turns(collections)
+            case _:
+                raise serializers.ValidationError(
+                    {
+                        "status": _("The resource is not in anomaly status"),
+                    }
+                )
+
+        self.instance.save(update_fields=["status", "instruction_turns"])
+        # TODO notify instructors of the reset
+        return self.instance
+
+    @staticmethod
+    def _get_turns(collections: QuerySet[Collection]) -> list[dict[str, str]]:
+        turns: list[dict[str, str]] = [
+            {"library": str(_collection.library_id), "collection": str(_collection.id)}
+            for _collection in collections.filter(position__gt=0).order_by("position")
+        ]
+        return turns

@@ -15,11 +15,13 @@ from epl.apps.project.permissions.resource import ResourcePermission
 from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.resource import (
     ReportAnomaliesSerializer,
+    ResetInstructionSerializer,
     ResourceSerializer,
     ResourceWithCollectionsSerializer,
     ValidateControlSerializer,
 )
 from epl.libs.pagination import PageNumberPagination
+from epl.schema_serializers import UnauthorizedSerializer
 
 
 @extend_schema_view(
@@ -185,4 +187,29 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
             partial=True,
         )
         serializer.report()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        summary=_("Reset instruction"),
+        request=None,
+        responses={
+            status.HTTP_200_OK: ResetInstructionSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: None,
+        },
+        tags=["resource", "instruction", "anomaly"],
+    )
+    @action(detail=True, methods=["PATCH"], url_path="reset")
+    def reset_instruction(self, request, pk) -> Response:
+        """
+        Allows admins to reset the instruction of a resource.
+        """
+        resource = self.get_object()
+        serializer = ResetInstructionSerializer(
+            resource,
+            context=self.get_serializer_context(),
+            partial=True,
+        )
+        serializer.reset()
         return Response(serializer.data, status=status.HTTP_200_OK)
