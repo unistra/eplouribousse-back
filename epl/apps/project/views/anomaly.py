@@ -37,7 +37,7 @@ from epl.schema_serializers import UnauthorizedSerializer
                 location=OpenApiParameter.QUERY,
                 required=False,
                 type=OpenApiTypes.UUID,
-                description=_("Filter by resource ID (one of segment, project or resource is required"),
+                description=_("Filter by resource ID (one of segment, project or resource is required)"),
             ),
         ],
         responses={

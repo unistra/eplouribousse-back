@@ -3,6 +3,7 @@ from epl.apps.project.models.choices import AlertType
 from epl.apps.project.models.collection import Arbitration, Collection
 from epl.apps.user.models import User
 from epl.services.user.email import (
+    send_anomaly_notification_email,
     send_arbitration_notification_email,
     send_collection_positioned_email,
     send_control_notification_email,
@@ -258,3 +259,68 @@ def notify_controllers_of_control(resource, request, cycle):
                 resource=resource,
                 cycle=cycle,
             )
+
+
+def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
+    """
+    Sends notification emails when anomalies are reported on a resource.
+
+    Recipients:
+    - Instructors concerned by the resource instruction (excluding those with excluded collections)
+    - Project administrators
+    - Other controllers
+    - Copy to the sender (reporter)
+    """
+    project = resource.project
+
+    # Check project settings to see if anomaly emails should be sent
+    project_alerts = resource.project.settings.get("alerts", {})
+    if project_alerts.get(AlertType.ANOMALY.value, True) is False:
+        return
+
+    recipients = set()
+
+    # Get instructors concerned by the resource instruction (excluding those with excluded collections)
+    instructors_to_notify = (
+        UserRole.objects.filter(
+            project=project,
+            role=Role.INSTRUCTOR,
+            library__collections__resource=resource,
+        )
+        .exclude(
+            library__collections__position=0  # Exclude excluded collections
+        )
+        .select_related("user")
+        .distinct()
+    )
+
+    for instructor_role in instructors_to_notify:
+        # Exclude the instructor who reported the anomaly (he will receive a copy later)
+        if instructor_role.user != reporter_user and should_send_alert(
+            instructor_role.user, project, AlertType.ANOMALY
+        ):
+            recipients.add(instructor_role.user.email)
+
+    # Get project administrators
+    project_admins = UserRole.objects.filter(project=project, role=Role.PROJECT_ADMIN).select_related("user").distinct()
+
+    for admin_role in project_admins:
+        if should_send_alert(admin_role.user, project, AlertType.ANOMALY):
+            recipients.add(admin_role.user.email)
+
+    # Get other controllers (excluding the reporter if he's a controller)
+    controllers = UserRole.objects.filter(project=project, role=Role.CONTROLLER).select_related("user").distinct()
+
+    for controller_role in controllers:
+        if controller_role.user != reporter_user and should_send_alert(
+            controller_role.user, project, AlertType.ANOMALY
+        ):
+            recipients.add(controller_role.user.email)
+
+    # Add copy to sender
+    if should_send_alert(reporter_user, project, AlertType.ANOMALY):
+        recipients.add(reporter_user.email)
+
+    # Send emails to all recipients
+    for email in recipients:
+        send_anomaly_notification_email(email=email, request=request, resource=resource, reporter_user=reporter_user)

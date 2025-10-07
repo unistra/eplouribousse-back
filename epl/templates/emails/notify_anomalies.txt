@@ -1,0 +1,12 @@
+{% load i18n %}
+
+{% blocktrans %}One or more anomalies have been reported by {{ reporter_role }} {{ reporter_identifier }} {{ reporter_email }} in the instruction of the resource:{% endblocktrans %}
+{{ resource_title }}
+
+{% trans "An intervention from a project administrator is required. They will save the maximum number of lines and then restart the circulation of the form." %}
+
+{{ project_url }}
+
+---
+{% trans "This is an automated message, please do not reply." %}
+Eplouribousse - {% now "Y" %}
