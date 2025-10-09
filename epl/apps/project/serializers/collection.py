@@ -12,7 +12,7 @@ from rest_framework.exceptions import PermissionDenied
 from sentry_sdk import set_tag
 
 from epl.apps.project.models import Collection, Library, Project, Resource, ResourceStatus
-from epl.apps.project.models.collection import Arbitration
+from epl.apps.project.models.collection import Arbitration, TurnType
 from epl.apps.project.models.comment import Comment
 from epl.apps.project.permissions.collection import CollectionPermission
 from epl.libs.csv_import import handle_import
@@ -162,12 +162,10 @@ class MoveToInstructionMixin:
         if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
             # All libraries have positioned and no arbitration is needed: move to Instruction Bound and set turns
             resource.status = ResourceStatus.INSTRUCTION_BOUND
-            turns: list[dict[str, str]] = [
-                {"library": str(_collection.library_id), "collection": str(_collection.id)}
-                for _collection in collections.filter(position__gt=0).order_by("position")
-            ]
+            turns: list[TurnType] = resource.calculate_turns()
             resource.instruction_turns["bound_copies"]["turns"] = turns.copy()
             resource.instruction_turns["unbound_copies"]["turns"] = turns.copy()
+            resource.instruction_turns["turns"] = turns.copy()  # Save turns in case of reset or later reassignment
             resource.save(update_fields=["status", "instruction_turns"])
 
             # Send email to instructors of the first collection to be instructed

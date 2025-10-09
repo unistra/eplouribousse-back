@@ -1,4 +1,3 @@
-from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
@@ -211,11 +210,11 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
             case ResourceStatus.ANOMALY_BOUND:
                 Segment.objects.filter(collection__in=collections).delete()
                 self.instance.status = ResourceStatus.INSTRUCTION_BOUND
-                self.instance.instruction_turns["bound_copies"]["turns"] = self._get_turns(collections)
+                self.instance.instruction_turns["bound_copies"]["turns"] = self.instance.calculate_turns()
             case ResourceStatus.ANOMALY_UNBOUND:
                 Segment.objects.filter(collection__in=collections, segment_type=SegmentType.UNBOUND).delete()
                 self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
-                self.instance.instruction_turns["unbound_copies"]["turns"] = self._get_turns(collections)
+                self.instance.instruction_turns["unbound_copies"]["turns"] = self.instance.calculate_turns()
             case _:
                 raise serializers.ValidationError(
                     {
@@ -228,11 +227,3 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
             resource=self.instance, request=self.context["request"], admin_user=self.context["request"].user
         )
         return self.instance
-
-    @staticmethod
-    def _get_turns(collections: QuerySet[Collection]) -> list[dict[str, str]]:
-        turns: list[dict[str, str]] = [
-            {"library": str(_collection.library_id), "collection": str(_collection.id)}
-            for _collection in collections.filter(position__gt=0).order_by("position")
-        ]
-        return turns

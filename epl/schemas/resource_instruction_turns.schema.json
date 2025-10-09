@@ -1,58 +1,89 @@
 {
-    "$id": "https://eplouribousse.fr/schemas/resource_instruction_turns.schema.json",
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": " instruction_turns",
-    "type": "object",
-    "properties": {
-        "bound_copies": {
+  "$id": "https://eplouribousse.fr/schemas/resource_instruction_turns.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": " instruction_turns",
+  "type": "object",
+  "properties": {
+    "bound_copies": {
+      "type": "object",
+      "properties": {
+        "turns": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
             "type": "object",
             "properties": {
-                "turns": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                          "library": {
-                            "type": "string",
-                            "format":  "uuid"
-                          },
-                          "collection": {
-                            "type": "string",
-                            "format": "uuid"
-                          }
-                        },
-                        "required": ["library", "collection"],
-                        "additionalProperties": false
-                    }
-                }
-            }
-        },
-        "unbound_copies": {
-            "type": "object",
-            "properties": {
-                "turns": {
-                    "type": "array",
-                    "minItems": 0,
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                          "library": {
-                            "type": "string",
-                            "format":  "uuid"
-                          },
-                          "collection": {
-                            "type": "string",
-                            "format": "uuid"
-                          }
-                        },
-                        "required": ["library", "collection"],
-                        "additionalProperties": false
-                    }
-                }
-            }
+              "library": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "collection": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "library",
+              "collection"
+            ],
+            "additionalProperties": false
+          }
         }
+      }
     },
-    "required": ["bound_copies", "unbound_copies"],
-    "additionalProperties": false
+    "unbound_copies": {
+      "type": "object",
+      "properties": {
+        "turns": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "properties": {
+              "library": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "collection": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "library",
+              "collection"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    "turns": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "library": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "collection": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "library",
+          "collection"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "bound_copies",
+    "unbound_copies"
+  ],
+  "additionalProperties": false
 }
