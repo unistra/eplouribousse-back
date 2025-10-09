@@ -77,6 +77,10 @@ class Resource(models.Model):
 
     @property
     def next_turn(self) -> TurnType | None:
+        """
+            Returns the next collection and library that should perform instruction
+        based on the current resource status and instruction turns sequence.
+        """
         turn = None
         try:
             if self.status == ResourceStatus.INSTRUCTION_BOUND:
