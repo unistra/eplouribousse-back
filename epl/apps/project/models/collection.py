@@ -78,14 +78,14 @@ class Resource(models.Model):
     @property
     def next_turn(self) -> TurnType | None:
         """
-            Returns the next collection and library that should perform instruction
+        Returns the next collection and library that should perform instruction
         based on the current resource status and instruction turns sequence.
         """
         turn = None
         try:
-            if self.status == ResourceStatus.INSTRUCTION_BOUND:
+            if self.status in [ResourceStatus.INSTRUCTION_BOUND, ResourceStatus.ANOMALY_BOUND]:
                 turn = self.instruction_turns.get("bound_copies", {}).get("turns", [])[0]
-            elif self.status == ResourceStatus.INSTRUCTION_UNBOUND:
+            elif self.status in [ResourceStatus.INSTRUCTION_UNBOUND, ResourceStatus.ANOMALY_UNBOUND]:
                 turn = self.instruction_turns.get("unbound_copies", {}).get("turns", [])[0]
         except IndexError:
             turn = None

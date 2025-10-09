@@ -276,7 +276,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
 
     # Check project settings to see if anomaly emails should be sent
     project_alerts = resource.project.settings.get("alerts", {})
-    if project_alerts.get(AlertType.ANOMALY.value, True) is False:
+    if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
     recipients = set()
@@ -298,7 +298,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     for instructor_role in instructors_to_notify:
         # Exclude the instructor who reported the anomaly (he will receive a copy later)
         if instructor_role.user != reporter_user and should_send_alert(
-            instructor_role.user, project, AlertType.ANOMALY
+            instructor_role.user, project, AlertType.INSTRUCTION
         ):
             recipients.add(instructor_role.user.email)
 
@@ -306,7 +306,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     project_admins = UserRole.objects.filter(project=project, role=Role.PROJECT_ADMIN).select_related("user").distinct()
 
     for admin_role in project_admins:
-        if should_send_alert(admin_role.user, project, AlertType.ANOMALY):
+        if should_send_alert(admin_role.user, project, AlertType.INSTRUCTION):
             recipients.add(admin_role.user.email)
 
     # Get other controllers (excluding the reporter if he's a controller)
@@ -314,12 +314,12 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
 
     for controller_role in controllers:
         if controller_role.user != reporter_user and should_send_alert(
-            controller_role.user, project, AlertType.ANOMALY
+            controller_role.user, project, AlertType.INSTRUCTION
         ):
             recipients.add(controller_role.user.email)
 
     # Add copy to sender
-    if should_send_alert(reporter_user, project, AlertType.ANOMALY):
+    if should_send_alert(reporter_user, project, AlertType.INSTRUCTION):
         recipients.add(reporter_user.email)
 
     # Send emails to all recipients
@@ -339,7 +339,7 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
 
     # Check project settings to see if anomaly emails should be sent
     project_alerts = resource.project.settings.get("alerts", {})
-    if project_alerts.get(AlertType.ANOMALY.value, True) is False:
+    if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
     # Get the current turn using the existing utility

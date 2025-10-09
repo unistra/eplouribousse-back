@@ -8,7 +8,7 @@ from epl.apps.project.models import Library
 
 class LibraryFactory(factory.django.DjangoModelFactory):
     name = factory.lazy_attribute(lambda _: LibraryFactory.generate_valid_name())
-    code = factory.lazy_attribute(lambda _: random.choices(string.ascii_letters + string.digits, k=10))  # noqa: S311
+    code = factory.lazy_attribute(lambda _: "".join(random.choices(string.ascii_letters + string.digits, k=10)))  # noqa: S311
 
     class Meta:
         model = Library
