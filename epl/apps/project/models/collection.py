@@ -58,6 +58,7 @@ class Resource(models.Model):
         "collections",
         "validate_control",
         "report_anomalies",
+        "reset_instruction",
     ]
 
     class Meta:
