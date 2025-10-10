@@ -14,6 +14,7 @@ from epl.apps.project.models import Resource, ResourceStatus
 from epl.apps.project.permissions.resource import ResourcePermission
 from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.resource import (
+    ReassignInstructionTurnSerializer,
     ReportAnomaliesSerializer,
     ResetInstructionSerializer,
     ResourceSerializer,
@@ -191,6 +192,7 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
 
     @extend_schema(
         summary=_("Reset instruction"),
+        tags=["resource", "instruction", "anomaly"],
         request=None,
         responses={
             status.HTTP_200_OK: ResetInstructionSerializer,
@@ -198,7 +200,6 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
             status.HTTP_404_NOT_FOUND: None,
         },
-        tags=["resource", "instruction", "anomaly"],
     )
     @action(detail=True, methods=["PATCH"], url_path="reset")
     def reset_instruction(self, request, pk) -> Response:
@@ -212,4 +213,28 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
             partial=True,
         )
         serializer.reset()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        summary=_("Reassign instruction turns"),
+        tags=["resource", "instruction", "anomaly"],
+        request=ReassignInstructionTurnSerializer,
+        responses={
+            status.HTTP_200_OK: ReassignInstructionTurnSerializer,
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: None,
+        },
+    )
+    @action(detail=True, methods=["PATCH"], url_path="reassign-turn")
+    def reassign_instruction_turn(self, request, pk) -> Response:
+        resource = self.get_object()
+        serializer = ReassignInstructionTurnSerializer(
+            resource,
+            data=request.data,
+            context=self.get_serializer_context(),
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.reassign()
         return Response(serializer.data, status=status.HTTP_200_OK)
