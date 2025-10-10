@@ -148,3 +148,153 @@ class ResetResourceInstructionViewTest(AnomaliesTestCase):
         )
         # All segments must be deleted
         self.assertFalse(Segment.objects.filter(collection__in=self.resource.collections.all()).exists())
+
+
+class ReassignResourceInstructionTurnViewTest(AnomaliesTestCase):
+    def setUp(self):
+        super().setUp()
+
+    def test_anonymous_user_can_not_reassign_instruction_turn(self):
+        response = self.patch(
+            reverse("resource-reassign-instruction-turn", kwargs={"pk": self.resource.pk}),
+            user=None,
+        )
+        self.response_unauthorized(response)
+
+    def test_instructor_can_not_reassign_instruction_turn(self):
+        response = self.patch(
+            reverse("resource-reassign-instruction-turn", kwargs={"pk": self.resource.pk}),
+            user=self.instructor,
+        )
+        self.response_forbidden(response)
+
+    def test_controller_can_not_reassign_instruction_turn(self):
+        response = self.patch(
+            reverse("resource-reassign-instruction-turn", kwargs={"pk": self.resource.pk}),
+            user=self.controller,
+        )
+        self.response_forbidden(response)
+
+    def test_admin_can_reassign_instruction_turn(self):
+        self.resource.status = ResourceStatus.ANOMALY_BOUND
+        self.resource.save(update_fields=["status"])
+        _bound_segment = SegmentFactory(
+            collection=self.collection,
+            segment_type=SegmentType.BOUND,
+            created_by=self.admin,
+        )
+        response = self.patch(
+            reverse("resource-reassign-instruction-turn", kwargs={"pk": self.resource.pk}),
+            user=self.admin,
+            data={"controller": True},
+            content_type="application/json",
+        )
+        self.response_ok(response)
+
+    def test_when_reassigning_to_controller_the_turns_are_empty(self):
+        self.resource.status = ResourceStatus.ANOMALY_BOUND
+        self.resource.instruction_turns = {
+            "bound_copies": {
+                "turns": [
+                    {"library": str(self.library.id), "collection": str(self.instructor.id)},
+                    {"library": None, "collection": None},
+                ]
+            },
+            "unbound_copies": {
+                "turns": [
+                    {"library": str(self.library.id), "collection": str(self.instructor.id)},
+                    {"library": None, "collection": None},
+                ]
+            },
+            "turns": [
+                {"library": str(self.library.id), "collection": str(self.instructor.id)},
+                {"library": None, "collection": None},
+            ],
+        }
+        self.resource.save(update_fields=["status", "instruction_turns"])
+        _bound_segment = SegmentFactory(
+            collection=self.collection,
+            segment_type=SegmentType.BOUND,
+            created_by=self.admin,
+        )
+        response = self.patch(
+            reverse("resource-reassign-instruction-turn", kwargs={"pk": self.resource.pk}),
+            user=self.admin,
+            data={"controller": True},
+            content_type="application/json",
+        )
+        self.response_ok(response)
+        self.resource.refresh_from_db()
+        self.assertEqual(
+            self.resource.status,
+            ResourceStatus.CONTROL_BOUND,
+        )
+        # Turns must be empty
+        self.assertEqual(len(self.resource.instruction_turns["bound_copies"]["turns"]), 0)
+
+    def test_when_reassigning_to_instructor_the_turns_are_updated(self):
+        self.resource.status = ResourceStatus.ANOMALY_BOUND
+        self.resource.instruction_turns = {
+            "bound_copies": {
+                "turns": [
+                    {
+                        "library": "49dc2153-3e45-48dd-8042-ad037e28f646",
+                        "collection": "d299dc1f-4778-46b8-b75b-cd342e69cd8f",
+                    },
+                    {
+                        "library": "2133c5f5-ca70-45b8-8eff-83455b0622fb",
+                        "collection": "eb57b827-4729-41c7-a052-b804aece6638",
+                    },
+                    {"library": str(self.library.id), "collection": str(self.collection.id)},
+                ],
+            },
+            "unbound_copies": {
+                "turns": [
+                    {
+                        "library": "49dc2153-3e45-48dd-8042-ad037e28f646",
+                        "collection": "d299dc1f-4778-46b8-b75b-cd342e69cd8f",
+                    },
+                    {
+                        "library": "2133c5f5-ca70-45b8-8eff-83455b0622fb",
+                        "collection": "eb57b827-4729-41c7-a052-b804aece6638",
+                    },
+                    {"library": str(self.library.id), "collection": str(self.collection.id)},
+                ],
+            },
+            "turns": [
+                {
+                    "library": "49dc2153-3e45-48dd-8042-ad037e28f646",
+                    "collection": "d299dc1f-4778-46b8-b75b-cd342e69cd8f",
+                },
+                {
+                    "library": "2133c5f5-ca70-45b8-8eff-83455b0622fb",
+                    "collection": "eb57b827-4729-41c7-a052-b804aece6638",
+                },
+                {"library": str(self.library.id), "collection": str(self.collection.id)},
+            ],
+        }
+        self.resource.save(update_fields=["status", "instruction_turns"])
+        _bound_segment = SegmentFactory(
+            collection=self.collection,
+            segment_type=SegmentType.BOUND,
+            created_by=self.admin,
+        )
+        response = self.patch(
+            reverse("resource-reassign-instruction-turn", kwargs={"pk": self.resource.pk}),
+            user=self.admin,
+            data={"library_id": str(self.library.id), "collection_id": str(self.collection.id)},
+            content_type="application/json",
+        )
+        self.response_ok(response)
+        self.resource.refresh_from_db()
+        self.assertEqual(
+            self.resource.status,
+            ResourceStatus.INSTRUCTION_BOUND,
+        )
+        self.assertEqual(len(self.resource.instruction_turns["bound_copies"]["turns"]), 1)
+        self.assertDictEqual(
+            self.resource.instruction_turns["bound_copies"]["turns"][0],
+            {"library": str(self.library.id), "collection": str(self.collection.id)},
+        )
+        self.assertEqual(len(self.resource.anomalies.filter(fixed=False)), 0)
+        self.assertEqual(len(self.resource.anomalies.filter(fixed=True)), 2)

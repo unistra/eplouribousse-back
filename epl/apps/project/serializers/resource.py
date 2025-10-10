@@ -224,19 +224,11 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
                 )
 
         self.instance.save(update_fields=["status", "instruction_turns"])
-        # TODO fix anomalies
-        self.fix_anomalies()
+        # There is no need to delete anomalies, they are deleted with the segments
         notify_anomaly_resolved(
             resource=self.instance, request=self.context["request"], admin_user=self.context["request"].user
         )
         return self.instance
-
-    def fix_anomalies(self):
-        Anomaly.objects.filter(resource=self.instance, fixed=False).update(
-            fixed=True,
-            fixed_at=timezone.now(),
-            fixed_by=self.context["request"].user,
-        )
 
 
 class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
@@ -265,6 +257,9 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
             "id",
             "status",
             "instruction_turns",
+            "collection_id",
+            "library_id",
+            "controller",
         ]
         read_only_fields = [
             "id",
@@ -301,7 +296,7 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
                     "status": _("The resource is not in anomaly status"),
                 }
             )
-        if attrs["controller"]:
+        if attrs.get("controller"):
             # collection_id and library_id should not be provided
             if "collection_id" in attrs or "library_id" in attrs:
                 raise serializers.ValidationError(
@@ -319,6 +314,7 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
                         "non_field_errors": _("collection_id and library_id must be provided"),
                     }
                 )
+        return attrs
 
     def reassign(self) -> Resource:
         if self.validated_data.get("controller"):
