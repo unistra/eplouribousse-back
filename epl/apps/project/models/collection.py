@@ -60,6 +60,7 @@ class Resource(models.Model):
         "validate_control",
         "report_anomalies",
         "reset_instruction",
+        "reassign_instruction_turn",
     ]
 
     class Meta:
