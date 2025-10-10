@@ -4,6 +4,7 @@ from epl.apps.project.models.collection import Arbitration, Collection
 from epl.apps.user.models import User
 from epl.services.user.email import (
     send_anomaly_notification_email,
+    send_anomaly_resolved_notification_email,
     send_arbitration_notification_email,
     send_collection_positioned_email,
     send_control_notification_email,
@@ -275,7 +276,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
 
     # Check project settings to see if anomaly emails should be sent
     project_alerts = resource.project.settings.get("alerts", {})
-    if project_alerts.get(AlertType.ANOMALY.value, True) is False:
+    if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
     recipients = set()
@@ -297,7 +298,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     for instructor_role in instructors_to_notify:
         # Exclude the instructor who reported the anomaly (he will receive a copy later)
         if instructor_role.user != reporter_user and should_send_alert(
-            instructor_role.user, project, AlertType.ANOMALY
+            instructor_role.user, project, AlertType.INSTRUCTION
         ):
             recipients.add(instructor_role.user.email)
 
@@ -305,7 +306,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     project_admins = UserRole.objects.filter(project=project, role=Role.PROJECT_ADMIN).select_related("user").distinct()
 
     for admin_role in project_admins:
-        if should_send_alert(admin_role.user, project, AlertType.ANOMALY):
+        if should_send_alert(admin_role.user, project, AlertType.INSTRUCTION):
             recipients.add(admin_role.user.email)
 
     # Get other controllers (excluding the reporter if he's a controller)
@@ -313,14 +314,103 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
 
     for controller_role in controllers:
         if controller_role.user != reporter_user and should_send_alert(
-            controller_role.user, project, AlertType.ANOMALY
+            controller_role.user, project, AlertType.INSTRUCTION
         ):
             recipients.add(controller_role.user.email)
 
     # Add copy to sender
-    if should_send_alert(reporter_user, project, AlertType.ANOMALY):
+    if should_send_alert(reporter_user, project, AlertType.INSTRUCTION):
         recipients.add(reporter_user.email)
 
     # Send emails to all recipients
     for email in recipients:
         send_anomaly_notification_email(email=email, request=request, resource=resource, reporter_user=reporter_user)
+
+
+def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
+    """
+    Sends notification emails when anomalies are resolved by a project administrator.
+
+    Recipients:
+    - TO: Instructors whose turn has come to instruct + Project administrators
+    - CC: Other instructors concerned by the resource instruction
+    """
+    project = resource.project
+
+    # Check project settings to see if anomaly emails should be sent
+    project_alerts = resource.project.settings.get("alerts", {})
+    if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
+        return
+
+    # Get the current turn using the existing utility
+    next_turn = resource.next_turn
+    current_turn_collections = []
+    library_codes_with_turn = []
+
+    if next_turn:
+        # Get the collection that has the current turn
+        try:
+            current_collection = resource.collections.get(id=next_turn["collection"])
+            current_turn_collections = [current_collection]
+            library_codes_with_turn = [current_collection.library.code]
+        except Collection.DoesNotExist:
+            pass
+
+    # Collect TO recipients (instructors with turn + project admins)
+    to_recipients = set()
+
+    # Get instructors whose turn has come
+    for collection in current_turn_collections:
+        instructors_with_turn = UserRole.objects.filter(
+            project=project,
+            role=Role.INSTRUCTOR,
+            library=collection.library,
+        ).select_related("user")
+
+        for instructor_role in instructors_with_turn:
+            if should_send_alert(instructor_role.user, project, AlertType.INSTRUCTION):
+                to_recipients.add(instructor_role.user.email)
+
+    # Get project administrators
+    project_admins = UserRole.objects.filter(project=project, role=Role.PROJECT_ADMIN).select_related("user").distinct()
+
+    for admin_role in project_admins:
+        if should_send_alert(admin_role.user, project, AlertType.INSTRUCTION):
+            to_recipients.add(admin_role.user.email)
+
+    # Collect CC recipients (other instructors concerned by the resource)
+    cc_recipients = set()
+    other_instructors = (
+        UserRole.objects.filter(
+            project=project,
+            role=Role.INSTRUCTOR,
+            library__collections__resource=resource,
+        )
+        .exclude(
+            library__collections__position=0  # Exclude excluded collections
+        )
+        .exclude(
+            library__in=[
+                collection.library for collection in current_turn_collections
+            ]  # Exclude those who got the turn
+        )
+        .select_related("user")
+        .distinct()
+    )
+
+    for instructor_role in other_instructors:
+        if should_send_alert(instructor_role.user, project, AlertType.INSTRUCTION):
+            cc_recipients.add(instructor_role.user.email)
+
+    # Send email with TO and CC
+    library_codes_str = ", ".join(library_codes_with_turn) if library_codes_with_turn else "N/A"
+
+    if to_recipients:  # Only send if there are TO recipients
+        send_anomaly_resolved_notification_email(
+            to_emails=list(to_recipients),
+            cc_emails=list(cc_recipients),
+            request=request,
+            resource=resource,
+            library_code=library_codes_str,
+            admin_user=admin_user,
+        )

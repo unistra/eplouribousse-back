@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import signing
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage, send_mail
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -373,3 +373,52 @@ def send_anomaly_notification_email(
         fail_silently=False,
         message=email_content,
     )
+
+
+def send_anomaly_resolved_notification_email(
+    to_emails: list[str],
+    cc_emails: list[str],
+    request: Request,
+    resource: Resource,
+    library_code: str,
+    admin_user: User,
+) -> None:
+    """
+    Sends an email notification when anomalies are resolved and instruction turn is assigned.
+
+    Args:
+        to_emails: List of primary recipients (instructors with turn + project admins)
+        cc_emails: List of CC recipients (other instructors concerned)
+        request: HTTP request object
+        resource: The resource for which anomalies were resolved
+        library_code: Code of the library that got the instruction turn
+        admin_user: The administrator who resolved the anomaly
+    """
+
+    front_domain = get_front_domain(request)
+    project = resource.project
+    tenant = request.tenant
+    project_url = f"{front_domain}/project/{project.id}"
+
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('anomaly resolved')}"
+
+    email_content = render_to_string(
+        "emails/notify_anomaly_resolved.txt",
+        {
+            "library_code": library_code,
+            "admin_identifier": admin_user.username,
+            "admin_email": admin_user.email,
+            "project_url": project_url,
+        },
+    )
+
+    # Create EmailMessage with TO and CC recipients
+    email_message = EmailMessage(
+        subject=subject,
+        body=email_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=to_emails,
+        cc=cc_emails,
+    )
+
+    email_message.send(fail_silently=False)

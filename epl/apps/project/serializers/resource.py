@@ -10,7 +10,11 @@ from epl.apps.project.serializers.collection import CollectionPositioningSeriali
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
-from epl.services.project.notifications import notify_anomaly_reported, notify_instructors_of_instruction_turn
+from epl.services.project.notifications import (
+    notify_anomaly_reported,
+    notify_anomaly_resolved,
+    notify_instructors_of_instruction_turn,
+)
 
 
 @extend_schema_field(load_json_schema("resource_instruction_turns.schema.json"))
@@ -207,11 +211,11 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
             case ResourceStatus.ANOMALY_BOUND:
                 Segment.objects.filter(collection__in=collections).delete()
                 self.instance.status = ResourceStatus.INSTRUCTION_BOUND
-                self.instance.instruction_turns["bound_copies"] = self._get_turns(collections)
+                self.instance.instruction_turns["bound_copies"]["turns"] = self._get_turns(collections)
             case ResourceStatus.ANOMALY_UNBOUND:
                 Segment.objects.filter(collection__in=collections, segment_type=SegmentType.UNBOUND).delete()
                 self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
-                self.instance.instruction_turns["unbound_copies"] = self._get_turns(collections)
+                self.instance.instruction_turns["unbound_copies"]["turns"] = self._get_turns(collections)
             case _:
                 raise serializers.ValidationError(
                     {
@@ -220,7 +224,9 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
                 )
 
         self.instance.save(update_fields=["status", "instruction_turns"])
-        # TODO notify instructors of the reset
+        notify_anomaly_resolved(
+            resource=self.instance, request=self.context["request"], admin_user=self.context["request"].user
+        )
         return self.instance
 
     @staticmethod
