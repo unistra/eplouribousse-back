@@ -22,6 +22,7 @@ class ResourcePermission(BasePermission):
             "validate_control",
             "report_anomalies",
             "reset_instruction",
+            "reassign_instruction_turn",
         ]:
             return self.user_has_permission(view.action, request.user, obj)
 
@@ -51,7 +52,7 @@ class ResourcePermission(BasePermission):
                     and user.is_authenticated
                     and (user.is_controller(resource.project) or user.is_instructor(resource.project))
                 )
-            case "reset_instruction":
+            case "reset_instruction" | "reassign_instruction_turn":
                 return bool(user and user.is_authenticated and user.is_project_admin(resource.project))
 
         return False

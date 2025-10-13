@@ -18,6 +18,7 @@ def default_instuction_turns():
         "unbound_copies": {
             "turns": [],
         },
+        "turns": [],
     }
 
 
@@ -59,6 +60,7 @@ class Resource(models.Model):
         "validate_control",
         "report_anomalies",
         "reset_instruction",
+        "reassign_instruction_turn",
     ]
 
     class Meta:
@@ -99,6 +101,13 @@ class Resource(models.Model):
         from epl.apps.project.models.segment import Segment
 
         return Segment.objects.filter(collection__resource=self)
+
+    def calculate_turns(self) -> list[TurnType]:
+        collections = self.collections.filter(position__gt=0).order_by("position")
+        turns: list[TurnType] = [
+            {"library": str(_collection.library_id), "collection": str(_collection.id)} for _collection in collections
+        ]
+        return turns
 
 
 class Collection(models.Model):

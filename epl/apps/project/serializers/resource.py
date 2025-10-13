@@ -1,9 +1,9 @@
-from django.db.models import QuerySet
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
 
-from epl.apps.project.models import Collection, Resource, ResourceStatus, Segment
+from epl.apps.project.models import Anomaly, Collection, Library, Resource, ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.models.collection import TurnType
 from epl.apps.project.serializers.collection import CollectionPositioningSerializer
@@ -211,11 +211,11 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
             case ResourceStatus.ANOMALY_BOUND:
                 Segment.objects.filter(collection__in=collections).delete()
                 self.instance.status = ResourceStatus.INSTRUCTION_BOUND
-                self.instance.instruction_turns["bound_copies"]["turns"] = self._get_turns(collections)
+                self.instance.instruction_turns["bound_copies"]["turns"] = self.instance.calculate_turns()
             case ResourceStatus.ANOMALY_UNBOUND:
                 Segment.objects.filter(collection__in=collections, segment_type=SegmentType.UNBOUND).delete()
                 self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
-                self.instance.instruction_turns["unbound_copies"]["turns"] = self._get_turns(collections)
+                self.instance.instruction_turns["unbound_copies"]["turns"] = self.instance.calculate_turns()
             case _:
                 raise serializers.ValidationError(
                     {
@@ -224,15 +224,156 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
                 )
 
         self.instance.save(update_fields=["status", "instruction_turns"])
+        # There is no need to delete anomalies, they are deleted with the segments
         notify_anomaly_resolved(
             resource=self.instance, request=self.context["request"], admin_user=self.context["request"].user
         )
         return self.instance
 
-    @staticmethod
-    def _get_turns(collections: QuerySet[Collection]) -> list[dict[str, str]]:
-        turns: list[dict[str, str]] = [
-            {"library": str(_collection.library_id), "collection": str(_collection.id)}
-            for _collection in collections.filter(position__gt=0).order_by("position")
+
+class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
+    instruction_turns = InstructionTurnsField(
+        read_only=True, help_text=_("The updated instruction turns of the resource after reassigning turns")
+    )
+    collection_id = serializers.UUIDField(
+        write_only=True,
+        help_text=_("The collection id to which the instruction turn will be reassigned"),
+        required=False,
+    )
+    library_id = serializers.UUIDField(
+        write_only=True,
+        help_text=_("The library id to which the instruction turn will be reassigned"),
+        required=False,
+    )
+    controller = serializers.BooleanField(
+        write_only=True,
+        help_text=_("Indicates if the turn is reassigned to a controller"),
+        default=False,
+    )
+
+    class Meta:
+        model = Resource
+        fields = [
+            "id",
+            "status",
+            "instruction_turns",
+            "collection_id",
+            "library_id",
+            "controller",
         ]
-        return turns
+        read_only_fields = [
+            "id",
+            "status",
+            "instruction_turns",
+        ]
+
+    def validate_collection_id(self, value):
+        try:
+            collection = Collection.objects.get(id=value)
+        except Collection.DoesNotExist:
+            raise serializers.ValidationError(_("Collection does not exist"))
+
+        if str(collection.id) not in [
+            _turn["collection"] for _turn in self.instance.instruction_turns.get("turns", [])
+        ]:
+            raise serializers.ValidationError(_("Collection is not in the instruction turns of the resource"))
+        return collection
+
+    def validate_library_id(self, value):
+        try:
+            library = Library.objects.get(id=value)
+        except Library.DoesNotExist:
+            raise serializers.ValidationError(_("Library does not exist"))
+
+        if str(library.id) not in [_turn["library"] for _turn in self.instance.instruction_turns.get("turns", [])]:
+            raise serializers.ValidationError(_("Library is not in the instruction turns of the resource"))
+        return library
+
+    def validate(self, attrs: dict) -> dict:
+        if self.instance.status not in [ResourceStatus.ANOMALY_BOUND, ResourceStatus.ANOMALY_UNBOUND]:
+            raise serializers.ValidationError(
+                {
+                    "status": _("The resource is not in anomaly status"),
+                }
+            )
+        if attrs.get("controller"):
+            # collection_id and library_id should not be provided
+            if "collection_id" in attrs or "library_id" in attrs:
+                raise serializers.ValidationError(
+                    {
+                        "non_field_errors": _(
+                            "When reassigning to a controller, collection_id and library_id should not be provided"
+                        ),
+                    }
+                )
+        else:
+            # collection_id and library_id must be provided
+            if not attrs.get("collection_id") or not attrs.get("library_id"):
+                raise serializers.ValidationError(
+                    {
+                        "non_field_errors": _("collection_id and library_id must be provided"),
+                    }
+                )
+        return attrs
+
+    def reassign(self) -> Resource:
+        if self.validated_data.get("controller"):
+            # Reassign to controller
+            self.reassign_to_controller()
+        else:
+            # Reassign to instructor of library/collection
+            self.reassign_to_instructor()
+
+        self.fix_anomalies()
+        # TODO notify instructors / controllers of the reassignment
+        return self.instance
+
+    def fix_anomalies(self):
+        Anomaly.objects.filter(resource=self.instance, fixed=False).update(
+            fixed=True,
+            fixed_at=timezone.now(),
+            fixed_by=self.context["request"].user,
+        )
+
+    def reassign_to_instructor(self):
+        collection: Collection = self.validated_data.get("collection_id")
+        library: Library = self.validated_data.get("library_id")
+
+        # iterate over turns, delete those preceding the selected library/collection
+        match self.instance.status:
+            case ResourceStatus.ANOMALY_BOUND:
+                cycle = "bound_copies"
+            case ResourceStatus.ANOMALY_UNBOUND:
+                cycle = "unbound_copies"
+            case _:
+                raise serializers.ValidationError(
+                    {
+                        "status": _("The resource is not in anomaly status"),
+                    }
+                )
+
+        turns = self.instance.instruction_turns.get(cycle, {}).get("turns", [])
+        for idx, turn in enumerate(turns):
+            if turn["library"] == str(library.id) and turn["collection"] == str(collection.id):
+                break
+        self.instance.instruction_turns[cycle]["turns"] = turns[idx:]
+        self.instance.status = (
+            ResourceStatus.INSTRUCTION_BOUND if cycle == "bound_copies" else ResourceStatus.INSTRUCTION_UNBOUND
+        )
+        self.instance.save(update_fields=["status", "instruction_turns"])
+
+    def reassign_to_controller(self):
+        match self.instance.status:
+            case ResourceStatus.ANOMALY_BOUND:
+                self.instance.status = ResourceStatus.CONTROL_BOUND
+                self.instance.instruction_turns["bound_copies"]["turns"] = []
+            case ResourceStatus.ANOMALY_UNBOUND:
+                self.instance.status = ResourceStatus.CONTROL_UNBOUND
+                self.instance.instruction_turns["unbound_copies"]["turns"] = []
+            case _:
+                raise serializers.ValidationError(
+                    {
+                        "status": _("The resource is not in anomaly status"),
+                    }
+                )
+        self.instance.save(update_fields=["status", "instruction_turns"])

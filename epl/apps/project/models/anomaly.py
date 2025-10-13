@@ -51,7 +51,7 @@ class Anomaly(models.Model):
         ]
 
     def __str__(self):
-        return f"Anomaly {self.id}: {self.type.value}"
+        return f"Anomaly {self.id}: {self.type}"
 
     def save(self, *args, **kwargs):
         self.full_clean()

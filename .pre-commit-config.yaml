@@ -4,15 +4,15 @@ exclude: "^`.tox*|fabfile.*"
 fail_fast: true
 repos:
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: 1.28.0
+    rev: 1.29.0
     hooks:
       - id: django-upgrade
         args: [--target-version, "4.2" ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.2
+    rev: v0.14.0
     hooks:
-    - id: ruff
+    - id: ruff-check
       types_or: [ python, pyi ]
       args: [ --fix ]
     - id: ruff-format
