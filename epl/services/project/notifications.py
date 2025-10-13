@@ -1,7 +1,11 @@
+from collections import defaultdict
+from typing import Any
+
 from epl.apps.project.models import Project, Resource, Role, UserRole
 from epl.apps.project.models.choices import AlertType
 from epl.apps.project.models.collection import Arbitration, Collection
 from epl.apps.user.models import User
+from epl.apps.user.views import _get_invite_signer
 from epl.services.user.email import (
     send_anomaly_notification_email,
     send_anomaly_resolved_notification_email,
@@ -32,27 +36,38 @@ def should_send_alert(user: User, project: Project, alert_type: AlertType) -> bo
     return user_alerts_for_project.get(alert_type.value, True)
 
 
+def group_invitations_by_email(invitations: list[dict[str, Any]] | None) -> dict[str, list[dict[str, Any]]]:
+    """
+    Group invitations by email.
+    Returns a dict where the keys are the email addresses and the values are the corresponding invitations.
+    Allows to process invitations if a user has multiple invitations, for multiple role in a project.
+    """
+    invitations_by_email = defaultdict(list)
+
+    for invitation in invitations or []:
+        email = invitation.get("email")
+        if email and isinstance(email, str):
+            cleaned_email = email.strip()
+            if cleaned_email:
+                invitations_by_email[cleaned_email].append(invitation)
+
+    return dict(invitations_by_email)
+
+
 def invite_unregistered_users_to_epl(project: Project, request):
     """
     Parse the invitations to join epl (stored in project.invitations) and sends an email for each one.
     This function is intended to be called when the project goes from "DRAFT" into "REVIEW".
     """
-    from epl.apps.user.views import _get_invite_signer
+    invitations_grouped_by_email = group_invitations_by_email(project.invitations)
 
-    invitations_list = project.invitations or []
-
-    for invitation in invitations_list:
-        email = invitation.get("email")
-        if not email:
-            continue
-
+    for email, user_invitations in invitations_grouped_by_email.items():
         send_invite_to_epl_email(
             email=email,
             request=request,
             signer=_get_invite_signer(),
             project_id=str(project.id),
-            library_id=invitation.get("library_id"),
-            role=invitation.get("role"),
+            invitations=user_invitations,
             assigned_by_id=request.user.id,
         )
 

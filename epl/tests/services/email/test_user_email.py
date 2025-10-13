@@ -75,31 +75,39 @@ class TestUserEmailServices(TestCase):
         request = MagicMock(spec=Request)
         request.tenant = MagicMock()
         request.tenant.name = "Test Tenant"
+        request.user = MagicMock()
+        request.user.email = "sender@example.com"
+
         email = "invitee@example.com"
         project_id = "123"
-        library_id = "456"
-        role = "INSTRUCTOR"
         assigned_by_id = "789"
+
+        invitations = [
+            {
+                "email": email,
+                "role": "INSTRUCTOR",
+                "library_id": "456",
+            }
+        ]
 
         send_invite_to_epl_email(
             email=email,
             request=request,
             signer=signer,
             project_id=project_id,
-            library_id=library_id,
-            role=role,
+            invitations=invitations,
             assigned_by_id=assigned_by_id,
         )
 
         args, kwargs = mock_render_to_string.call_args
         context = args[1]
         invitation_link = context["invitation_link"]
-
-        self.assertTrue(invitation_link.startswith("http://testdomain/create-account?t="))
         token = invitation_link.split("t=")[1]
         data = signer.unsign_object(token)
+
         self.assertEqual(data["email"], email)
         self.assertEqual(data["project_id"], project_id)
-        self.assertEqual(data["library_id"], library_id)
-        self.assertEqual(data["role"], role)
         self.assertEqual(data["assigned_by_id"], assigned_by_id)
+        self.assertEqual(len(data["invitations"]), 1)
+        self.assertEqual(data["invitations"][0]["role"], "INSTRUCTOR")
+        self.assertEqual(data["invitations"][0]["library_id"], "456")

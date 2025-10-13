@@ -384,16 +384,21 @@ def invite(request: Request) -> Response:
     serializer = EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
+    invitation = {
+        "email": serializer.validated_data.get("email"),
+        "role": serializer.validated_data.get("role"),
+        "library_id": serializer.validated_data.get("library_id"),
+    }
+
     send_invite_to_epl_email(
         email=serializer.validated_data.get("email"),
-        project_id=serializer.validated_data.get("project_id"),
-        library_id=serializer.validated_data.get("library_id"),
-        role=serializer.validated_data.get("role"),
-        assigned_by_id=request.user.id,
         request=request,
         signer=_get_invite_signer(),
+        project_id=serializer.validated_data.get("project_id"),
+        invitations=[invitation] if serializer.validated_data.get("role") else [],
+        assigned_by_id=request.user.id,
     )
-    return Response(status=status.HTTP_200_OK)
+    return Response({"detail": _("Invitation email sent successfully.")}, status=status.HTTP_200_OK)
 
 
 def _get_context_for_invite_and_create_account(request: Request) -> dict:

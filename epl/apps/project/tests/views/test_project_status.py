@@ -186,7 +186,12 @@ class TestSubscriptionNotificationForProjectManagers(TestCase):
         invitation_payload = {
             "email": self.invited_user_email,
             "project_id": str(project.id),
-            "role": Role.PROJECT_MANAGER,
+            "invitations": [
+                {
+                    "role": Role.PROJECT_MANAGER,
+                    "library_id": None,
+                }
+            ],
             "assigned_by_id": str(self.project_creator.id),
         }
         signer = TimestampSigner(salt=INVITE_TOKEN_SALT)
@@ -254,7 +259,12 @@ class TestSubscriptionNotificationForProjectAdmins(TestCase):
         invitation_payload = {
             "email": self.invited_user_email,
             "project_id": str(project.id),
-            "role": Role.PROJECT_ADMIN,
+            "invitations": [
+                {
+                    "role": Role.PROJECT_ADMIN,
+                    "library_id": None,
+                }
+            ],
             "assigned_by_id": str(self.project_creator.id),
         }
         signer = TimestampSigner(salt=INVITE_TOKEN_SALT)
