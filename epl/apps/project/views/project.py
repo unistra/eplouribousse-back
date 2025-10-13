@@ -427,7 +427,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 "alerts": {
                     "control": False,
                     "edition": False,
-                    "position": False,
+                    "positioning": False,
                     "transfer": False,
                     "arbitration": False,
                     "instruction": False,
