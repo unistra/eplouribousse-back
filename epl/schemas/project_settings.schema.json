@@ -13,22 +13,22 @@
         "positioning": {
           "type": "boolean"
         },
-        "arbitration0": {
+        "arbitration": {
           "type": "boolean"
         },
-        "arbitration1": {
+        "instruction": {
           "type": "boolean"
         },
-        "instructions": {
+        "control": {
           "type": "boolean"
         },
-        "results": {
+        "edition": {
           "type": "boolean"
         },
-        "transfertTracking": {
+        "preservation": {
           "type": "boolean"
         },
-        "treatmentTracking": {
+        "transfer": {
           "type": "boolean"
         }
       }
