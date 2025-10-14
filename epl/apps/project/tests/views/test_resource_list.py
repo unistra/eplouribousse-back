@@ -16,17 +16,22 @@ class FilterResourceOnStatusTest(TestCase):
     def setUp(self):
         super().setUp()
         self.project = ProjectFactory()
-        self.library = LibraryFactory()
-        self.instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library)
+        self.library1 = LibraryFactory()
+        self.library2 = LibraryFactory()
+        self.project.libraries.add(self.library1, self.library2)
+        self.instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library1)
 
         self.resource_positioning = ResourceFactory(
             project=self.project,
             status=ResourceStatus.POSITIONING,
         )
-        _c1 = CollectionFactory(library=self.library, project=self.project, resource=self.resource_positioning)
+        _c1 = CollectionFactory(library=self.library1, project=self.project, resource=self.resource_positioning)
+        # We need a duplicate collection in another library to ensure the resource is not filtered out
+        CollectionFactory(library=self.library2, project=self.project, resource=self.resource_positioning)
+
         self.resource_positioning.instruction_turns = (
             {
-                "bound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c1.id)}]},
+                "bound_copies": {"turns": [{"library": str(self.library1.id), "collection": str(_c1.id)}]},
                 "unbound_copies": {"turns": []},
             },
         )
@@ -37,11 +42,14 @@ class FilterResourceOnStatusTest(TestCase):
             status=ResourceStatus.INSTRUCTION_BOUND,
         )
         _c2 = CollectionFactory(
-            library=self.library, project=self.project, resource=self.resource_instruction_bound_for_user
+            library=self.library1, project=self.project, resource=self.resource_instruction_bound_for_user
+        )
+        CollectionFactory(
+            library=self.library2, project=self.project, resource=self.resource_instruction_bound_for_user
         )
 
         self.resource_instruction_bound_for_user.instruction_turns = {
-            "bound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c2.id)}]}
+            "bound_copies": {"turns": [{"library": str(self.library1.id), "collection": str(_c2.id)}]}
         }
         self.resource_instruction_bound_for_user.save()
         self.resource_instruction_bound_for_other_library = ResourceFactory(
@@ -52,15 +60,17 @@ class FilterResourceOnStatusTest(TestCase):
             },
         )
         _c3 = CollectionFactory(project=self.project, resource=self.resource_instruction_bound_for_other_library)
+        CollectionFactory(project=self.project, resource=self.resource_instruction_bound_for_other_library)
 
         self.resource_control_bound = ResourceFactory(
             project=self.project,
             status=ResourceStatus.CONTROL_BOUND,
         )
-        _c4 = CollectionFactory(project=self.project, library=self.library, resource=self.resource_control_bound)
+        _c4 = CollectionFactory(project=self.project, library=self.library1, resource=self.resource_control_bound)
+        CollectionFactory(project=self.project, library=self.library2, resource=self.resource_control_bound)
         self.resource_control_bound.instruction_turns = {
             "bound_copies": {"turns": []},
-            "unbound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c4.id)}]},
+            "unbound_copies": {"turns": [{"library": str(self.library1.id), "collection": str(_c4.id)}]},
         }
         self.resource_control_bound.save()
 
@@ -69,11 +79,14 @@ class FilterResourceOnStatusTest(TestCase):
             status=ResourceStatus.INSTRUCTION_UNBOUND,
         )
         _c5 = CollectionFactory(
-            project=self.project, library=self.library, resource=self.resource_instruction_unbound_for_user
+            project=self.project, library=self.library1, resource=self.resource_instruction_unbound_for_user
+        )
+        CollectionFactory(
+            project=self.project, library=self.library2, resource=self.resource_instruction_unbound_for_user
         )
         self.resource_instruction_unbound_for_user.instruction_turns = {
             "bound_copies": {"turns": []},
-            "unbound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c5.id)}]},
+            "unbound_copies": {"turns": [{"library": str(self.library1.id), "collection": str(_c5.id)}]},
         }
         self.resource_instruction_unbound_for_user.save()
 
@@ -82,6 +95,7 @@ class FilterResourceOnStatusTest(TestCase):
             status=ResourceStatus.INSTRUCTION_UNBOUND,
         )
         _c6 = CollectionFactory(project=self.project, resource=self.resource_instruction_unbound_for_other_library)
+        CollectionFactory(project=self.project, resource=self.resource_instruction_unbound_for_other_library)
         self.resource_instruction_unbound_for_other_library.instruction_turns = (
             {
                 "bound_copies": {"turns": []},
@@ -94,9 +108,10 @@ class FilterResourceOnStatusTest(TestCase):
             project=self.project,
             status=ResourceStatus.CONTROL_UNBOUND,
         )
-        _c7 = CollectionFactory(project=self.project, library=self.library, resource=self.resource_control_unbound)
+        _c7 = CollectionFactory(project=self.project, library=self.library1, resource=self.resource_control_unbound)
+        CollectionFactory(project=self.project, library=self.library2, resource=self.resource_control_unbound)
         self.resource_control_unbound.instruction_turns = {
-            "unbound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c7.id)}]},
+            "unbound_copies": {"turns": [{"library": str(self.library1.id), "collection": str(_c7.id)}]},
         }
         self.resource_control_unbound.save()
 
@@ -105,10 +120,13 @@ class FilterResourceOnStatusTest(TestCase):
             status=ResourceStatus.INSTRUCTION_BOUND,
         )
         _c8 = CollectionFactory(
-            project=self.project, library=self.library, resource=self.resource_instruction_bound_without_segments
+            project=self.project, library=self.library1, resource=self.resource_instruction_bound_without_segments
+        )
+        CollectionFactory(
+            project=self.project, library=self.library2, resource=self.resource_instruction_bound_without_segments
         )
         self.resource_instruction_bound_without_segments.instruction_turns = {
-            "bound_copies": {"turns": [{"library": str(self.library.id), "collection": str(_c8.id)}]},
+            "bound_copies": {"turns": [{"library": str(self.library1.id), "collection": str(_c8.id)}]},
         }
         self.resource_instruction_bound_without_segments.save()
 
@@ -117,7 +135,10 @@ class FilterResourceOnStatusTest(TestCase):
             status=ResourceStatus.INSTRUCTION_BOUND,
         )
         _c9 = CollectionFactory(
-            project=self.project, library=self.library, resource=self.resource_instruction_bound_with_segment
+            project=self.project, library=self.library1, resource=self.resource_instruction_bound_with_segment
+        )
+        CollectionFactory(
+            project=self.project, library=self.library2, resource=self.resource_instruction_bound_with_segment
         )
         _segment = SegmentFactory(collection=_c9)
         self.resource_instruction_bound_with_segment.instruction_turns = {
@@ -148,7 +169,7 @@ class FilterResourceOnStatusTest(TestCase):
         self.response_ok(response)
         self.assertEqual(
             response.data["count"],
-            8,
+            9,
         )
 
     def test_filter_positioning_with_library(self):
@@ -156,7 +177,7 @@ class FilterResourceOnStatusTest(TestCase):
         # and whose turn it is to instruct
         query_params = {
             "project": self.project.id,
-            "library": self.library.id,
+            "library": self.library1.id,
             "status": ResourceStatus.POSITIONING,
         }
         response = self.get(
@@ -211,7 +232,7 @@ class FilterResourceOnStatusTest(TestCase):
     def test_filter_instruction_bound_for_instructor(self):
         query_params = {
             "project": self.project.id,
-            "library": self.library.id,
+            "library": self.library1.id,
             "status": ResourceStatus.INSTRUCTION_BOUND,
         }
         response = self.get(
@@ -260,7 +281,7 @@ class FilterResourceOnStatusTest(TestCase):
     def test_filter_instruction_unbound_for_instructor(self):
         query_params = {
             "project": self.project.id,
-            "library": self.library.id,
+            "library": self.library1.id,
             "status": ResourceStatus.INSTRUCTION_UNBOUND,
         }
         response = self.get(
@@ -307,7 +328,7 @@ class FilterResourceOnStatusTest(TestCase):
     def test_filter_control_bound_with_library(self):
         query_params = {
             "project": self.project.id,
-            "library": self.library.id,
+            "library": self.library1.id,
             "status": ResourceStatus.CONTROL_BOUND,
         }
         response = self.get(
@@ -354,7 +375,7 @@ class FilterResourceOnStatusTest(TestCase):
     def test_filter_control_unbound_with_library(self):
         query_params = {
             "project": self.project.id,
-            "library": self.library.id,
+            "library": self.library1.id,
             "status": ResourceStatus.CONTROL_UNBOUND,
         }
         response = self.get(
@@ -384,7 +405,7 @@ class FilterResourceOnStatusTest(TestCase):
         )
         query_params = {
             "project": self.project.id,
-            "library": self.library.id,
+            "library": self.library1.id,
             "against": other_library.id,
             "status": ResourceStatus.INSTRUCTION_BOUND,
         }
