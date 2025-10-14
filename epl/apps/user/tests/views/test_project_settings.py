@@ -22,51 +22,54 @@ class ProjectSettingsViewTest(TestCase):
             }
             self.user.save()
 
-    def test_user_can_set_notification_preferences_for_specific_project(self):
-        url = reverse("user-project-settings")
+    def test_user_can_get_alerts_for_specific_project(self):
+        url = reverse("user-project-alerts")
+        response = self.get(
+            url,
+            user=self.user,
+            data={"project_id": str(self.project.id)},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("position", response.data["alerts"])
+        self.assertTrue(response.data["alerts"]["position"])
+
+    def test_user_can_patch_alerts_for_specific_project(self):
+        url = reverse("user-project-alerts")
+        data = {
+            "project_id": str(self.project.id),
+            "alerts": {
+                "control": True,
+                "position": False,
+            },
+        }
         response = self.patch(
             url,
             user=self.user,
-            data={"project_id": str(self.project.id), "alert_type": "control", "enabled": True},
+            data=data,
             content_type="application/json",
         )
         self.user.refresh_from_db()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["alert_type"], "control")
-        self.assertEqual(response.data["enabled"], True)
+        self.assertEqual(response.data["alerts"]["control"], True)
+        self.assertEqual(response.data["alerts"]["position"], False)
         self.assertIn("control", self.user.settings["alerts"][str(self.project.id)])
         self.assertTrue(self.user.settings["alerts"][str(self.project.id)]["control"])
+        self.assertFalse(self.user.settings["alerts"][str(self.project.id)]["position"])
 
-    def test_user_can_get_notification_preferences_for_specific_project(self):
-        url = reverse("user-project-settings")
+    def test_get_alerts_missing_project_id_returns_400(self):
+        url = reverse("user-project-alerts")
         response = self.get(
             url,
             user=self.user,
-            data={"project_id": str(self.project.id), "alert_type": "position"},
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["project_id"], str(self.project.id))
-        self.assertEqual(response.data["alert_type"], "position")
-        self.assertTrue(response.data["enabled"])
-
-    def test_get_alert_missing_project_id_returns_400(self):
-        url = reverse("user-project-settings")
-        response = self.get(
-            url,
-            user=self.user,
-            data={"alert_type": "position"},
+            data={},
         )
         self.assertEqual(response.status_code, 400)
-        self.assertIn("detail", response.data)
 
-    def test_get_unconfigured_alert_in_user_settings_returns_true_by_default(self):
-        url = reverse("user-project-settings")
+    def test_get_alerts_unconfigured_project_fail(self):
+        url = reverse("user-project-alerts")
         response = self.get(
             url,
             user=self.user,
-            data={"project_id": str(self.project.id), "alert_type": "not_configured"},
+            data={"project_id": "not_configured"},
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["project_id"], str(self.project.id))
-        self.assertEqual(response.data["alert_type"], "not_configured")
-        self.assertTrue(response.data["enabled"])
+        self.assertEqual(response.status_code, 400)

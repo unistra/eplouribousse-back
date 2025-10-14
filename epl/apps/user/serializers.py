@@ -13,7 +13,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as Ba
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 
 from epl.apps.project.models import Project, ProjectStatus, Role
-from epl.apps.project.models.choices import AlertType
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.user.email import (
@@ -419,14 +418,28 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
 
 
 class UserAlertSettingsSerializer(serializers.Serializer):
-    project_id = serializers.UUIDField()
-    alert_type = serializers.ChoiceField(choices=AlertType.choices)
-    enabled = serializers.BooleanField()
+    project_id = serializers.UUIDField(required=True, write_only=True)
+    alerts = serializers.DictField(
+        child=serializers.BooleanField(),
+        help_text=_("Alert settings for the project"),
+        required=False,
+    )
 
-    def update(self, instance: User, validated_data: dict) -> User:
+    def validate_project_id(self, value):
+        try:
+            Project.objects.get(id=value)
+        except Project.DoesNotExist:
+            raise serializers.ValidationError(_("Project does not exist."))
+        return value
+
+    def to_representation(self, instance):
+        user = self.context.get("user", instance)
+        project_id = self.initial_data.get("project_id") or self.validated_data.get("project_id")
+        return {"alerts": user.settings.get("alerts", {}).get(str(project_id), {})}
+
+    def update(self, instance: User, validated_data: dict):
         alerts = instance.settings.setdefault("alerts", {})
-        project_alerts = alerts.setdefault(str(validated_data["project_id"]), {})
-        project_alerts[validated_data["alert_type"]] = validated_data["enabled"]
+        alerts[str(validated_data["project_id"])] = validated_data["alerts"]
         instance.settings["alerts"] = alerts
         instance.save(update_fields=["settings"])
-        return instance
+        return {"alerts": instance.settings["alerts"][str(validated_data["project_id"])]}
