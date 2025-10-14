@@ -2,6 +2,7 @@
   "$id": "https://eplouribousse.fr/schemas/project_settings.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Project Settings",
+  "description": "Settings for a project, including exclusion reasons and alert settings. Alert settings are stored in a sub schema (project_alert_settings.schema.json) to make the serialization of the alert datas easier.",
   "type": "object",
   "properties": {
     "exclusion_reasons": {

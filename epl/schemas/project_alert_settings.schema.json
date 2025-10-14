@@ -2,6 +2,7 @@
   "$id": "https://eplouribousse.fr/schemas/project_alert_settings.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Project Alert Settings",
+  "description": "Settings to enable or disable alerts, this is a subset of the project settings. We split this schema from the project_settings.schema.json to make the serialization of the alert datas easier.",
   "type": "object",
   "properties": {
     "positioning": {
