@@ -484,3 +484,269 @@ class ProjectInvitationTests(TestCase):
         else:
             self.project.refresh_from_db()
             self.assertEqual(len(self.project.invitations), 1)
+
+
+class TestInviteExistingUsers(TestCase):
+    """
+    Tests for the behavior when inviting users who already exist in the database.
+    """
+
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            # Create a project creator and a project
+            self.project_creator = UserFactory()
+            self.project = ProjectFactory()
+            UserRole.objects.create(
+                user=self.project_creator,
+                project=self.project,
+                role=Role.PROJECT_CREATOR,
+                assigned_by=self.project_creator,
+            )
+
+            # Create a library for instructor roles
+            self.library = LibraryFactory()
+            self.project.libraries.add(self.library)
+
+            # Create an existing user in the database
+            self.existing_user = UserFactory(email="existing@example.com")
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_existing_user_not_sent_email_and_gets_role_assigned(self, mock_send_email):
+        """
+        Test that when inviting an existing user:
+        1. No email is sent
+        2. UserRole is created directly
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Add invitation for existing user
+        invitation_data = {
+            "email": self.existing_user.email,
+            "role": Role.PROJECT_ADMIN,
+            "library_id": None,
+        }
+        self.project.invitations = [invitation_data]
+        self.project.save()
+
+        # Create a mock request
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify no email was sent
+        mock_send_email.assert_not_called()
+
+        # Verify UserRole was created for the existing user
+        user_role = UserRole.objects.get(user=self.existing_user, project=self.project, role=Role.PROJECT_ADMIN)
+        self.assertEqual(user_role.assigned_by, self.project_creator)
+        self.assertIsNone(user_role.library_id)
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_existing_user_with_library_role(self, mock_send_email):
+        """
+        Test that existing user gets instructor role with library assigned.
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Add invitation for existing user as instructor
+        invitation_data = {
+            "email": self.existing_user.email,
+            "role": Role.INSTRUCTOR,
+            "library_id": str(self.library.id),
+        }
+        self.project.invitations = [invitation_data]
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify no email was sent
+        mock_send_email.assert_not_called()
+
+        # Verify UserRole was created with library
+        user_role = UserRole.objects.get(user=self.existing_user, project=self.project, role=Role.INSTRUCTOR)
+        self.assertEqual(user_role.library_id, self.library.id)
+        self.assertEqual(user_role.assigned_by, self.project_creator)
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_existing_user_multiple_roles(self, mock_send_email):
+        """
+        Test that existing user gets multiple roles assigned without email.
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Add multiple invitations for the same existing user
+        invitations_data = [
+            {
+                "email": self.existing_user.email,
+                "role": Role.INSTRUCTOR,
+                "library_id": str(self.library.id),
+            },
+            {
+                "email": self.existing_user.email,
+                "role": Role.CONTROLLER,
+                "library_id": None,
+            },
+        ]
+        self.project.invitations = invitations_data
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify no email was sent
+        mock_send_email.assert_not_called()
+
+        # Verify both UserRoles were created
+        user_roles = UserRole.objects.filter(user=self.existing_user, project=self.project)
+        self.assertEqual(user_roles.count(), 2)
+
+        # Check specific roles
+        instructor_role = user_roles.get(role=Role.INSTRUCTOR)
+        self.assertEqual(instructor_role.library_id, self.library.id)
+
+        controller_role = user_roles.get(role=Role.CONTROLLER)
+        self.assertIsNone(controller_role.library_id)
+
+        # Both should be assigned by project creator
+        for user_role in user_roles:
+            self.assertEqual(user_role.assigned_by, self.project_creator)
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_mixed_existing_and_new_users(self, mock_send_email):
+        """
+        Test behavior with both existing and non-existing users:
+        - Existing user: no email, role assigned
+        - Non-existing user: email sent, no role assigned yet
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Invitations for both existing and new users
+        invitations_data = [
+            {
+                "email": self.existing_user.email,  # Existing user
+                "role": Role.PROJECT_ADMIN,
+                "library_id": None,
+            },
+            {
+                "email": "newuser@example.com",  # New user
+                "role": Role.GUEST,
+                "library_id": None,
+            },
+        ]
+        self.project.invitations = invitations_data
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify email was sent only once (for the new user)
+        mock_send_email.assert_called_once()
+        call_args = mock_send_email.call_args[1]  # Get keyword arguments
+        self.assertEqual(call_args["email"], "newuser@example.com")
+
+        # Verify existing user got role assigned
+        user_role = UserRole.objects.get(user=self.existing_user, project=self.project)
+        self.assertEqual(user_role.role, Role.PROJECT_ADMIN)
+
+        # Verify new user doesn't have role yet (would be created on account creation)
+        self.assertFalse(UserRole.objects.filter(user__email="newuser@example.com", project=self.project).exists())
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_existing_user_duplicate_role_not_created(self, mock_send_email):
+        """
+        Test that if an existing user already has a role, it's not duplicated.
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Create an existing UserRole
+        existing_role = UserRole.objects.create(
+            user=self.existing_user,
+            project=self.project,
+            role=Role.PROJECT_ADMIN,
+            assigned_by=self.project_creator,
+        )
+
+        # Add invitation for the same role
+        invitation_data = {
+            "email": self.existing_user.email,
+            "role": Role.PROJECT_ADMIN,
+            "library_id": None,
+        }
+        self.project.invitations = [invitation_data]
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify no email was sent
+        mock_send_email.assert_not_called()
+
+        # Verify only one UserRole exists (no duplicate created)
+        user_roles = UserRole.objects.filter(user=self.existing_user, project=self.project, role=Role.PROJECT_ADMIN)
+        self.assertEqual(user_roles.count(), 1)
+        self.assertEqual(user_roles.first().id, existing_role.id)
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_inactive_user_still_gets_email(self, mock_send_email):
+        """
+        Test that inactive users are treated as non-existing and get email invitations.
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Create an inactive user
+        inactive_user = UserFactory(email="inactive@example.com", is_active=False)
+
+        # Add invitation for inactive user
+        invitation_data = {
+            "email": inactive_user.email,
+            "role": Role.PROJECT_ADMIN,
+            "library_id": None,
+        }
+        self.project.invitations = [invitation_data]
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify email was sent (inactive user treated as non-existing)
+        mock_send_email.assert_called_once()
+
+        # Verify no UserRole was created for inactive user
+        self.assertFalse(UserRole.objects.filter(user=inactive_user, project=self.project).exists())

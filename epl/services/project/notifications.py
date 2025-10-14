@@ -39,7 +39,7 @@ def should_send_alert(user: User, project: Project, alert_type: AlertType) -> bo
 def group_invitations_by_email(invitations: list[dict[str, Any]] | None) -> dict[str, list[dict[str, Any]]]:
     """
     Group invitations by email.
-    Returns a dict where the keys are the email addresses and the values are the corresponding invitations.
+    Takes a list of invitations (dict) and returns a dict where the keys are the email addresses and the values are the corresponding invitations.
     Allows to process invitations if a user has multiple invitations, for multiple role in a project.
     """
     invitations_by_email = defaultdict(list)
@@ -62,14 +62,36 @@ def invite_unregistered_users_to_epl(project: Project, request):
     invitations_grouped_by_email = group_invitations_by_email(project.invitations)
 
     for email, user_invitations in invitations_grouped_by_email.items():
-        send_invite_to_epl_email(
-            email=email,
-            request=request,
-            signer=_get_invite_signer(),
-            project_id=str(project.id),
-            invitations=user_invitations,
-            assigned_by_id=request.user.id,
-        )
+        try:
+            # Check if user already exists in database
+            existing_user = User.objects.active().get(email=email)
+
+            # User exists, add them directly to the project with their roles
+            for invitation in user_invitations:
+                role = invitation.get("role")
+                library_id = invitation.get("library_id")
+
+                # Create UserRole directly using the same logic as AssignRoleSerializer
+                UserRole.objects.get_or_create(
+                    user=existing_user,
+                    role=role,
+                    library_id=library_id,
+                    project=project,
+                    defaults={
+                        "assigned_by": request.user,
+                    },
+                )
+
+        except User.DoesNotExist:
+            # User doesn't exist, send invitation email
+            send_invite_to_epl_email(
+                email=email,
+                request=request,
+                signer=_get_invite_signer(),
+                project_id=str(project.id),
+                invitations=user_invitations,
+                assigned_by_id=request.user.id,
+            )
 
 
 def invite_project_admins_to_review(project: Project, request):
