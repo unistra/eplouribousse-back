@@ -301,33 +301,18 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     @extend_schema(
         tags=["user"],
         summary="Get or update project alert settings",
-        description="Retrieve or update the alert settings for a specific project and alert type.",
+        description="Retrieve or update the alert settings for a specific project.",
+        request=UserAlertSettingsSerializer,
         parameters=[
             OpenApiParameter(
                 name="project_id",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.QUERY,
-                description="The ID of the project for which to retrieve or update alert settings.",
+                type=OpenApiTypes.UUID,
                 required=True,
-            ),
-            OpenApiParameter(
-                name="alert_type",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.QUERY,
-                description="The type of alert to retrieve or update.",
-                required=True,
+                description="ID of the project to retrieve alert settings for.",
             ),
         ],
-        request=UserAlertSettingsSerializer,
         responses={
-            status.HTTP_200_OK: inline_serializer(
-                name="ProjectSettingsResponse",
-                fields={
-                    "project_id": serializers.CharField(help_text="The ID of the project."),
-                    "alert_type": serializers.CharField(help_text="The type of the alert."),
-                    "enabled": serializers.BooleanField(help_text="Whether the alert is enabled."),
-                },
-            ),
+            status.HTTP_200_OK: UserAlertSettingsSerializer,
             status.HTTP_400_BAD_REQUEST: inline_serializer(
                 name="BadRequestResponse",
                 fields={"detail": serializers.CharField(help_text="Error message.")},
@@ -337,30 +322,23 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     @action(
         methods=["GET", "PATCH"],
         detail=False,
-        url_path="project-settings",
-        url_name="project-settings",
+        url_path="project-alerts",
     )
-    def project_settings(self, request):
+    def project_alerts(self, request):
+        data = {}
         if request.method == "GET":
-            project_id = request.query_params.get("project_id")
-            alert_type = request.query_params.get("alert_type")
-            if not project_id or not alert_type:
-                return Response({"detail": "project_id and alert_type are required."}, status.HTTP_400_BAD_REQUEST)
-            alerts = request.user.settings.get("alerts", {})
-            project_alerts = alerts.get(str(project_id), {})
-            enabled = project_alerts.get(alert_type, True)
-            data = {
-                "project_id": project_id,
-                "alert_type": alert_type,
-                "enabled": enabled,
-            }
-            return Response(data)
+            serializer = UserAlertSettingsSerializer(
+                data={"project_id": request.query_params.get("project_id")}, context={"user": request.user}
+            )
+            serializer.is_valid(raise_exception=True)
+            data = serializer.to_representation(request.user)
 
         elif request.method == "PATCH":
             serializer = UserAlertSettingsSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.update(request.user, serializer.validated_data)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            data = serializer.update(request.user, serializer.validated_data)
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 def _get_invite_signer() -> signing.TimestampSigner:
