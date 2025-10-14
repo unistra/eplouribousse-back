@@ -370,6 +370,13 @@ def _get_invite_signer() -> signing.TimestampSigner:
 @extend_schema(
     tags=["user"],
     summary=_("Send an invitation email"),
+    description=_(
+        "Send an invitation email to a user. "
+        "For simple invitations, only email is required. "
+        "For project invitations, include project_id and role. "
+        "For instructor roles, library_id is required."
+        "This route is atm not used by the frontend"
+    ),
     request=EmailSerializer,
     responses={
         status.HTTP_200_OK: inline_serializer(
