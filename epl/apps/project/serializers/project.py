@@ -14,7 +14,6 @@ from epl.apps.project.models import (
     Role,
     UserRole,
 )
-from epl.apps.project.models.choices import AlertType
 from epl.apps.user.models import User
 from epl.apps.user.serializers import NestedUserSerializer
 from epl.libs.schema import load_json_schema
@@ -400,24 +399,31 @@ class ExclusionReasonSerializer(serializers.Serializer):
             project.save(update_fields=["settings"])
 
 
+@extend_schema_field(load_json_schema("project_alert_settings.schema.json"))
+class ProjectAlertSettingsField(serializers.JSONField):
+    pass
+
+
 class ProjectAlertSettingsSerializer(serializers.Serializer):
-    alerts = serializers.DictField(
-        child=serializers.BooleanField(),
-        help_text="Key = alert type, value = alert activated or not (True/False)",
-        source="settings.alerts",
-        required=False,
-        default=dict,
+    alerts = serializers.JSONField(
+        help_text="Alert settings for each alert type",
+        required=True,
+        validators=[JSONSchemaValidator("project_alert_settings.schema.json")],
     )
 
+    def validate(self, attrs):
+        if "alerts" not in attrs:
+            raise serializers.ValidationError({"alerts": "This field is required."})
+        return attrs
+
+    def to_representation(self, instance):
+        if instance and instance.settings:
+            return {"alerts": instance.settings.get("alerts", {})}
+        return {"alerts": {}}
+
     def update(self, instance: Project, validated_data: dict) -> Project:
-        alerts = validated_data.get("settings", {}).get("alerts", {})
-        instance.settings["alerts"] = alerts
+        current_settings = instance.settings or {}
+        current_settings["alerts"] = validated_data["alerts"]
+        instance.settings = current_settings
         instance.save(update_fields=["settings"])
         return instance
-
-    def validate_alerts(self, alert):
-        alert_types = [alert_type[0] for alert_type in AlertType.choices]
-        for key, value in alert.items():
-            if key not in alert_types:
-                raise serializers.ValidationError(f"Invalid alert type: {key}")
-        return alert
