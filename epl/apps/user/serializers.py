@@ -414,8 +414,10 @@ class UserAlertSettingsSerializer(serializers.Serializer):
     )
 
     def validate_project_id(self, value):
-        if not value:
-            raise serializers.ValidationError(_("project_id is required."))
+        try:
+            Project.objects.get(id=value)
+        except Project.DoesNotExist:
+            raise serializers.ValidationError(_("Project does not exist."))
         return value
 
     def to_representation(self, instance):
