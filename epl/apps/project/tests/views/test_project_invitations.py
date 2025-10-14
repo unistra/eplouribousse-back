@@ -16,7 +16,7 @@ from epl.apps.user.views import _get_invite_signer
 from epl.tests import TestCase
 
 
-class TestUserAccountCreationAfterInvite(TestCase):
+class TestUserAccountCreationAfterInviteSingleRole(TestCase):
     def setUp(self):
         super().setUp()
         with tenant_context(self.tenant):
@@ -48,8 +48,7 @@ class TestUserAccountCreationAfterInvite(TestCase):
                 {
                     "email": self.invitation_data["email"],
                     "project_id": str(self.project.id),
-                    "role": self.invitation_data["role"],
-                    "library_id": self.invitation_data["library_id"],
+                    "invitations": [self.invitation_data],
                     "assigned_by_id": str(self.project_creator.id),
                 }
             )
@@ -113,7 +112,7 @@ class TestUserAccountCreationAfterInvite(TestCase):
             {
                 "email": self.new_user_email,
                 "project_id": str(uuid.uuid4()),  # Non-existent project
-                "role": Role.PROJECT_ADMIN,
+                "invitations": [self.invitation_data],
                 "assigned_by_id": str(self.project_creator.id),
             }
         )
@@ -133,7 +132,7 @@ class TestUserAccountCreationAfterInvite(TestCase):
             {
                 "email": self.new_user_email,
                 "project_id": str(self.project.id),
-                "role": Role.PROJECT_ADMIN,
+                "invitations": [self.invitation_data],
                 "assigned_by_id": str(uuid.uuid4()),  # Non-existent assigner
             }
         )
@@ -149,11 +148,17 @@ class TestUserAccountCreationAfterInvite(TestCase):
         self.assertIn("Invitation expired. The user who sent the invitation no longer exists", str(response.content))
 
     def test_account_creation_success_without_library(self):
+        invitation_without_library = {
+            "email": self.new_user_email,
+            "role": Role.PROJECT_ADMIN,
+            "library_id": None,
+        }
+
         token_without_library = self.signer.sign_object(
             {
                 "email": self.new_user_email,
                 "project_id": str(self.project.id),
-                "role": Role.PROJECT_ADMIN,
+                "invitations": [invitation_without_library],
                 "assigned_by_id": str(self.project_creator.id),
             }
         )
@@ -180,7 +185,7 @@ class TestUserAccountCreationAfterInvite(TestCase):
             {
                 # No email specified
                 "project_id": str(self.project.id),
-                "role": Role.PROJECT_ADMIN,
+                "invitations": [{"role": Role.PROJECT_ADMIN, "library_id": None}],
                 "assigned_by_id": str(self.project_creator.id),
             }
         )
@@ -192,13 +197,18 @@ class TestUserAccountCreationAfterInvite(TestCase):
         self.response_bad_request(response)
 
     def test_account_creation_fails_with_library_not_found(self):
+        invitation_with_invalid_library = {
+            "email": self.new_user_email,
+            "role": Role.PROJECT_ADMIN,
+            "library_id": str(uuid.uuid4()),
+        }
+
         token_with_invalid_library = self.signer.sign_object(
             {
                 "email": self.new_user_email,
                 "project_id": str(self.project.id),
-                "role": Role.PROJECT_ADMIN,
+                "invitations": [invitation_with_invalid_library],  # ← Nouveau format
                 "assigned_by_id": str(self.project_creator.id),
-                "library_id": str(uuid.uuid4()),  # Non-existent library
             }
         )
 
@@ -214,11 +224,17 @@ class TestUserAccountCreationAfterInvite(TestCase):
         self.response_bad_request(response)
 
     def test_account_creation_fails_when_no_email_in_project_invitation(self):
+        non_invited_invitation = {
+            "email": "not_invited@example.com",
+            "role": Role.PROJECT_ADMIN,
+            "library_id": None,
+        }
+
         token_with_non_invited_email = self.signer.sign_object(
             {
                 "email": "not_invited@example.com",
                 "project_id": str(self.project.id),
-                "role": Role.PROJECT_ADMIN,
+                "invitations": [non_invited_invitation],
                 "assigned_by_id": str(self.project_creator.id),
             }
         )
@@ -234,6 +250,162 @@ class TestUserAccountCreationAfterInvite(TestCase):
 
         self.response_bad_request(response)
         self.assertIn("This email is not invited to join this project", str(response.content))
+
+
+class TestUserAccountCreationAfterInviteMultipleRoles(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            # Create a project creator and a project
+            self.project_creator = UserFactory()
+            self.project = ProjectFactory()
+            UserRole.objects.create(
+                user=self.project_creator,
+                project=self.project,
+                role=Role.PROJECT_CREATOR,
+                assigned_by=self.project_creator,
+            )
+
+            # Create a library for the instructor role
+            self.library = LibraryFactory()
+            self.project.libraries.add(self.library)
+
+            # Create multiple invitations for the same user (multiple roles)
+            self.new_user_email = "multi_role_user@example.com"
+            self.invitations_data = [
+                {
+                    "email": self.new_user_email,
+                    "role": Role.INSTRUCTOR,
+                    "library_id": str(self.library.id),
+                },
+                {
+                    "email": self.new_user_email,
+                    "role": Role.CONTROLLER,
+                    "library_id": None,
+                },
+            ]
+
+            # Add all invitations to the project
+            for invitation in self.invitations_data:
+                self.project.invitations.append(invitation)
+            self.project.save()
+
+            # Create the token with multiple invitations
+            self.signer = _get_invite_signer()
+            self.token = self.signer.sign_object(
+                {
+                    "email": self.new_user_email,
+                    "project_id": str(self.project.id),
+                    "invitations": self.invitations_data,  # Multiple invitations
+                    "assigned_by_id": str(self.project_creator.id),
+                }
+            )
+
+    def test_account_creation_with_multiple_roles_success(self):
+        """Test creating account when user has multiple roles (INSTRUCTOR + CONTROLLER)."""
+        response = self.post(
+            reverse("create_account"),
+            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+        )
+
+        self.response_created(response)
+
+        # Verify user creation
+        self.assertTrue(User.objects.filter(email=self.new_user_email).exists())
+        new_user = User.objects.get(email=self.new_user_email)
+
+        # Verify ALL roles were created
+        user_roles = UserRole.objects.filter(user=new_user, project=self.project)
+        self.assertEqual(user_roles.count(), 2, "Should create exactly 2 roles")
+
+        # Verify specific roles exist
+        roles = [ur.role for ur in user_roles]
+        self.assertIn(Role.INSTRUCTOR, roles, "Should have INSTRUCTOR role")
+        self.assertIn(Role.CONTROLLER, roles, "Should have CONTROLLER role")
+
+        # Verify the instructor role has the correct library
+        instructor_role = user_roles.get(role=Role.INSTRUCTOR)
+        self.assertEqual(instructor_role.library, self.library)
+        self.assertEqual(instructor_role.assigned_by, self.project_creator)
+
+        # Verify the controller role has no library
+        controller_role = user_roles.get(role=Role.CONTROLLER)
+        self.assertIsNone(controller_role.library)
+        self.assertEqual(controller_role.assigned_by, self.project_creator)
+
+        # Verify ALL invitations for this email were removed
+        self.project.refresh_from_db()
+        remaining_emails = [inv.get("email") for inv in self.project.invitations]
+        self.assertNotIn(self.new_user_email, remaining_emails)
+        self.assertEqual(len(self.project.invitations), 0)
+
+    def test_multiple_roles_with_three_roles(self):
+        """Test with 3 roles: INSTRUCTOR, CONTROLLER, GUEST."""
+        # Add a third role
+        guest_invitation = {
+            "email": self.new_user_email,
+            "role": Role.GUEST,
+            "library_id": None,
+        }
+        self.invitations_data.append(guest_invitation)
+        self.project.invitations.append(guest_invitation)
+        self.project.save()
+
+        # Create new token with 3 roles
+        token_with_three_roles = self.signer.sign_object(
+            {
+                "email": self.new_user_email,
+                "project_id": str(self.project.id),
+                "invitations": self.invitations_data,  # 3 invitations
+                "assigned_by_id": str(self.project_creator.id),
+            }
+        )
+
+        response = self.post(
+            reverse("create_account"),
+            {
+                "token": token_with_three_roles,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+            },
+        )
+
+        self.response_created(response)
+
+        # Verify user creation
+        new_user = User.objects.get(email=self.new_user_email)
+
+        # Verify ALL 3 roles were created
+        user_roles = UserRole.objects.filter(user=new_user, project=self.project)
+        self.assertEqual(user_roles.count(), 3)
+
+        # Verify specific roles
+        roles = [ur.role for ur in user_roles]
+        expected_roles = [Role.INSTRUCTOR, Role.CONTROLLER, Role.GUEST]
+        self.assertCountEqual(roles, expected_roles)
+
+    def test_empty_invitations_list(self):
+        """Test behavior with empty invitations list."""
+        empty_token = self.signer.sign_object(
+            {
+                "email": self.new_user_email,
+                "project_id": str(self.project.id),
+                "invitations": [],  # Empty list
+                "assigned_by_id": str(self.project_creator.id),
+            }
+        )
+
+        response = self.post(
+            reverse("create_account"),
+            {"token": empty_token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+        )
+
+        self.response_created(response)
+
+        # Verify user created but no roles assigned
+        new_user = User.objects.get(email=self.new_user_email)
+        user_roles = UserRole.objects.filter(user=new_user, project=self.project)
+        self.assertEqual(user_roles.count(), 0)
 
 
 class ProjectInvitationTests(TestCase):
@@ -313,227 +485,268 @@ class ProjectInvitationTests(TestCase):
             self.project.refresh_from_db()
             self.assertEqual(len(self.project.invitations), 1)
 
-    # class ProjectInvitationTests(TestCase):
-    ...
-    # def setUp(self):
-    #     """
-    #     Set up the test case.
-    #     """
-    #     super().setUp()
-    #     with tenant_context(self.tenant):
-    #         # Create admin and regular users
-    #         self.admin = User.objects.create_user(username="admin", email="admin@eplouribousse.fr", is_active=True)
-    #         self.regular_user = User.objects.create_user(
-    #             username="regular", email="regular@eplouribouse.fr", is_active=True
-    #         )
-    #
-    #         # Create project
-    #         self.project = Project.objects.create(
-    #             name="Test Project",
-    #             description="Test Description",
-    #             is_private=False,
-    #         )
-    #
-    #         # Create library and associate with project
-    #         self.library = Library.objects.create(name="Test Library")
-    #         self.project.libraries.add(self.library)
-    #
-    #         # Assign admin role to admin user
-    #         self.project.user_roles.create(user=self.admin, role=Role.PROJECT_ADMIN)
-    #
-    #         # Assign minimal role to regular user
-    #         self.project.user_roles.create(user=self.regular_user, role=Role.GUEST)
-    #
-    # def test_add_invitation_success(self):
-    #     """
-    #     Test successfully adding an invitation to a project.
-    #     """
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "newuser@example.com",
-    #         "role": Role.GUEST,
-    #     }
-    #
-    #     response = self.post(url, user=self.admin, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #
-    #     with tenant_context(self.tenant):
-    #         self.project.refresh_from_db()
-    #         self.assertEqual(len(self.project.invitations), 1)
-    #         self.assertEqual(self.project.invitations[0]["email"], "newuser@example.com")
-    #         self.assertEqual(self.project.invitations[0]["role"], Role.GUEST)
-    #
-    # def test_add_invitation_instructor_with_library(self):
-    #     """
-    #     Test adding an instructor invitation with a valid library.
-    #     """
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "instructor@example.com",
-    #         "role": Role.INSTRUCTOR,
-    #         "library": str(self.library.id),
-    #     }
-    #
-    #     response = self.post(url, user=self.admin, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #
-    #     with tenant_context(self.tenant):
-    #         self.project.refresh_from_db()
-    #         self.assertEqual(len(self.project.invitations), 1)
-    #         self.assertEqual(self.project.invitations[0]["role"], Role.INSTRUCTOR)
-    #         self.assertEqual(self.project.invitations[0]["library"], str(self.library.id))
-    #
-    # def test_add_invitation_instructor_without_library_fails(self):
-    #     """
-    #     Test that adding an instructor invitation without a library fails.
-    #     """
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "instructor@example.com",
-    #         "role": Role.INSTRUCTOR,
-    #     }
-    #
-    #     response = self.post(url, user=self.admin, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     self.assertIn("Library must be provided for instructor role", str(response.content))
-    #
-    # def test_add_invitation_with_invalid_library_fails(self):
-    #     """
-    #     Test that adding an invitation with an invalid library fails.
-    #     """
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "instructor@example.com",
-    #         "role": Role.INSTRUCTOR,
-    #         "library": str(uuid.uuid4()),  # invalid library UUID
-    #     }
-    #
-    #     response = self.post(url, user=self.admin, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     self.assertIn("Library is not attached to the project", str(response.content))
-    #
-    # def test_add_duplicate_invitation_fails(self):
-    #     """
-    #     Test that adding a duplicate invitation fails.
-    #     """
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "duplicate@example.com",
-    #         "role": Role.GUEST,
-    #     }
-    #
-    #     # First request should succeed
-    #     response = self.post(url, user=self.admin, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #
-    #     # Second request should fail
-    #     response = self.post(url, user=self.admin, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #     self.assertIn("This invitation already exists", str(response.content))
-    #
-    # def test_remove_invitation_success(self):
-    #     """
-    #     Test successfully removing an invitation.
-    #     """
-    #     # First add an invitation
-    #     add_url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "toremove@example.com",
-    #         "role": Role.GUEST,
-    #     }
-    #     self.post(add_url, user=self.admin, data=data)
-    #
-    #     # Now remove it
-    #     remove_url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     response = self.delete(remove_url, user=self.admin, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #
-    #     with tenant_context(self.tenant):
-    #         self.project.refresh_from_db()
-    #         self.assertEqual(len(self.project.invitations), 0)
-    #
-    # def test_remove_nonexistent_invitation_fails(self):
-    #     """
-    #     Test that removing a non-existent invitation fails.
-    #     """
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "nonexistent@example.com",
-    #         "role": Role.GUEST,
-    #     }
-    #
-    #     response = self.delete(url, user=self.admin, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-    #     self.assertIn("Invitation not found", str(response.content))
-    #
-    # def test_clear_invitations_success(self):
-    #     """
-    #     Test successfully clearing all invitations.
-    #     """
-    #     # First add some invitations
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data1 = {
-    #         "email": "user1@example.com",
-    #         "role": Role.GUEST,
-    #     }
-    #     data2 = {
-    #         "email": "user2@example.com",
-    #         "role": Role.CONTROLLER,
-    #     }
-    #     self.post(url, user=self.admin, data=data1)
-    #     self.post(url, user=self.admin, data=data2)
-    #
-    #     # Now clear them
-    #     clear_url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/clear/"
-    #     response = self.delete(clear_url, user=self.admin)
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #
-    #     with tenant_context(self.tenant):
-    #         self.project.refresh_from_db()
-    #         self.assertEqual(len(self.project.invitations), 0)
-    #
-    # def test_unauthenticated_access_fails(self):
-    #     """
-    #     Test that unauthenticated access to invitation endpoints fails.
-    #     """
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "user@example.com",
-    #         "role": Role.GUEST,
-    #     }
-    #
-    #     # Test add invitation
-    #     response = self.post(url, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-    #
-    #     # Test remove invitation
-    #     response = self.delete(url, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-    #
-    #     # Test clear invitations
-    #     clear_url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/clear/"
-    #     response = self.delete(clear_url)
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-    #
-    # def test_unauthorized_access_fails(self):
-    #     """
-    #     Test that unauthorized access (regular user) to invitation endpoints fails.
-    #     """
-    #     url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/"
-    #     data = {
-    #         "email": "user@example.com",
-    #         "role": Role.GUEST,
-    #     }
-    #
-    #     # Test add invitation
-    #     response = self.post(url, user=self.regular_user, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-    #
-    #     # Test remove invitation
-    #     response = self.delete(url, user=self.regular_user, data=data)
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-    #
-    #     # Test clear invitations
-    #     clear_url = reverse("project-detail", kwargs={"pk": self.project.id}) + "invitations/clear/"
-    #     response = self.delete(clear_url, user=self.regular_user)
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+class TestInviteExistingUsers(TestCase):
+    """
+    Tests for the behavior when inviting users who already exist in the database.
+    """
+
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            # Create a project creator and a project
+            self.project_creator = UserFactory()
+            self.project = ProjectFactory()
+            UserRole.objects.create(
+                user=self.project_creator,
+                project=self.project,
+                role=Role.PROJECT_CREATOR,
+                assigned_by=self.project_creator,
+            )
+
+            # Create a library for instructor roles
+            self.library = LibraryFactory()
+            self.project.libraries.add(self.library)
+
+            # Create an existing user in the database
+            self.existing_user = UserFactory(email="existing@example.com")
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_existing_user_not_sent_email_and_gets_role_assigned(self, mock_send_email):
+        """
+        Test that when inviting an existing user:
+        1. No email is sent
+        2. UserRole is created directly
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Add invitation for existing user
+        invitation_data = {
+            "email": self.existing_user.email,
+            "role": Role.PROJECT_ADMIN,
+            "library_id": None,
+        }
+        self.project.invitations = [invitation_data]
+        self.project.save()
+
+        # Create a mock request
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify no email was sent
+        mock_send_email.assert_not_called()
+
+        # Verify UserRole was created for the existing user
+        user_role = UserRole.objects.get(user=self.existing_user, project=self.project, role=Role.PROJECT_ADMIN)
+        self.assertEqual(user_role.assigned_by, self.project_creator)
+        self.assertIsNone(user_role.library_id)
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_existing_user_with_library_role(self, mock_send_email):
+        """
+        Test that existing user gets instructor role with library assigned.
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Add invitation for existing user as instructor
+        invitation_data = {
+            "email": self.existing_user.email,
+            "role": Role.INSTRUCTOR,
+            "library_id": str(self.library.id),
+        }
+        self.project.invitations = [invitation_data]
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify no email was sent
+        mock_send_email.assert_not_called()
+
+        # Verify UserRole was created with library
+        user_role = UserRole.objects.get(user=self.existing_user, project=self.project, role=Role.INSTRUCTOR)
+        self.assertEqual(user_role.library_id, self.library.id)
+        self.assertEqual(user_role.assigned_by, self.project_creator)
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_existing_user_multiple_roles(self, mock_send_email):
+        """
+        Test that existing user gets multiple roles assigned without email.
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Add multiple invitations for the same existing user
+        invitations_data = [
+            {
+                "email": self.existing_user.email,
+                "role": Role.INSTRUCTOR,
+                "library_id": str(self.library.id),
+            },
+            {
+                "email": self.existing_user.email,
+                "role": Role.CONTROLLER,
+                "library_id": None,
+            },
+        ]
+        self.project.invitations = invitations_data
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify no email was sent
+        mock_send_email.assert_not_called()
+
+        # Verify both UserRoles were created
+        user_roles = UserRole.objects.filter(user=self.existing_user, project=self.project)
+        self.assertEqual(user_roles.count(), 2)
+
+        # Check specific roles
+        instructor_role = user_roles.get(role=Role.INSTRUCTOR)
+        self.assertEqual(instructor_role.library_id, self.library.id)
+
+        controller_role = user_roles.get(role=Role.CONTROLLER)
+        self.assertIsNone(controller_role.library_id)
+
+        # Both should be assigned by project creator
+        for user_role in user_roles:
+            self.assertEqual(user_role.assigned_by, self.project_creator)
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_mixed_existing_and_new_users(self, mock_send_email):
+        """
+        Test behavior with both existing and non-existing users:
+        - Existing user: no email, role assigned
+        - Non-existing user: email sent, no role assigned yet
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Invitations for both existing and new users
+        invitations_data = [
+            {
+                "email": self.existing_user.email,  # Existing user
+                "role": Role.PROJECT_ADMIN,
+                "library_id": None,
+            },
+            {
+                "email": "newuser@example.com",  # New user
+                "role": Role.GUEST,
+                "library_id": None,
+            },
+        ]
+        self.project.invitations = invitations_data
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify email was sent only once (for the new user)
+        mock_send_email.assert_called_once()
+        call_args = mock_send_email.call_args[1]  # Get keyword arguments
+        self.assertEqual(call_args["email"], "newuser@example.com")
+
+        # Verify existing user got role assigned
+        user_role = UserRole.objects.get(user=self.existing_user, project=self.project)
+        self.assertEqual(user_role.role, Role.PROJECT_ADMIN)
+
+        # Verify new user doesn't have role yet (would be created on account creation)
+        self.assertFalse(UserRole.objects.filter(user__email="newuser@example.com", project=self.project).exists())
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_existing_user_duplicate_role_not_created(self, mock_send_email):
+        """
+        Test that if an existing user already has a role, it's not duplicated.
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Create an existing UserRole
+        existing_role = UserRole.objects.create(
+            user=self.existing_user,
+            project=self.project,
+            role=Role.PROJECT_ADMIN,
+            assigned_by=self.project_creator,
+        )
+
+        # Add invitation for the same role
+        invitation_data = {
+            "email": self.existing_user.email,
+            "role": Role.PROJECT_ADMIN,
+            "library_id": None,
+        }
+        self.project.invitations = [invitation_data]
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify no email was sent
+        mock_send_email.assert_not_called()
+
+        # Verify only one UserRole exists (no duplicate created)
+        user_roles = UserRole.objects.filter(user=self.existing_user, project=self.project, role=Role.PROJECT_ADMIN)
+        self.assertEqual(user_roles.count(), 1)
+        self.assertEqual(user_roles.first().id, existing_role.id)
+
+    @patch("epl.services.project.notifications.send_invite_to_epl_email")
+    def test_inactive_user_still_gets_email(self, mock_send_email):
+        """
+        Test that inactive users are treated as non-existing and get email invitations.
+        """
+        from epl.services.project.notifications import invite_unregistered_users_to_epl
+
+        # Create an inactive user
+        inactive_user = UserFactory(email="inactive@example.com", is_active=False)
+
+        # Add invitation for inactive user
+        invitation_data = {
+            "email": inactive_user.email,
+            "role": Role.PROJECT_ADMIN,
+            "library_id": None,
+        }
+        self.project.invitations = [invitation_data]
+        self.project.save()
+
+        class MockRequest:
+            def __init__(self, user):
+                self.user = user
+
+        mock_request = MockRequest(self.project_creator)
+
+        # Call the function
+        invite_unregistered_users_to_epl(self.project, mock_request)
+
+        # Verify email was sent (inactive user treated as non-existing)
+        mock_send_email.assert_called_once()
+
+        # Verify no UserRole was created for inactive user
+        self.assertFalse(UserRole.objects.filter(user=inactive_user, project=self.project).exists())

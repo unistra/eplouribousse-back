@@ -55,16 +55,14 @@ def send_invite_to_epl_email(
     request: Request,
     signer: signing.TimestampSigner,
     project_id: str = None,
-    library_id: str = None,
-    role: str = None,
+    invitations: list = None,
     assigned_by_id=None,
 ) -> None:
     invite_token: str = signer.sign_object(
         {
             "email": str(email),
             "project_id": str(project_id) if project_id else None,
-            "library_id": str(library_id) if library_id else None,
-            "role": str(role) if role else None,
+            "invitations": invitations or [],
             "assigned_by_id": str(assigned_by_id) if assigned_by_id else None,
         }
     )

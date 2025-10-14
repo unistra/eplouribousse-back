@@ -250,6 +250,10 @@ class EmailSerializer(serializers.Serializer):
     def validate(self, attrs):
         if User.objects.filter(email=attrs["email"]).exists():
             raise serializers.ValidationError(_("Email is already linked to an account"))
+
+        if attrs.get("role") == Role.INSTRUCTOR and not attrs.get("library_id"):
+            raise serializers.ValidationError(_("Library must be provided for instructor role."))
+
         return attrs
 
 
@@ -257,9 +261,8 @@ class InviteTokenSerializer(serializers.Serializer):
     token = serializers.CharField(write_only=True, required=True)
     email = serializers.EmailField(read_only=True)
     project_id = serializers.CharField(read_only=True, required=False)
-    library_id = serializers.CharField(read_only=True, required=False)
-    role = serializers.CharField(read_only=True, required=False)
     assigned_by_id = serializers.CharField(read_only=True, required=False)
+    invitations = serializers.ListField(read_only=True, required=False)
 
     def validate(self, attrs):
         invite_token = attrs.get("token")
@@ -273,11 +276,11 @@ class InviteTokenSerializer(serializers.Serializer):
             email = token_data.get("email")
             if not email:
                 raise serializers.ValidationError(_("Invalid token format."))
+
             attrs["email"] = email
             attrs["project_id"] = token_data.get("project_id")
-            attrs["library_id"] = token_data.get("library_id")
-            attrs["role"] = token_data.get("role")
             attrs["assigned_by_id"] = token_data.get("assigned_by_id")
+            attrs["invitations"] = token_data.get("invitations", [])
 
         except SignatureExpired:
             raise serializers.ValidationError(_("Invite token expired"))
@@ -295,8 +298,7 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         self.email = None
         self.project_id = None
-        self.library_id = None
-        self.role = None
+        self.invitations = None
         self.assigned_by_id = None
         super().__init__(*args, **kwargs)
 
@@ -309,9 +311,9 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
 
         self.email = token_serializer.validated_data.get("email")
         self.project_id = token_serializer.validated_data.get("project_id")
-        self.library_id = token_serializer.validated_data.get("library_id")
-        self.role = token_serializer.validated_data.get("role")
+        self.invitations = token_serializer.validated_data.get("invitations", [])
         self.assigned_by_id = token_serializer.validated_data.get("assigned_by_id")
+
         return token_value
 
     def validate(self, attrs):
@@ -334,8 +336,8 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                 request = self.context["request"]
                 send_account_created_email(user, request)
 
-                # If there is a project_id and a role, we assign the user to the project with the specified role.
-                if self.project_id and self.role:
+                # If there is a project_id and invitations, we create a userrole instance per role
+                if self.project_id and self.invitations:
                     try:
                         project = Project.objects.get(id=self.project_id)
                     except Project.DoesNotExist:
@@ -343,7 +345,7 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                             _("The project associated with this invitation no longer exists.")
                         )
 
-                    # We check if user that assigned the role still exists, for better clarity in the error message.
+                    # We check if user that assigned the role still exists
                     assigned_by = None
                     if self.assigned_by_id:
                         try:
@@ -352,55 +354,65 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                             raise serializers.ValidationError(
                                 _("Invitation expired. The user who sent the invitation no longer exists.")
                             )
-                    user_role_data = {
-                        "user": user,
-                        "role": self.role,
-                        "assigned_by": assigned_by,
-                    }
 
                     # Check if the email is in the project's invitations
                     invited_emails = [invitation.get("email") for invitation in (project.invitations or [])]
                     if self.email not in invited_emails:
                         raise serializers.ValidationError(_("This email is not invited to join this project."))
 
-                    if self.library_id:
-                        try:
-                            library = project.libraries.get(pk=self.library_id)
-                            user_role_data["library"] = library
-                        except ObjectDoesNotExist:
-                            raise serializers.ValidationError(
-                                _("The library associated with this invitation no longer exists.")
+                    # Create a UserRole for each invitation/role
+                    created_roles = []
+                    for invitation in self.invitations:
+                        role = invitation.get("role")
+                        library_id = invitation.get("library_id")
+
+                        user_role_data = {
+                            "user": user,
+                            "role": role,
+                            "assigned_by": assigned_by,
+                        }
+
+                        if library_id:
+                            try:
+                                library = project.libraries.get(pk=library_id)
+                                user_role_data["library"] = library
+                            except ObjectDoesNotExist:
+                                raise serializers.ValidationError(
+                                    _("The library associated with this invitation no longer exists.")
+                                )
+
+                        # Create the UserRole
+                        user_role = project.user_roles.create(**user_role_data)
+                        created_roles.append((user_role, role))
+
+                    # Post-creation actions for each created role
+                    for user_role, role in created_roles:
+                        if role == Role.PROJECT_ADMIN and project.status == ProjectStatus.REVIEW:
+                            send_invite_project_admins_to_review_email(
+                                email=user.email,
+                                request=request,
+                                project_name=project.name,
+                                tenant_name=request.tenant.name,
+                                project_creator_email=assigned_by.email if assigned_by else None,
                             )
 
-                    project.user_roles.create(**user_role_data)
-                    request = self.context["request"]
+                        if role == Role.PROJECT_MANAGER and project.status == ProjectStatus.READY:
+                            send_invite_project_managers_to_launch_email(
+                                email=user.email,
+                                request=request,
+                                project=project,
+                                tenant_name=request.tenant.name,
+                                action_user_email=assigned_by.email if assigned_by else None,
+                            )
 
-                    # Post-creation actions:
-                    # If the user has a project_admin role, he is notified that he must review the project's settings.
-                    if self.role == Role.PROJECT_ADMIN and project.status == ProjectStatus.REVIEW:
-                        send_invite_project_admins_to_review_email(
-                            email=user.email,
-                            request=request,
-                            project_name=project.name,
-                            tenant_name=request.tenant.name,
-                            project_creator_email=assigned_by.email if assigned_by else None,
-                        )
-                    # If the user has a project_manager role, and the project status is READY, he is notified that he must launch or schedule the project start
-                    if self.role == Role.PROJECT_MANAGER and project.status == ProjectStatus.READY:
-                        send_invite_project_managers_to_launch_email(
-                            email=user.email,
-                            request=request,
-                            project=project,
-                            tenant_name=request.tenant.name,
-                            action_user_email=assigned_by.email if assigned_by else None,
-                        )
+                    # Remove ALL invitations for this email
+                    project.invitations = [
+                        invitation
+                        for invitation in (project.invitations or [])
+                        if invitation.get("email") != self.email
+                    ]
+                    project.save()
 
-                    # If the user has an invitation pending in project.invitations, it is removed.
-                    if self.email in [invitation.get("email") for invitation in project.invitations]:
-                        project.invitations = [
-                            invitation for invitation in project.invitations if invitation.get("email") != self.email
-                        ]
-                        project.save()
             return user
         except (IntegrityError, ObjectDoesNotExist) as e:
             raise serializers.ValidationError(str(e))
