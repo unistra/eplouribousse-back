@@ -416,7 +416,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     summary="Retrieve or update a project's alert settings",
     description=(
         "Retrieves or updates the alert configuration for each alert type on this project. "
-        "The `alerts` field must be a dictionary whose key is the project UUID and whose value is an object with the alert types. "
+        "The `alerts` field must be a dictionary whose key is the alert type and whose value is a boolean indicating if the alert is enabled."
     ),
     request=ProjectAlertSettingsSerializer,
     responses={status.HTTP_200_OK: ProjectAlertSettingsSerializer},

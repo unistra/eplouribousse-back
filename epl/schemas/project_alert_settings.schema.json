@@ -1,0 +1,39 @@
+{
+  "$id": "https://eplouribousse.fr/schemas/project_alert_settings.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Project Alert Settings",
+  "type": "object",
+  "properties": {
+    "positioning": {
+      "type": "boolean"
+    },
+    "arbitration": {
+      "type": "boolean"
+    },
+    "instruction": {
+      "type": "boolean"
+    },
+    "control": {
+      "type": "boolean"
+    },
+    "edition": {
+      "type": "boolean"
+    },
+    "preservation": {
+      "type": "boolean"
+    },
+    "transfer": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "positioning",
+    "arbitration",
+    "instruction",
+    "control",
+    "edition",
+    "preservation",
+    "transfer"
+  ],
+  "additionalProperties": false
+}

@@ -1,37 +1,17 @@
 {
-  "$id": "https://eplouribousse.fr/schemas/user_settings.schema.json",
+  "$id": "https://eplouribousse.fr/schemas/project_settings.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": " settings",
+  "title": "Project Settings",
   "type": "object",
   "properties": {
     "exclusion_reasons": {
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "alerts": {
-      "type": "object",
-      "properties": {
-        "positioning": {
-          "type": "boolean"
-        },
-        "arbitration": {
-          "type": "boolean"
-        },
-        "instruction": {
-          "type": "boolean"
-        },
-        "control": {
-          "type": "boolean"
-        },
-        "edition": {
-          "type": "boolean"
-        },
-        "preservation": {
-          "type": "boolean"
-        },
-        "transfer": {
-          "type": "boolean"
-        }
-      }
+      "$ref": "project_alert_settings.schema.json"
     }
   },
   "additionalProperties": false
