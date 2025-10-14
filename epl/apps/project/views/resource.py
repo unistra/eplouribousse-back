@@ -93,6 +93,7 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
                     ),
                 ),
             )
+            queryset = queryset.filter(count__gt=1)
         return queryset
 
     @extend_schema(
