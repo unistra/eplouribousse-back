@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-15 13:36+0200\n"
+"POT-Creation-Date: 2025-10-15 13:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -600,7 +600,7 @@ msgid "Library is not attached to the project."
 msgstr "La bibliothèque n'est pas rattachée au projet"
 
 #: epl/apps/project/serializers/project.py:121 epl/apps/user/serializers.py:236
-#: epl/apps/user/serializers.py:432
+#: epl/apps/user/serializers.py:452
 msgid "Project does not exist."
 msgstr "Le projet n'existe pas."
 
@@ -674,9 +674,9 @@ msgid "The resource is not in instruction or control status"
 msgstr "La resource n'est pas en phase d'instruction ou de contrôle"
 
 #: epl/apps/project/serializers/resource.py:191
-
 msgid "The updated instruction turns of the resource after reset"
-msgstr "Les tours d'instruction mis à jour de la ressource après réinitialisation"
+msgstr ""
+"Les tours d'instruction mis à jour de la ressource après réinitialisation"
 
 #: epl/apps/project/serializers/resource.py:222
 #: epl/apps/project/serializers/resource.py:296
@@ -687,7 +687,9 @@ msgstr "La resource n'est pas en phase d'anomalie"
 
 #: epl/apps/project/serializers/resource.py:236
 msgid "The updated instruction turns of the resource after reassigning turns"
-msgstr "Les tours d'instruction de la ressource mis à jour après la réaffectation des tours"
+msgstr ""
+"Les tours d'instruction de la ressource mis à jour après la réaffectation "
+"des tours"
 
 #: epl/apps/project/serializers/resource.py:240
 msgid "The collection id to which the instruction turn will be reassigned"
@@ -695,7 +697,8 @@ msgstr "L'ID de la collection à laquelle le tour d'instruction sera réaffecté
 
 #: epl/apps/project/serializers/resource.py:245
 msgid "The library id to which the instruction turn will be reassigned"
-msgstr "L'ID de la bibliothèque à laquelle le tour d'instruction sera réaffecté"
+msgstr ""
+"L'ID de la bibliothèque à laquelle le tour d'instruction sera réaffecté"
 
 #: epl/apps/project/serializers/resource.py:250
 msgid "Indicates if the turn is reassigned to a controller"
@@ -715,16 +718,16 @@ msgstr "La bibliothèque n'existe pas."
 
 #: epl/apps/project/serializers/resource.py:289
 msgid "Library is not in the instruction turns of the resource"
-msgstr "La bibliothèque ne fait pas partie des tours d'instruction de la ressource"
+msgstr ""
+"La bibliothèque ne fait pas partie des tours d'instruction de la ressource"
 
 #: epl/apps/project/serializers/resource.py:305
 msgid ""
 "When reassigning to a controller, collection_id and library_id should not be "
 "provided"
 msgstr ""
-"Lors de la réaffectation à un contrôleur, collection_id et library_id ne doivent pas être "
-"fournis"
-
+"Lors de la réaffectation à un contrôleur, collection_id et library_id ne "
+"doivent pas être fournis"
 
 #: epl/apps/project/serializers/resource.py:314
 msgid "collection_id and library_id must be provided"
@@ -771,7 +774,7 @@ msgstr "En tant que pilote, vous pouvez maintenant lancer ou programmer"
 #: epl/apps/project/tests/views/test_project_status.py:224
 #: epl/apps/project/tests/views/test_project_status.py:245
 #: epl/apps/project/tests/views/test_project_status.py:316
-#: epl/apps/user/tests/views/test_create_account.py:83
+#: epl/apps/user/tests/views/test_create_account.py:87
 #: epl/services/user/email.py:103
 msgid "your account creation"
 msgstr "création de votre compte"
@@ -1131,24 +1134,32 @@ msgid "Password and confirm password do not match"
 msgstr ""
 "Le mot de passe et le mot de passe de confirmation ne correspondent pas"
 
-#: epl/apps/user/serializers.py:344
+#: epl/apps/user/serializers.py:343
+msgid ""
+"An inactive user account exists with this email. Please contact an "
+"administrator to reactivate the account before accepting invitations."
+msgstr ""
+"Un compte utilisateur inactif existe avec cet email. Veuillez contacter un "
+"administrateur pour réactiver le compte avant d'accepter les invitations."
+
+#: epl/apps/user/serializers.py:357
 msgid "The project associated with this invitation no longer exists."
 msgstr "Le projet associé à l'invitation a été supprimé."
 
-#: epl/apps/user/serializers.py:354
+#: epl/apps/user/serializers.py:367
 msgid "Invitation expired. The user who sent the invitation no longer exists."
 msgstr ""
 "L'invitation a expiré. L'utilisateur qui a envoyé l'invitation n'existe plus."
 
-#: epl/apps/user/serializers.py:360
+#: epl/apps/user/serializers.py:373
 msgid "This email is not invited to join this project."
 msgstr "L'adresse email n'est pas invitée à rejoindre ce projet."
 
-#: epl/apps/user/serializers.py:380
+#: epl/apps/user/serializers.py:389
 msgid "The library associated with this invitation no longer exists."
 msgstr "La bibliothèque associée à cette invitation n'existe plus."
 
-#: epl/apps/user/serializers.py:424
+#: epl/apps/user/serializers.py:444
 msgid "Alert settings for the project"
 msgstr "Paramètres d'alerte pour le projet"
 
@@ -1157,7 +1168,7 @@ msgstr "Paramètres d'alerte pour le projet"
 msgid "The password is too weak"
 msgstr "Le mot de passe est trop faible"
 
-#: epl/apps/user/tests/views/test_create_account.py:84
+#: epl/apps/user/tests/views/test_create_account.py:88
 msgid "Your account has just been opened"
 msgstr "Votre compte vient d'être ouvert"
 
