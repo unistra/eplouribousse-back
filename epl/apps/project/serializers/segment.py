@@ -91,9 +91,7 @@ class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
             else:
                 new_order = Segment.get_last_order(resource)
 
-            segment_type = (
-                SegmentType.BOUND if resource.status <= ResourceStatus.INSTRUCTION_BOUND else SegmentType.UNBOUND
-            )
+            segment_type = SegmentType.BOUND if resource.status <= ResourceStatus.CONTROL_BOUND else SegmentType.UNBOUND
 
             # Create the segment with the calculated order
             instance = Segment.objects.create(
