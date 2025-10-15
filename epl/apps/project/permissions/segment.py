@@ -8,9 +8,13 @@ class SegmentPermissions(BasePermission):
     def has_permission(self, request, view):
         match view.action:
             case "create":
-                return request.user.is_authenticated and self.is_user_instructor(
-                    collection_id=request.data.get("collection"), user=request.user
-                )
+                try:
+                    collection = Collection.objects.get(pk=request.data.get("collection"))
+                    return request.user.is_authenticated and self.is_user_instructor(
+                        collection=collection, user=request.user
+                    )
+                except Collection.DoesNotExist:
+                    return False
             case _:
                 return True
 
@@ -30,20 +34,18 @@ class SegmentPermissions(BasePermission):
             return False
         match action:
             case "partial_update" | "destroy":
-                return SegmentPermissions.is_user_instructor(collection_id=segment.collection.id, user=user)
+                return SegmentPermissions.is_user_instructor(collection=segment.collection, user=user)
             case "up" | "down":
                 return SegmentPermissions.is_user_instructor(
-                    collection_id=segment.collection.id, user=user
-                ) or SegmentPermissions.is_user_controller(collection_id=segment.collection.id, user=user)
+                    collection=segment.collection, user=user
+                ) or SegmentPermissions.is_user_admin(collection=segment.collection, user=user)
             case _:
                 return False
 
     @staticmethod
-    def is_user_instructor(collection_id: str, user: User) -> bool:
-        project = Collection.objects.get(id=collection_id).project
-        return user.is_instructor(project=project)
+    def is_user_instructor(collection: Collection, user: User) -> bool:
+        return user.is_instructor(project=collection.project, library=collection.library)
 
     @staticmethod
-    def is_user_controller(collection_id: str, user: User) -> bool:
-        project = Collection.objects.get(id=collection_id).project
-        return user.is_controller(project=project)
+    def is_user_admin(collection: Collection, user: User) -> bool:
+        return user.is_project_admin(project=collection.project)
