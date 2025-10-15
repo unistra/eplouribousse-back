@@ -12,7 +12,7 @@ from rest_framework_simplejwt.serializers import AuthUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 
-from epl.apps.project.models import Project, ProjectStatus, Role, UserRole
+from epl.apps.project.models import ActionLog, Project, ProjectStatus, Role, UserRole
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.user.email import (
@@ -58,6 +58,16 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
         token = super().get_token(user)
         token["aud"] = self.context["request"].tenant.id.hex
         return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        ActionLog.log(
+            message="User logged in",
+            actor=self.user,
+            request=self.context["request"],
+            obj=self.user,
+        )
+        return data
 
 
 class TokenObtainSerializer(serializers.Serializer):
