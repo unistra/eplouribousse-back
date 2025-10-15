@@ -12,7 +12,7 @@ from rest_framework_simplejwt.serializers import AuthUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as BaseTokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 
-from epl.apps.project.models import Project, ProjectStatus, Role
+from epl.apps.project.models import Project, ProjectStatus, Role, UserRole
 from epl.apps.user.models import User
 from epl.libs.schema import load_json_schema
 from epl.services.user.email import (
@@ -329,11 +329,24 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
     def save(self, **kwargs):
         try:
             with transaction.atomic():
-                user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
-
-                # send account creation confirmation email to a user
                 request = self.context["request"]
-                send_account_created_email(user, request)
+
+                # Check if user already exists (active only)
+                try:
+                    existing_user = User.objects.active().get(email=self.email)
+                    user = existing_user
+                except User.DoesNotExist:
+                    # Check if an inactive user exists with this email
+                    if User.objects.filter(email=self.email, is_active=False).exists():
+                        raise serializers.ValidationError(
+                            _(
+                                "An inactive user account exists with this email. Please contact an administrator to reactivate the account before accepting invitations."
+                            )
+                        )
+
+                    # No user exists, create new one
+                    user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
+                    send_account_created_email(user, request)
 
                 # If there is a project_id and invitations, we create a userrole instance per role
                 if self.project_id and self.invitations:
@@ -365,24 +378,31 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                         role = invitation.get("role")
                         library_id = invitation.get("library_id")
 
-                        user_role_data = {
-                            "user": user,
-                            "role": role,
-                            "assigned_by": assigned_by,
-                        }
+                        # Skip if role is missing
+                        if not role:
+                            continue
 
+                        # Validate library exists if library_id is provided
                         if library_id:
-                            try:
-                                library = project.libraries.get(pk=library_id)
-                                user_role_data["library"] = library
-                            except ObjectDoesNotExist:
+                            if not project.libraries.filter(id=library_id).exists():
                                 raise serializers.ValidationError(
                                     _("The library associated with this invitation no longer exists.")
                                 )
 
-                        # Create the UserRole
-                        user_role = project.user_roles.create(**user_role_data)
-                        created_roles.append((user_role, role))
+                        # Use get_or_create to avoid duplicates
+                        user_role, created = UserRole.objects.get_or_create(
+                            user=user,
+                            role=role,
+                            library_id=library_id,
+                            project=project,
+                            defaults={
+                                "assigned_by": assigned_by,
+                            },
+                        )
+
+                        # Only process newly created roles
+                        if created:
+                            created_roles.append((user_role, role))
 
                     # Post-creation actions for each created role
                     for user_role, role in created_roles:
