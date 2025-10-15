@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
 
-from epl.apps.project.models import Anomaly, Collection, Library, Resource, ResourceStatus, Segment
+from epl.apps.project.models import ActionLog, Anomaly, Collection, Library, Resource, ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.models.collection import TurnType
 from epl.apps.project.serializers.collection import CollectionPositioningSerializer
@@ -142,9 +142,15 @@ class ValidateControlSerializer(serializers.ModelSerializer):
             # The controller validates the instruction phase
             if self.instance.status == ResourceStatus.CONTROL_BOUND:
                 self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
-                library_id = self.instance.next_turn["library"] if self.instance.next_turn else None
-                collection = Collection.objects.get(library_id=library_id, resource=self.instance)
-                notify_instructors_of_instruction_turn(self.instance, collection, self.context["request"])
+                turn = self.instance.next_turn
+                library = Library.objects.get(id=turn["library"])
+                notify_instructors_of_instruction_turn(self.instance, library, self.context["request"])
+                ActionLog.log(
+                    f"Resource in <{self.instance.status.name}>: unbound instruction turn notified to collection <lib:{turn['library']}/col:{turn['collection']}>",
+                    actor=self.context["request"].user,
+                    obj=self.instance,
+                    request=self.context.get("request"),
+                )
             elif self.instance.status == ResourceStatus.CONTROL_UNBOUND:
                 self.instance.status = ResourceStatus.EDITION
                 # todo send email to all instructors (notify them that a resulting report is available)
@@ -224,6 +230,12 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
                 )
 
         self.instance.save(update_fields=["status", "instruction_turns"])
+        ActionLog.log(
+            f"Resource in <{self.instance.status.name}>: instruction reset",
+            actor=self.context["request"].user,
+            obj=self.instance,
+            request=self.context.get("request"),
+        )
         # There is no need to delete anomalies, they are deleted with the segments
         notify_anomaly_resolved(
             resource=self.instance, request=self.context["request"], admin_user=self.context["request"].user
@@ -317,12 +329,25 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
         return attrs
 
     def reassign(self) -> Resource:
+        request = self.context["request"]
         if self.validated_data.get("controller"):
             # Reassign to controller
             self.reassign_to_controller()
+            ActionLog.log(
+                f"Resource in <{self.instance.status.name}>: turn reassigned to controller",
+                request.user,
+                obj=self.instance,
+                request=request,
+            )
         else:
             # Reassign to instructor of library/collection
             self.reassign_to_instructor()
+            ActionLog.log(
+                f"Resource in <{self.instance.status.name}>: turn reassigned to instructor <lib:{self.instance.next_turn['library']}/col:{self.instance.next_turn['collection']}>",
+                request.user,
+                obj=self.instance,
+                request=request,
+            )
 
         self.fix_anomalies()
         # TODO notify instructors / controllers of the reassignment

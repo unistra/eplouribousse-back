@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Any
 
-from epl.apps.project.models import Project, Resource, Role, UserRole
+from epl.apps.project.models import Library, Project, Resource, Role, UserRole
 from epl.apps.project.models.choices import AlertType
 from epl.apps.project.models.collection import Arbitration, Collection
 from epl.apps.user.models import User
@@ -247,12 +247,11 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
             )
 
 
-def notify_instructors_of_instruction_turn(resource: Resource, collection: Collection, request):
+def notify_instructors_of_instruction_turn(resource: Resource, library: Library, request):
     """
     Notifies the instructors of a library that it is their turn to instruct.
     """
     project = resource.project
-    library = collection.library
 
     # check project settings to see if arbitration emails should be sent
     # to avoid unnecessary queries if arbitration is disabled

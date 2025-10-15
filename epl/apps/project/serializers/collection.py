@@ -170,9 +170,8 @@ class MoveToInstructionMixin:
 
             # Send email to instructors of the first collection to be instructed
             if turns:
-                collection_to_instruct_id = turns[0]["collection"]
-                collection_to_instruct = Collection.objects.get(pk=collection_to_instruct_id)
-                notify_instructors_of_instruction_turn(resource, collection_to_instruct, self.context["request"])
+                library_to_instruct = Library.objects.get(pk=turns[0]["library"])
+                notify_instructors_of_instruction_turn(resource, library_to_instruct, self.context["request"])
 
 
 class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
@@ -377,9 +376,9 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
             resource.instruction_turns[cycle] = turns.copy()
             resource.save(update_fields=["instruction_turns"])
 
-            next_collection_id = turns["turns"][0]["collection"]
-            next_collection = Collection.objects.get(pk=next_collection_id)
-            notify_instructors_of_instruction_turn(resource, next_collection, self.context["request"])
+            next_library_id = turns["turns"][0]["library"]
+            next_library = Library.objects.get(pk=next_library_id)
+            notify_instructors_of_instruction_turn(resource, next_library, self.context["request"])
 
         else:
             # No next turn, move to control

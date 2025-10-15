@@ -5,6 +5,8 @@ import typing
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.http import HttpRequest
+from ipware import get_client_ip
 
 from epl.models import UUIDPrimaryKeyField
 
@@ -34,7 +36,9 @@ class ActionLog(models.Model):
         return f"{self.action_time:%Y-%m-%d %H:%M:%S} - {self.action_message} by {self.actor} ({self.ip}) on {self.content_object}"
 
     @classmethod
-    def log(cls, message: str, actor: User, ip: str = "", obj: models.Model = None):
+    def log(cls, message: str, actor: User, ip: str = "", obj: models.Model = None, request: HttpRequest = None):
+        if not ip.strip() and request:
+            ip = get_client_ip(request)[0] or ""
         ActionLog.objects.create(
             action_message=message,
             actor=f"{actor.first_name} {actor.last_name} <{actor.username}>".strip(),

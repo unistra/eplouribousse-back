@@ -87,7 +87,11 @@ class Resource(models.Model):
         try:
             if self.status in [ResourceStatus.INSTRUCTION_BOUND, ResourceStatus.ANOMALY_BOUND]:
                 turn = self.instruction_turns.get("bound_copies", {}).get("turns", [])[0]
-            elif self.status in [ResourceStatus.INSTRUCTION_UNBOUND, ResourceStatus.ANOMALY_UNBOUND]:
+            elif self.status in [
+                ResourceStatus.INSTRUCTION_UNBOUND,
+                ResourceStatus.ANOMALY_UNBOUND,
+                ResourceStatus.CONTROL_BOUND,
+            ]:
                 turn = self.instruction_turns.get("unbound_copies", {}).get("turns", [])[0]
         except IndexError:
             turn = None
