@@ -10,8 +10,9 @@ class SegmentPermissions(BasePermission):
             case "create":
                 try:
                     collection = Collection.objects.get(pk=request.data.get("collection"))
-                    return request.user.is_authenticated and self.is_user_instructor(
-                        collection=collection, user=request.user
+                    return request.user.is_authenticated and (
+                        self.is_user_instructor(collection=collection, user=request.user)
+                        or self.is_user_admin(collection=collection, user=request.user)
                     )
                 except Collection.DoesNotExist:
                     return False
