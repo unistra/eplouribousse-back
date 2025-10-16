@@ -20,6 +20,7 @@ from epl.services.user.email import (
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_password_change_email,
+    send_project_launched_email,
 )
 from epl.validators import JSONSchemaValidator
 
@@ -433,6 +434,18 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                                 tenant_name=request.tenant.name,
                                 action_user_email=assigned_by.email if assigned_by else None,
                             )
+
+                    # Send launched project email if project is launched (once per user, not per role)
+                    if project.status >= ProjectStatus.LAUNCHED and created_roles:
+                        # Temporarily set request.user to the assigner for the email template
+                        request.user = assigned_by
+
+                        send_project_launched_email(
+                            request=request,
+                            project=project,
+                            project_users=[user.email],
+                            is_starting_now=True,
+                        )
 
                     # Remove ALL invitations for this email
                     project.invitations = [
