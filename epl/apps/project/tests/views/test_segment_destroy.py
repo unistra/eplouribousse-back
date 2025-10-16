@@ -24,7 +24,7 @@ class SegmentDestroyTest(TestCase):
             (Role.TENANT_SUPER_USER, 403),
             (Role.PROJECT_CREATOR, 403),
             (Role.INSTRUCTOR, 204),
-            (Role.PROJECT_ADMIN, 403),
+            (Role.PROJECT_ADMIN, 204),
             (Role.PROJECT_MANAGER, 403),
             (Role.CONTROLLER, 403),
             (Role.GUEST, 403),
