@@ -98,7 +98,12 @@ class ImportSerializer(serializers.Serializer):
             # Resource may already be imported for a project, we need to check
             for resource in resources:
                 resource_in_database, _created = Resource.objects.get_or_create(
-                    project_id=project.id, code=resource.code, defaults={"id": resource.id, "title": resource.title}
+                    project_id=project.id,
+                    code=resource.code,
+                    issn=resource.issn,
+                    publication_history=resource.publication_history,
+                    numbering=resource.numbering,
+                    defaults={"id": resource.id, "title": resource.title},
                 )
                 if not _created:
                     # If the resource already existed, we need to reuse the existing resource ID when creating collections
@@ -106,7 +111,6 @@ class ImportSerializer(serializers.Serializer):
 
             for collection in collections:
                 Collection.objects.create(
-                    issn=collection.issn,
                     call_number=collection.call_number,
                     hold_statement=collection.hold_statement,
                     missing=collection.missing,
