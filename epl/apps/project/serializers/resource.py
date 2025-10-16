@@ -146,7 +146,7 @@ class ValidateControlSerializer(serializers.ModelSerializer):
                 library = Library.objects.get(id=turn["library"])
                 notify_instructors_of_instruction_turn(self.instance, library, self.context["request"])
                 ActionLog.log(
-                    f"Resource in <{self.instance.status.name}>: unbound instruction turn notified to collection <lib:{turn['library']}/col:{turn['collection']}>",
+                    f"Bound control validated: unbound instruction turn notified to <lib:{turn['library']}/col:{turn['collection']}>",
                     actor=self.context["request"].user,
                     obj=self.instance,
                     request=self.context.get("request"),
@@ -231,7 +231,7 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
 
         self.instance.save(update_fields=["status", "instruction_turns"])
         ActionLog.log(
-            f"Resource in <{self.instance.status.name}>: instruction reset",
+            f"Resource in {self.instance.status.value}: instruction reset",
             actor=self.context["request"].user,
             obj=self.instance,
             request=self.context.get("request"),

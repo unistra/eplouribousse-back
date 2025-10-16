@@ -11,7 +11,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from sentry_sdk import set_tag
 
-from epl.apps.project.models import Collection, Library, Project, Resource, ResourceStatus
+from epl.apps.project.models import ActionLog, Collection, Library, Project, Resource, ResourceStatus
 from epl.apps.project.models.collection import Arbitration, TurnType
 from epl.apps.project.models.comment import Comment
 from epl.apps.project.permissions.collection import CollectionPermission
@@ -167,6 +167,12 @@ class MoveToInstructionMixin:
             resource.instruction_turns["unbound_copies"]["turns"] = turns.copy()
             resource.instruction_turns["turns"] = turns.copy()  # Save turns in case of reset or later reassignment
             resource.save(update_fields=["status", "instruction_turns"])
+            ActionLog.log(
+                "Resource moved to Instruction phase",
+                actor=self.context["request"].user,
+                obj=resource,
+                request=self.context["request"],
+            )
 
             # Send email to instructors of the first collection to be instructed
             if turns:
@@ -210,6 +216,12 @@ class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
 
         if resource.arbitration in [Arbitration.ONE, Arbitration.ZERO]:
             notify_instructors_of_arbitration(resource, self.context["request"])
+            ActionLog.log(
+                resource.get_arbitration_display(),
+                actor=self.context["request"].user,
+                obj=resource,
+                request=self.context["request"],
+            )
 
         # si au moins une autre collection n'a pas encore été positionnée, on envoie le message de positionnement
         if any(c.position is None for c in collections):
@@ -388,5 +400,11 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
             resource.instruction_turns[cycle]["turns"] = []
             resource.save(update_fields=["instruction_turns", "status"])
             notify_controllers_of_control(resource, self.context["request"], cycle)
+            ActionLog.log(
+                f"Resource moved to {resource.get_status_display()} phase",
+                actor=self.context["request"].user,
+                obj=resource,
+                request=self.context["request"],
+            )
 
         return collection
