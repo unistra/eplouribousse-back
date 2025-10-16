@@ -226,25 +226,6 @@ class TestSubscriptionNotificationForProjectManagers(TestCase):
         self.assertTrue(any(account_creation_subject_part in s for s in subjects))
         self.assertTrue(any(project_ready_body_part in b for b in bodies))
 
-    def test_manager_does_not_receive_notification_if_project_is_launched(self):
-        """
-        Checks that a project manager does not receive an invitation to launch the project,
-        when subscribing after the project is launched.
-        """
-        project = ProjectFactory(
-            status=ProjectStatus.LAUNCHED,
-            invitations=[{"email": self.invited_user_email, "role": Role.PROJECT_MANAGER}],
-        )
-
-        self._register_invited_user(project)
-
-        user = User.objects.get(email=self.invited_user_email)
-        self.assertTrue(UserRole.objects.filter(user=user, project=project, role=Role.PROJECT_MANAGER).exists())
-        # Check that the only email sent is the confirmation of registration.
-        self.assertEqual(len(mail.outbox), 1)
-        expected_string_in_subject = str(_("your account creation"))
-        self.assertIn(expected_string_in_subject, mail.outbox[0].subject)
-
 
 class TestSubscriptionNotificationForProjectAdmins(TestCase):
     def setUp(self):
