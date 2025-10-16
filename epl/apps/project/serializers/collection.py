@@ -54,12 +54,9 @@ class CollectionSerializer(serializers.ModelSerializer):
             "code",
             "library",
             "project",
-            "issn",
             "call_number",
             "hold_statement",
             "missing",
-            "publication_history",
-            "numbering",
             "notes",
         ]
         read_only_fields = ["id"]
