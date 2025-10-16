@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(code=remove_collection_fields, reverse_code=add_code_field),
+        # migrations.RunPython(code=remove_collection_fields, reverse_code=add_code_field),
         migrations.AlterField(
             model_name="collection",
             name="resource",
@@ -49,4 +49,6 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "Collections",
             },
         ),
+        migrations.RemoveField(model_name="collection", name="code"),
+        migrations.RemoveField(model_name="collection", name="title"),
     ]
