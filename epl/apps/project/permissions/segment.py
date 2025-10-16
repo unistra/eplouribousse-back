@@ -34,7 +34,9 @@ class SegmentPermissions(BasePermission):
             return False
         match action:
             case "partial_update" | "destroy":
-                return SegmentPermissions.is_user_instructor(collection=segment.collection, user=user)
+                return SegmentPermissions.is_user_instructor(
+                    collection=segment.collection, user=user
+                ) or SegmentPermissions.is_user_admin(collection=segment.collection, user=user)
             case "up" | "down":
                 return SegmentPermissions.is_user_instructor(
                     collection=segment.collection, user=user
