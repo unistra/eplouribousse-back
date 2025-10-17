@@ -377,7 +377,7 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
                     }
                 )
 
-        turns = self.instance.instruction_turns.get(cycle, {}).get("turns", [])
+        turns = self.instance.instruction_turns.get("turns", {})
         for idx, turn in enumerate(turns):
             if turn["library"] == str(library.id) and turn["collection"] == str(collection.id):
                 break
