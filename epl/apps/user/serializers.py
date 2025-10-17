@@ -3,6 +3,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field
@@ -439,12 +440,13 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                     if project.status >= ProjectStatus.LAUNCHED and created_roles:
                         # Temporarily set request.user to the assigner for the email template
                         request.user = assigned_by
+                        is_starting_now = project.active_after <= timezone.now()
 
                         send_project_launched_email(
                             request=request,
                             project=project,
                             project_users=[user.email],
-                            is_starting_now=True,
+                            is_starting_now=is_starting_now,
                         )
 
                     # Remove ALL invitations for this email

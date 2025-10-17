@@ -349,13 +349,13 @@ class AssignRoleSerializer(serializers.Serializer):
                         action_user_email=request.user.email,
                     )
 
-                # Send launched project email if project is launched
                 elif project.status >= ProjectStatus.LAUNCHED:
+                    is_starting_now = project.active_after <= timezone.now()
                     send_project_launched_email(
                         request=request,
                         project=project,
                         project_users=[user.email],
-                        is_starting_now=True,
+                        is_starting_now=is_starting_now,
                     )
 
             return user_role

@@ -1,4 +1,8 @@
+from datetime import timedelta
+from unittest.mock import patch
+
 from django.core import mail
+from django.utils import timezone
 from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
@@ -473,3 +477,258 @@ class TestInvitationWorkflowIntegration(TestCase):
         project.refresh_from_db()
         remaining_emails = [inv.get("email") for inv in (project.invitations or [])]
         self.assertNotIn(new_user_email, remaining_emails)
+
+
+class TestLaunchedProjectEmailWithActiveAfter(TestCase):
+    """
+    Tests for launched project email logic with project.active_after field
+    """
+
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project_admin = UserFactory()
+            self.library = LibraryFactory()
+            self.signer = _get_invite_signer()
+            mail.outbox = []
+
+    def _create_project_with_status_and_admin(self, status: ProjectStatus, active_after):
+        """Helper to create a project with specific status, admin and active_after date"""
+        project = ProjectFactory(status=status, active_after=active_after)
+        project.libraries.add(self.library)
+
+        UserRole.objects.create(
+            user=self.project_admin,
+            project=project,
+            role=Role.PROJECT_CREATOR,
+            assigned_by=self.project_admin,
+        )
+        return project
+
+    def test_launched_project_email_with_current_active_after_date(self):
+        """
+        Test that launched project email is sent with is_starting_now=True when active_after is now
+        """
+        # Project with active_after date set to now
+        now = timezone.now()
+        project = self._create_project_with_status_and_admin(ProjectStatus.LAUNCHED, active_after=now)
+        new_user_email = "test_current_date@example.com"
+
+        # Add invitation
+        invitation_data = {
+            "email": new_user_email,
+            "role": Role.GUEST,
+            "library_id": None,
+        }
+        project.invitations = [invitation_data]
+        project.save()
+
+        # Create account token
+        token = self.signer.sign_object(
+            {
+                "email": new_user_email,
+                "project_id": str(project.id),
+                "invitations": [invitation_data],
+                "assigned_by_id": str(self.project_admin.id),
+            }
+        )
+
+        mail.outbox = []
+
+        with patch("epl.services.user.email.render_to_string") as mock_render:
+            mock_render.return_value = "Mocked email content"
+
+            response = self.post(
+                reverse("create_account"),
+                {
+                    "token": token,
+                    "password": "SecurePassword123!",
+                    "confirm_password": "SecurePassword123!",
+                },
+            )
+
+            self.response_created(response)
+
+            # Verify render_to_string was called with is_starting_now=True
+            self.assertTrue(mock_render.called)
+            call_args = mock_render.call_args
+            context = call_args[0][1]  # Second positional argument (context)
+
+            # Check that is_starting_now is True (now <= now = True)
+            self.assertEqual(context["is_starting_now"], True)
+            self.assertIn("now", context["project_active_date"])
+
+    def test_launched_project_email_with_past_active_after_date(self):
+        """
+        Test that launched project email is sent with is_starting_now=True when active_after is in the past
+        """
+        # Project with active_after date in the past
+        past_date = timezone.now() - timedelta(days=1)
+        project = self._create_project_with_status_and_admin(ProjectStatus.LAUNCHED, active_after=past_date)
+        new_user_email = "test_past_date@example.com"
+
+        # Add invitation
+        invitation_data = {
+            "email": new_user_email,
+            "role": Role.GUEST,
+            "library_id": None,
+        }
+        project.invitations = [invitation_data]
+        project.save()
+
+        # Create account token
+        token = self.signer.sign_object(
+            {
+                "email": new_user_email,
+                "project_id": str(project.id),
+                "invitations": [invitation_data],
+                "assigned_by_id": str(self.project_admin.id),
+            }
+        )
+
+        mail.outbox = []
+
+        with patch("epl.services.user.email.render_to_string") as mock_render:
+            mock_render.return_value = "Mocked email content"
+
+            response = self.post(
+                reverse("create_account"),
+                {
+                    "token": token,
+                    "password": "SecurePassword123!",
+                    "confirm_password": "SecurePassword123!",
+                },
+            )
+
+            self.response_created(response)
+
+            # Verify render_to_string was called with is_starting_now=True
+            self.assertTrue(mock_render.called)
+            call_args = mock_render.call_args
+            context = call_args[0][1]
+
+            # Check that is_starting_now is True (past <= now = True)
+            self.assertEqual(context["is_starting_now"], True)
+            self.assertIn("now", context["project_active_date"])
+
+    def test_launched_project_email_with_future_active_after_date(self):
+        """
+        Test that launched project email is sent with is_starting_now=False when active_after is in the future
+        """
+        # Project with active_after date in the future
+        future_date = timezone.now() + timedelta(days=2)
+        project = self._create_project_with_status_and_admin(ProjectStatus.LAUNCHED, active_after=future_date)
+        new_user_email = "test_future_date@example.com"
+
+        # Add invitation
+        invitation_data = {
+            "email": new_user_email,
+            "role": Role.GUEST,
+            "library_id": None,
+        }
+        project.invitations = [invitation_data]
+        project.save()
+
+        # Create account token
+        token = self.signer.sign_object(
+            {
+                "email": new_user_email,
+                "project_id": str(project.id),
+                "invitations": [invitation_data],
+                "assigned_by_id": str(self.project_admin.id),
+            }
+        )
+
+        mail.outbox = []
+
+        with patch("epl.services.user.email.render_to_string") as mock_render:
+            mock_render.return_value = "Mocked email content"
+
+            response = self.post(
+                reverse("create_account"),
+                {
+                    "token": token,
+                    "password": "SecurePassword123!",
+                    "confirm_password": "SecurePassword123!",
+                },
+            )
+
+            self.response_created(response)
+
+            # Verify render_to_string was called with is_starting_now=False
+            self.assertTrue(mock_render.called)
+            call_args = mock_render.call_args
+            context = call_args[0][1]
+
+            # Check that is_starting_now is False (future > now = False)
+            self.assertEqual(context["is_starting_now"], False)
+            # Should contain the formatted future date
+            expected_date_str = future_date.strftime("%Y-%m-%d")
+            self.assertIn(expected_date_str, context["project_active_date"])
+
+    def test_role_assignment_launched_project_with_future_date(self):
+        """
+        Test role assignment (existing user) for launched project with future active_after date
+        """
+        # Project launching in 3 days
+        future_date = timezone.now() + timedelta(days=3)
+        project = self._create_project_with_status_and_admin(ProjectStatus.LAUNCHED, active_after=future_date)
+        existing_user = UserFactory(email="existing_future@example.com")
+
+        # Test via role assignment (not account creation)
+        url = reverse("project-assign-roles", kwargs={"pk": project.pk})
+        data = {
+            "user_id": str(existing_user.id),
+            "role": Role.GUEST,
+        }
+
+        mail.outbox = []
+
+        with patch("epl.services.user.email.render_to_string") as mock_render:
+            mock_render.return_value = "Mocked email content"
+
+            response = self.post(url, data=data, user=self.project_admin)
+            self.assertEqual(response.status_code, 201)
+
+            # Verify email sent with correct is_starting_now value
+            self.assertTrue(mock_render.called)
+            call_args = mock_render.call_args
+            context = call_args[0][1]
+
+            # Should be False because future_date > now
+            self.assertEqual(context["is_starting_now"], False)
+            expected_date_str = future_date.strftime("%Y-%m-%d")
+            self.assertIn(expected_date_str, context["project_active_date"])
+
+    def test_role_assignment_launched_project_with_past_date(self):
+        """
+        Test role assignment (existing user) for launched project with past active_after date
+        """
+        # Project that was supposed to launch yesterday
+        past_date = timezone.now() - timedelta(days=1)
+        project = self._create_project_with_status_and_admin(ProjectStatus.LAUNCHED, active_after=past_date)
+        existing_user = UserFactory(email="existing_past@example.com")
+
+        # Test via role assignment
+        url = reverse("project-assign-roles", kwargs={"pk": project.pk})
+        data = {
+            "user_id": str(existing_user.id),
+            "role": Role.GUEST,
+        }
+
+        mail.outbox = []
+
+        with patch("epl.services.user.email.render_to_string") as mock_render:
+            mock_render.return_value = "Mocked email content"
+
+            response = self.post(url, data=data, user=self.project_admin)
+            self.assertEqual(response.status_code, 201)
+
+            # Verify email sent with correct is_starting_now value
+            self.assertTrue(mock_render.called)
+            call_args = mock_render.call_args
+            context = call_args[0][1]
+
+            # Should be True because past_date <= now
+            self.assertEqual(context["is_starting_now"], True)
+            self.assertIn("now", context["project_active_date"])
