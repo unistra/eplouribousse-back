@@ -63,3 +63,79 @@ class IssnValidatorTest(TestCase):
     def test_returned_value_is_uppercased(self):
         validated_value = IssnValidator()("1050-124x")
         self.assertEqual(validated_value, "1050-124X")
+
+
+class JSONSchemaWithRefValidatorTest(TestCase):
+    def test_project_settings_schema_with_ref_resolution(self):
+        """
+        Test that references $ref in project_settings.schema.json work correctly.
+        """
+        # Data used with $ref resolution in project_settings.schema.json
+        project_data = {
+            "exclusion_reasons": ["reason1", "reason2"],  # not validated here
+            "alerts": {  # validated here
+                "positioning": True,
+                "arbitration": False,
+                "instruction": True,
+                "control": True,
+                "edition": False,
+                "preservation": True,
+                "transfer": False,
+            },
+        }
+
+        validator = JSONSchemaValidator("project_settings.schema.json")
+
+        # Should succeed with $ref resolved (used to fail with "Unresolvable: project_alert_settings.schema.json")
+        validated_value = validator(project_data)
+        self.assertDictEqual(project_data, validated_value)
+
+    def test_invalid_alert_settings_should_fail(self):
+        """
+        Tests that validation fails correctly for invalid alert settings
+        """
+        invalid_data = {
+            "exclusion_reasons": ["reason1"],
+            "alerts": {
+                "positioning": "not_a_boolean",
+                "arbitration": False,
+                "instruction": True,
+                "control": True,
+                "edition": False,
+                "preservation": True,
+                "transfer": False,
+            },
+        }
+
+        validator = JSONSchemaValidator("project_settings.schema.json")
+
+        with self.assertRaises(serializers.ValidationError) as cm:
+            validator(invalid_data)
+
+        error_message = str(cm.exception)
+        self.assertIn("not of type 'boolean'", error_message)
+
+    def test_missing_required_alert_field_should_fail(self):
+        """
+        Test que la validation échoue si un champ requis manque dans alerts
+        """
+        incomplete_data = {
+            "exclusion_reasons": ["reason1"],
+            "alerts": {
+                "positioning": True,
+                "arbitration": False,
+                # "instruction" missing
+                "control": True,
+                "edition": False,
+                "preservation": True,
+                "transfer": False,
+            },
+        }
+
+        validator = JSONSchemaValidator("project_settings.schema.json")
+
+        with self.assertRaises(serializers.ValidationError) as cm:
+            validator(incomplete_data)
+
+        error_message = str(cm.exception)
+        self.assertIn("'instruction' is a required property", error_message)

@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.deconstruct import deconstructible
 from django.utils.translation import gettext_lazy as _
-from jsonschema import validate
+from jsonschema import RefResolver, validate
 from jsonschema.exceptions import ValidationError as SchemaValidationError
 from rest_framework import serializers
 from stdnum import issn
@@ -27,7 +27,20 @@ class JSONSchemaValidator:
         with Path(self.schema).open() as f:
             try:
                 schema = json.load(f)
-                validate(value, schema)
+
+                # tweak to allow internal ref resolving in schema
+                # source: https://stackoverflow.com/questions/25145160/json-schema-ref-does-not-work-for-relative-path
+                # Delete the $id key from the schema to avoid network calls
+                schema_copy = schema.copy()
+                if "$id" in schema_copy:
+                    del schema_copy["$id"]
+
+                # Create the resolver with the schema directory as the base_uri
+                schema_dir = self.schema.parent
+                schema_path = f"file:///{schema_dir}/"
+                resolver = RefResolver(schema_path, schema_copy)
+                validate(value, schema_copy, resolver=resolver)
+
             except SchemaValidationError as e:
                 raise serializers.ValidationError(f"Invalid JSON schema: {str(e)}")
         return value
