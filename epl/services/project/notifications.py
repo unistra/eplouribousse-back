@@ -94,6 +94,50 @@ def invite_unregistered_users_to_epl(project: Project, request):
             )
 
 
+def invite_single_user_to_epl(project: Project, invitation: dict[str, Any], request):
+    """
+    Invite a single user to epl based on a specific invitation.
+    Allows sending invitation emails even if a project is no longer in "DRAFT" state.
+    """
+    email = invitation.get("email")
+    if not email:
+        return
+
+    cleaned_email = email.strip()
+    if not cleaned_email:
+        return
+
+    try:
+        # Check if user already exists in database
+        existing_user = User.objects.active().get(email=cleaned_email)
+
+        # User exists, add them directly to the project with their role
+        role = invitation.get("role")
+        library_id = invitation.get("library_id")
+
+        # Create UserRole directly
+        UserRole.objects.get_or_create(
+            user=existing_user,
+            role=role,
+            library_id=library_id,
+            project=project,
+            defaults={
+                "assigned_by": request.user,
+            },
+        )
+
+    except User.DoesNotExist:
+        # User doesn't exist, send invitation email
+        send_invite_to_epl_email(
+            email=cleaned_email,
+            request=request,
+            signer=_get_invite_signer(),
+            project_id=str(project.id),
+            invitations=[invitation],
+            assigned_by_id=request.user.id,
+        )
+
+
 def invite_project_admins_to_review(project: Project, request):
     """
     Email project admins when a project is ready for review.

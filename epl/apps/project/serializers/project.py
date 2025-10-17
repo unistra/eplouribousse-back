@@ -21,8 +21,14 @@ from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
     invite_project_admins_to_review,
     invite_project_managers_to_launch,
+    invite_single_user_to_epl,
     invite_unregistered_users_to_epl,
     notify_project_launched,
+)
+from epl.services.user.email import (
+    send_invite_project_admins_to_review_email,
+    send_invite_project_managers_to_launch_email,
+    send_project_launched_email,
 )
 from epl.validators import JSONSchemaValidator
 
@@ -141,6 +147,12 @@ class InvitationSerializer(serializers.Serializer):
 
             invitations.append(invitation)
             project.invitations = invitations
+
+            # If the project status > DRAFT, send an invitation email to the user.
+            # (as the invitations are fired when the project.status switches from DRAFT to REVIEW)
+            if project.status > ProjectStatus.DRAFT:
+                invite_single_user_to_epl(project, invitation, self.context["request"])
+
             project.save()
 
         elif self.context["request"].method == "DELETE":
@@ -297,21 +309,57 @@ class AssignRoleSerializer(serializers.Serializer):
 
     def save(self):
         if self.context["request"].method == "POST":
-            user_role, _created = UserRole.objects.filter(
+            project = self.context["project"]
+            request = self.context["request"]
+
+            user_role, created = UserRole.objects.filter(
                 user_id=self.validated_data["user_id"],
                 role=self.validated_data["role"],
-                library_id=self.validated_data.get(
-                    "library_id"
-                ),  # get method is used to avoid KeyError if library_id is not provided
-                project=self.context["project"],
+                library_id=self.validated_data.get("library_id"),
+                project=project,
             ).get_or_create(
                 user_id=self.validated_data["user_id"],
                 role=self.validated_data["role"],
                 library_id=self.validated_data.get("library_id"),
-                project=self.context["project"],
-                assigned_by=self.context["request"].user,
+                project=project,
+                assigned_by=request.user,
             )
+
+            if created:
+                # Get the user object
+                user = User.objects.get(id=self.validated_data["user_id"])
+                role = self.validated_data["role"]
+
+                # Send appropriate emails based on role and project status
+                if role == Role.PROJECT_ADMIN and project.status == ProjectStatus.REVIEW:
+                    send_invite_project_admins_to_review_email(
+                        email=user.email,
+                        request=request,
+                        project_name=project.name,
+                        tenant_name=request.tenant.name,
+                        project_creator_email=request.user.email,
+                    )
+
+                elif role == Role.PROJECT_MANAGER and project.status == ProjectStatus.READY:
+                    send_invite_project_managers_to_launch_email(
+                        email=user.email,
+                        request=request,
+                        project=project,
+                        tenant_name=request.tenant.name,
+                        action_user_email=request.user.email,
+                    )
+
+                elif project.status >= ProjectStatus.LAUNCHED:
+                    is_starting_now = project.active_after <= timezone.now()
+                    send_project_launched_email(
+                        request=request,
+                        project=project,
+                        project_users=[user.email],
+                        is_starting_now=is_starting_now,
+                    )
+
             return user_role
+
         elif self.context["request"].method == "DELETE":
             result = UserRole.objects.filter(
                 user_id=self.validated_data["user_id"],

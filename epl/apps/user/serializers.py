@@ -3,6 +3,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field
@@ -20,6 +21,7 @@ from epl.services.user.email import (
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_password_change_email,
+    send_project_launched_email,
 )
 from epl.validators import JSONSchemaValidator
 
@@ -433,6 +435,19 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                                 tenant_name=request.tenant.name,
                                 action_user_email=assigned_by.email if assigned_by else None,
                             )
+
+                    # Send launched project email if project is launched (once per user, not per role)
+                    if project.status >= ProjectStatus.LAUNCHED and created_roles:
+                        # Temporarily set request.user to the assigner for the email template
+                        request.user = assigned_by
+                        is_starting_now = project.active_after <= timezone.now()
+
+                        send_project_launched_email(
+                            request=request,
+                            project=project,
+                            project_users=[user.email],
+                            is_starting_now=is_starting_now,
+                        )
 
                     # Remove ALL invitations for this email
                     project.invitations = [
