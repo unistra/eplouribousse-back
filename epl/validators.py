@@ -5,8 +5,9 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.deconstruct import deconstructible
 from django.utils.translation import gettext_lazy as _
-from jsonschema import RefResolver, validate
+from jsonschema import Draft202012Validator
 from jsonschema.exceptions import ValidationError as SchemaValidationError
+from referencing import Registry, Resource
 from rest_framework import serializers
 from stdnum import issn
 from stdnum.exceptions import ValidationError as StdValidationError
@@ -28,18 +29,20 @@ class JSONSchemaValidator:
             try:
                 schema = json.load(f)
 
-                # tweak to allow internal ref resolving in schema
-                # source: https://stackoverflow.com/questions/25145160/json-schema-ref-does-not-work-for-relative-path
-                # Delete the $id key from the schema to avoid network calls
-                schema_copy = schema.copy()
-                if "$id" in schema_copy:
-                    del schema_copy["$id"]
-
-                # Create the resolver with the schema directory as the base_uri
+                # Load all schemas from the schema directory
+                registry = Registry()
                 schema_dir = self.schema.parent
-                schema_path = f"file:///{schema_dir}/"
-                resolver = RefResolver(schema_path, schema_copy)
-                validate(value, schema_copy, resolver=resolver)
+
+                for schema_file in schema_dir.glob("*.json"):
+                    with schema_file.open() as f:
+                        schema_content = json.load(f)
+
+                    resource = Resource.from_contents(schema_content)
+                    registry = registry.with_resource(schema_file.name, resource)  # Add schema to registry
+
+                # Validation with registry
+                validator = Draft202012Validator(schema, registry=registry)
+                validator.validate(value)
 
             except SchemaValidationError as e:
                 raise serializers.ValidationError(f"Invalid JSON schema: {str(e)}")
