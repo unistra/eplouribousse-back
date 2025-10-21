@@ -146,7 +146,7 @@ class ValidateControlSerializer(serializers.ModelSerializer):
                 library = Library.objects.get(id=turn["library"])
                 notify_instructors_of_instruction_turn(self.instance, library, self.context["request"])
                 ActionLog.log(
-                    f"Bound control validated: unbound instruction turn notified to <lib:{turn['library']}/col:{turn['collection']}>",
+                    f"{ResourceStatus(ResourceStatus.CONTROL_BOUND).name} validated: unbound instruction turn notified to <lib:{turn['library']}/col:{turn['collection']}>",
                     actor=self.context["request"].user,
                     obj=self.instance,
                     request=self.context.get("request"),
@@ -231,7 +231,7 @@ class ResetInstructionSerializer(serializers.ModelSerializer):
 
         self.instance.save(update_fields=["status", "instruction_turns"])
         ActionLog.log(
-            f"Resource in {self.instance.status.value}: instruction reset",
+            f"Resource in {ResourceStatus(self.instance.status).name}: instruction reset",
             actor=self.context["request"].user,
             obj=self.instance,
             request=self.context.get("request"),
@@ -334,8 +334,8 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
             # Reassign to controller
             self.reassign_to_controller()
             ActionLog.log(
-                f"Resource in <{self.instance.status.name}>: turn reassigned to controller",
-                request.user,
+                message=f"Resource in {ResourceStatus(self.instance.status).name} (turn reassigned to controller)",
+                actor=request.user,
                 obj=self.instance,
                 request=request,
             )
@@ -343,8 +343,8 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
             # Reassign to instructor of library/collection
             self.reassign_to_instructor()
             ActionLog.log(
-                f"Resource in <{self.instance.status.name}>: turn reassigned to instructor <lib:{self.instance.next_turn['library']}/col:{self.instance.next_turn['collection']}>",
-                request.user,
+                message=f"Resource in {ResourceStatus(self.instance.status).name} (turn reassigned to instructor <lib:{self.instance.next_turn['library']}/col:{self.instance.next_turn['collection']}>)",
+                actor=request.user,
                 obj=self.instance,
                 request=request,
             )

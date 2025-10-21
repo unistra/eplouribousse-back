@@ -168,7 +168,7 @@ class MoveToInstructionMixin:
             resource.instruction_turns["turns"] = turns.copy()  # Save turns in case of reset or later reassignment
             resource.save(update_fields=["status", "instruction_turns"])
             ActionLog.log(
-                "Resource moved to Instruction phase",
+                f"Resource status moved to {ResourceStatus(resource.status).name}",
                 actor=self.context["request"].user,
                 obj=resource,
                 request=self.context["request"],
@@ -217,7 +217,7 @@ class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
         if resource.arbitration in [Arbitration.ONE, Arbitration.ZERO]:
             notify_instructors_of_arbitration(resource, self.context["request"])
             ActionLog.log(
-                resource.get_arbitration_display(),
+                f"Resource in Arbitration {Arbitration(resource.arbitration).name}",
                 actor=self.context["request"].user,
                 obj=resource,
                 request=self.context["request"],
@@ -401,7 +401,7 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
             resource.save(update_fields=["instruction_turns", "status"])
             notify_controllers_of_control(resource, self.context["request"], cycle)
             ActionLog.log(
-                f"Resource moved to {resource.get_status_display()} phase",
+                f"Resource status moved to {ResourceStatus(resource.status).name}",
                 actor=self.context["request"].user,
                 obj=resource,
                 request=self.context["request"],
