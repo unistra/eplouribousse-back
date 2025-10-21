@@ -9,7 +9,6 @@ from epl.validators import IssnValidator
 
 
 class CollectionModel(BaseModel):
-    issn: Annotated[str, Field(alias="Issn", max_length=9)] = ""
     call_number: Annotated[str, Field(alias="Cote")] = ""
     hold_statement: Annotated[str, Field(alias="Etat de collection")] = ""
     missing: Annotated[str, Field(alias="Lacunes")] = ""
@@ -17,6 +16,23 @@ class CollectionModel(BaseModel):
     created_by_id: UUID
     project_id: UUID
     library_id: UUID
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def strip_whitespace(cls, value: str) -> str:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+
+class ResourceModel(BaseModel):
+    id: UUID
+    title: Annotated[str, Field(max_length=510, min_length=1)]
+    code: Annotated[str, Field(min_length=1, max_length=25)]
+    project_id: UUID
+    issn: Annotated[str, Field(max_length=9)] = ""
+    numbering: Annotated[str, Field(alias="Numerotation")] = ""
+    publication_history: Annotated[str, Field(alias="PublieEn")] = ""
 
     @field_validator("*", mode="before")
     @classmethod
@@ -34,20 +50,6 @@ class CollectionModel(BaseModel):
             value = IssnValidator()(value)
         except Exception:
             raise ValueError("Invalid ISSN")
-        return value
-
-
-class ResourceModel(BaseModel):
-    id: UUID
-    title: Annotated[str, Field(max_length=510, min_length=1)]
-    code: Annotated[str, Field(alias="PPN", min_length=1, max_length=25)]
-    project_id: UUID
-
-    @field_validator("*", mode="before")
-    @classmethod
-    def strip_whitespace(cls, value: str) -> str:
-        if isinstance(value, str):
-            return value.strip()
         return value
 
 
@@ -70,9 +72,21 @@ def handle_import(
         row_number += 1
         ppn = row.pop("PPN").strip()
         titre = row.pop("Titre").strip()
+        issn = row.pop("Issn").strip()
+        numbering = row.pop("PublieEn", "").strip()
+        publication_history = row.pop("Publication history", "").strip()
+
         if not codes.get(ppn):
             try:
-                resource = ResourceModel(id=uuid.uuid4(), PPN=ppn, title=titre, project_id=project_id)
+                resource = ResourceModel(
+                    id=uuid.uuid4(),
+                    code=ppn,
+                    title=titre,
+                    issn=issn,
+                    publication_history=publication_history,
+                    numbering=numbering,
+                    project_id=project_id,
+                )
                 codes[ppn] = {"id": resource.id, "count": 1}
                 resources.append(resource)
             except ValidationError as e:

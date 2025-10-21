@@ -44,10 +44,15 @@ class TurnType(TypedDict):
 class Resource(models.Model):
     id = UUIDPrimaryKeyField()
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
+    issn = models.CharField(_("ISSN"), max_length=9, blank=True, validators=[IssnValidator()])
     title = models.CharField(_("Title"), max_length=510, db_index=True)
     project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="resources")
     status = models.IntegerField(_("Status"), choices=ResourceStatus.choices, default=ResourceStatus.POSITIONING)
     instruction_turns = models.JSONField(_("Instruction turns"), default=default_instuction_turns, blank=True)
+    publication_history = models.CharField(
+        _("Publication history"), blank=True
+    )  # Historique de la publication (todo absent des exemples)
+    numbering = models.CharField(_("Numbering"), blank=True)  # Numérotation (todo absent des exemples)
     arbitration = models.IntegerField(
         _("Arbitration"), choices=Arbitration.choices, default=Arbitration.NONE, db_index=True
     )
@@ -119,14 +124,9 @@ class Collection(models.Model):
     resource = models.ForeignKey("Resource", on_delete=models.CASCADE, related_name="collections")  # RCR
     library = models.ForeignKey("Library", on_delete=models.CASCADE, related_name="collections")  # RCR
     project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="collections")
-    issn = models.CharField(_("ISSN"), max_length=9, blank=True, validators=[IssnValidator()])
     call_number = models.CharField(_("Call number"), blank=True)  # Cote
     hold_statement = models.CharField(_("Hold statement"), blank=True)  # État de la collection
     missing = models.CharField(_("Missing"), blank=True)  # Lacunes
-    publication_history = models.CharField(
-        _("Publication history"), blank=True
-    )  # Historique de la publication (todo absent des exemples)
-    numbering = models.CharField(_("Numbering"), blank=True)  # Numérotation (todo absent des exemples)
     notes = models.TextField(_("Notes"), blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     created_by = models.ForeignKey("user.User", on_delete=models.SET_NULL, null=True, verbose_name=_("Created by"))
