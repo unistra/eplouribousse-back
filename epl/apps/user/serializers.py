@@ -305,6 +305,8 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
     confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
 
     def __init__(self, *args, **kwargs):
         self.email = None
@@ -357,7 +359,12 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                         )
 
                     # No user exists, create new one
-                    user = User.objects.create_user(email=self.email, password=self.validated_data["password"])
+                    user = User.objects.create_user(
+                        email=self.email,
+                        password=self.validated_data["password"],
+                        first_name=self.validated_data.get("first_name", ""),
+                        last_name=self.validated_data.get("last_name", ""),
+                    )
                     send_account_created_email(user, request)
 
                 # If there is a project_id and invitations, we create a userrole instance per role
