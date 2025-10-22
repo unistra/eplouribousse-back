@@ -26,20 +26,12 @@ class CustomUserManager(UserManager.from_queryset(UserQuerySet)):
             username = email
         return username, email
 
-    def create_user(
-        self, username=None, email=None, password=None, first_name=None, last_name=None, **extra_fields
-    ) -> "User":
+    def create_user(self, username=None, email=None, password=None, **extra_fields) -> "User":
         username, email = self._check_username_and_email(username, email)
-        extra_fields.setdefault("first_name", first_name or "")
-        extra_fields.setdefault("last_name", last_name or "")
         return super().create_user(username, email, password, **extra_fields)
 
-    def create_superuser(
-        self, username=None, email=None, password=None, first_name=None, last_name=None, **extra_fields
-    ) -> "User":
+    def create_superuser(self, username=None, email=None, password=None, **extra_fields) -> "User":
         username, email = self._check_username_and_email(username, email)
-        extra_fields.setdefault("first_name", first_name or "")
-        extra_fields.setdefault("last_name", last_name or "")
         return super().create_superuser(username, email, password, **extra_fields)
 
 
