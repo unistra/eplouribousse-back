@@ -73,7 +73,15 @@ class CreateProjectSerializer(serializers.ModelSerializer):
 
     def save(self):
         project = super().save()
-        ActionLog.log(f"Project <{project.name}> created", self.context["request"].user, obj=project)
+
+        project_creator = self.context["request"].user
+        current_settings = project.settings or {}
+        current_settings["project_creator"] = str(project_creator.username)
+        project.settings = current_settings
+        project.save(update_fields=["settings"])
+
+        ActionLog.log(f"Project <{project.name}> created", project_creator, obj=project)
+
         return project
 
 
