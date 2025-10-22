@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+{% load i18n %}
+<html lang="{{ language_code }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{% translate "Resulting report" %}: {{ collection.library.name }}</title>
+</head>
+<body>
+
+<section>
+    <h1>{% translate "Resulting report" %}: {{ resource.title }}</h1>
+    <dl>
+        <dt>{% translate "Source(s)" %}</dt>
+        <dd>{{ resource.title }}</dd>
+        <dt>{% translate "Resource identifier" %}</dt>
+        <dd>{{ resource.code }}</dd>
+        <dt>{% translate "Issn" %}</dt>
+        <dd>{{ resource.issn }}</dd>
+        <dt>{% translate "Publication history" %}</dt>
+        <dd>{{ resource.publication_history }}</dd>
+        <dt>{% translate "Call number" %}</dt>
+        <dd>{{ collection.call_number }}</dd>
+        <dt>{% translate "Main collection" %}</dt>
+        <dd>{{ main_collection }}</dd>
+        <dt>{% translate "Participating collections" %}</dt>
+        <dd>À compléter</dd>
+        <dt>{% translate "Excluded collections" %}</dt>
+        <dd>À compléter</dd>
+        <dt>{% translate "Bound control" %}</dt>
+        <dd>À compléter</dd>
+        <dt>{% translate "Unbound control" %}</dt>
+        <dd>À compléter</dd>
+    </dl>
+    <table>
+        <thead>
+        <tr>
+            <th scope="col">{% translate "Order" %}</th>
+            <th scope="col">{% translate "Library" %}</th>
+            <th scope="col">{% translate "Collection" %}</th>
+            <th scope="col">{% translate "Segment" %}</th>
+            <th scope="col">{% translate "Bound or Unbound" %}</th>
+            <th scope="col">{% translate "Improvable element" %}</th>
+            <th scope="col">{% translate "Exception" %}</th>
+            <th scope="col">{% translate "Remediated library" %}</th>
+            <th scope="col">{% translate "Anomalies" %}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for segment in resource.segments %}
+            <tr class="segment {% if segment.collection.library.id == collection.library.id %}active{% else %}inactive{% endif %}">
+                <td>{{ segment.order }}</td>
+                <td>{{ segment.collection.library.name }}</td>
+                <td>{{ segment.collection.position }} | {{ segment.collection.call_number }}</td>
+                <td>{{ segment.content }}</td>
+                <td>{{ segment.segment_type }}</td>
+                <td>{{ segment.improvable_element }}</td>
+                <td>{{ segment.exception }}</td>
+                <td>{{ segment.improved_segment.collection.library.name }}</td>
+                <td>{{ segment.anomalies | length }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+</body>
+
+</html>
