@@ -23,13 +23,22 @@ class TestCreateAccountView(TestCase):
 
         response = self.post(
             reverse("create_account"),
-            {"token": token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "John",
+                "last_name": "Doe",
+            },
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         with tenant_context(self.tenant):
+            user = User.objects.get(email=email)
             self.assertTrue(User.objects.filter(email=email).exists())
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
 
     def test_password_mismatch(self):
         signer = _get_invite_signer()
@@ -38,7 +47,13 @@ class TestCreateAccountView(TestCase):
 
         response = self.post(
             reverse("create_account"),
-            {"token": token, "password": "SecurePassword123!", "confirm_password": "DifferentPassword123!"},
+            {
+                "token": token,
+                "password": "SecurePassword123!",
+                "confirm_password": "DifferentPassword123!",
+                "first_name": "John",
+                "last_name": "Doe",
+            },
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -47,7 +62,13 @@ class TestCreateAccountView(TestCase):
     def test_invalid_token(self):
         response = self.post(
             reverse("create_account"),
-            {"token": "invalid_token", "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": "invalid_token",
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "John",
+                "last_name": "Doe",
+            },
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -61,7 +82,13 @@ class TestCreateAccountView(TestCase):
         with patch("epl.apps.user.views.INVITE_TOKEN_MAX_AGE", 0):
             response = self.post(
                 reverse("create_account"),
-                {"token": token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+                {
+                    "token": token,
+                    "password": "SecurePassword123!",
+                    "confirm_password": "SecurePassword123!",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                },
             )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -75,7 +102,13 @@ class TestCreateAccountView(TestCase):
 
         response = self.post(
             reverse("create_account"),
-            {"token": token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "John",
+                "last_name": "Doe",
+            },
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -91,6 +124,55 @@ class TestCreateAccountView(TestCase):
         self.assertIn(expected_body_string, sent_email.body)
 
         self.assertIn(email, sent_email.body)
+
+    def test_account_creation_without_names(self):
+        """Test that account creation works without first_name and last_name"""
+        signer = _get_invite_signer()
+        email = "new_user@example.com"
+        token = signer.sign_object({"email": email})
+
+        response = self.post(
+            reverse("create_account"),
+            {
+                "token": token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                # first_name and last_name missing
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        with tenant_context(self.tenant):
+            user = User.objects.get(email=email)
+            self.assertTrue(User.objects.filter(email=email).exists())
+            # User exists but first_name and last_name are empty strings
+            self.assertEqual(user.first_name, "")
+            self.assertEqual(user.last_name, "")
+
+    def test_account_creation_with_empty_names(self):
+        """Test that account creation works with empty first_name and last_name"""
+        signer = _get_invite_signer()
+        email = "new_user@example.com"
+        token = signer.sign_object({"email": email})
+
+        response = self.post(
+            reverse("create_account"),
+            {
+                "token": token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "",
+                "last_name": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        with tenant_context(self.tenant):
+            user = User.objects.get(email=email)
+            self.assertEqual(user.first_name, "")
+            self.assertEqual(user.last_name, "")
 
 
 class TestAccountCreationWithExistingUser(TestCase):
@@ -150,7 +232,13 @@ class TestAccountCreationWithExistingUser(TestCase):
         with patch("epl.services.user.email.send_account_created_email") as mock_send_email:
             response = self.post(
                 reverse("create_account"),
-                {"token": token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+                {
+                    "token": token,
+                    "password": "SecurePassword123!",
+                    "confirm_password": "SecurePassword123!",
+                    "first_name": "Jane",
+                    "last_name": "Smith",
+                },
             )
 
         self.response_created(response)
@@ -172,6 +260,11 @@ class TestAccountCreationWithExistingUser(TestCase):
         # Verify invitation was removed
         self.project.refresh_from_db()
         self.assertEqual(len(self.project.invitations), 0)
+
+        # Verify first_name and last_name weren't changed for existing user
+        self.existing_user.refresh_from_db()
+        self.assertNotEqual(self.existing_user.first_name, "Jane")
+        self.assertNotEqual(self.existing_user.last_name, "Smith")
 
     def test_existing_user_multiple_roles(self):
         """
@@ -203,7 +296,13 @@ class TestAccountCreationWithExistingUser(TestCase):
 
         response = self.post(
             reverse("create_account"),
-            {"token": token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "Jane",
+                "last_name": "Smith",
+            },
         )
 
         self.response_created(response)
@@ -259,7 +358,13 @@ class TestAccountCreationWithExistingUser(TestCase):
 
         response = self.post(
             reverse("create_account"),
-            {"token": token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "Jane",
+                "last_name": "Smith",
+            },
         )
 
         # Process should succeed
@@ -310,7 +415,13 @@ class TestAccountCreationWithExistingUser(TestCase):
 
         response = self.post(
             reverse("create_account"),
-            {"token": token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "Jane",
+                "last_name": "Smith",
+            },
         )
 
         # Should fail with 400
@@ -354,7 +465,13 @@ class TestAccountCreationWithExistingUser(TestCase):
 
         response = self.post(
             reverse("create_account"),
-            {"token": token, "password": "NewPassword123!", "confirm_password": "NewPassword123!"},
+            {
+                "token": token,
+                "password": "NewPassword123!",
+                "confirm_password": "NewPassword123!",
+                "first_name": "Jane",
+                "last_name": "Smith",
+            },
         )
 
         self.response_created(response)
