@@ -72,16 +72,14 @@ class CreateProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def save(self):
-        project = super().save()
-
         project_creator = self.context["request"].user
-        current_settings = project.settings or {}
-        current_settings["project_creator"] = str(project_creator.username)
-        project.settings = current_settings
-        project.save(update_fields=["settings"])
+        current_settings = self.instance.settings if self.instance else {}
+        current_settings["project_creator"] = str(project_creator.id)
 
+        self.validated_data["settings"] = current_settings
+
+        project = super().save()
         ActionLog.log(f"Project <{project.name}> created", project_creator, obj=project)
-
         return project
 
 

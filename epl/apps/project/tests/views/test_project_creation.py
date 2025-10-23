@@ -64,9 +64,9 @@ class ProjectCreationTest(TestCase):
         response = self.post(reverse("project-list"), data=data, content_type="application/json", user=self.user)
         self.response_created(response)
         project = Project.objects.get(name="New Project")
-        self.assertEqual(project.settings["project_creator"], self.user.username)
+        self.assertEqual(project.settings["project_creator"], str(self.user.id))
         self.assertIn("project_creator", response.data["settings"])
-        self.assertEqual(response.data["settings"]["project_creator"], self.user.username)
+        self.assertEqual(response.data["settings"]["project_creator"], str(self.user.id))
 
 
 class ExclusionReasonsTest(TestCase):
