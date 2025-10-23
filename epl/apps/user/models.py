@@ -55,6 +55,10 @@ class User(AbstractUser):
         return name or self.username
 
     @property
+    def preferred_language(self) -> str | None:
+        return self.settings.get("locale")
+
+    @property
     def is_project_creator(self) -> bool:
         return UserRole.objects.filter(user=self, role=Role.PROJECT_CREATOR).exists()
 

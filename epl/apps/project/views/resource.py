@@ -1,6 +1,9 @@
 from django.contrib.postgres.aggregates import StringAgg
 from django.db import models
+from django.http import HttpResponse
+from django.utils import translation
 from django.utils.translation import gettext_lazy as _
+from django_weasyprint import WeasyTemplateResponse
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, status
 from rest_framework.decorators import action
@@ -10,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from epl.apps.project.filters.resource import ResourceFilter
-from epl.apps.project.models import Resource, ResourceStatus
+from epl.apps.project.models import Collection, Resource, ResourceStatus
 from epl.apps.project.permissions.resource import ResourcePermission
 from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.resource import (
@@ -21,6 +24,7 @@ from epl.apps.project.serializers.resource import (
     ResourceWithCollectionsSerializer,
     ValidateControlSerializer,
 )
+from epl.libs.language import get_user_language
 from epl.libs.pagination import PageNumberPagination
 from epl.schema_serializers import UnauthorizedSerializer
 
@@ -239,3 +243,47 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         serializer.is_valid(raise_exception=True)
         serializer.reassign()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        summary=_("Get outcome report in PDF format"),
+        tags=["resource"],
+        request=None,
+        responses={
+            status.HTTP_200_OK: {"type": "object", "properties": {"report": {"type": "string"}}},
+            status.HTTP_400_BAD_REQUEST: {"type": "object", "properties": {"detail": {"type": "string"}}},
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: None,
+        },
+    )
+    @action(detail=True, methods=["GET"], url_path="outcome-report")
+    def outcome_report(self, request, pk) -> HttpResponse:
+        collection_id = request.query_params.get("collection", None)
+        resource = self.get_object()
+        if resource.status < ResourceStatus.EDITION:
+            return Response(
+                {"detail": _("Outcome report is only available for resources in EDITION status or beyond.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            collection = resource.collections.get(id=collection_id)
+        except Collection.DoesNotExist:
+            return Response(
+                {"detail": _("A valid collection ID must be provided to generate the outcome report.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        language_code = get_user_language(request.user, resource.project)
+        context = {
+            "resource": resource,
+            "collection": collection,
+            "segments": resource.segments.order_by("order").all(),
+            "language_code": language_code,
+        }
+        filename = f"outcome-report-{resource.code}-{collection.library.code}.pdf"
+        with translation.override(language_code):
+            return WeasyTemplateResponse(
+                request,
+                "resulting-report.html",
+                context=context,
+                attachment=True,
+                filename=filename,
+            )
