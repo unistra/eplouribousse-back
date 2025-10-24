@@ -153,13 +153,7 @@ class ResourceFilter(filters.BaseFilterBackend):
                 "description": str(self.status_param_description),
                 "schema": {
                     "type": "integer",
-                    "enum": [
-                        ResourceStatus.POSITIONING,
-                        ResourceStatus.INSTRUCTION_BOUND,
-                        ResourceStatus.CONTROL_BOUND,
-                        ResourceStatus.INSTRUCTION_UNBOUND,
-                        ResourceStatus.CONTROL_UNBOUND,
-                    ],
+                    "enum": [_[0] for _ in ResourceStatus.choices],
                 },
             },
             {

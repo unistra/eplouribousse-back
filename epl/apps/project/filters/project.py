@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 
 from epl.apps.project.filters import QueryParamMixin
+from epl.apps.project.models import ProjectStatus
 
 
 class ProjectFilter(QueryParamMixin, filters.BaseFilterBackend):
@@ -39,6 +40,7 @@ class ProjectFilter(QueryParamMixin, filters.BaseFilterBackend):
                 "description": str(self.status_param_description),
                 "schema": {
                     "type": "integer",
+                    "enum": [_[0] for _ in ProjectStatus.choices],
                 },
             },
             {
