@@ -220,9 +220,20 @@ class ProjectUserSerializer(serializers.ModelSerializer):
 
 
 class NestedUserSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField(help_text=_("User's display name"))
+
     class Meta:
         model = User
-        fields = ["id", "first_name", "last_name", "email"]
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "display_name",
+            "email",
+        ]
+
+    def get_display_name(self, user: User) -> str:
+        return str(user)
 
 
 class UserListSerializer(ModelSerializer):

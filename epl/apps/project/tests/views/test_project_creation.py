@@ -4,7 +4,7 @@ from django_tenants.urlresolvers import reverse
 from django_tenants.utils import tenant_context
 from parameterized import parameterized
 
-from epl.apps.project.models import Role
+from epl.apps.project.models import Project, Role
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
 from epl.apps.project.tests.factories.user import ProjectCreatorFactory, UserWithRoleFactory
@@ -55,6 +55,18 @@ class ProjectCreationTest(TestCase):
             response.data["settings"]["exclusion_reasons"],
             ["Participation in another project", "Incorrect assignment", "Other"],
         )
+
+    def test_project_creator_is_in_project_settings(self):
+        data = {
+            "name": "New Project",
+            "description": "This is a test project.",
+        }
+        response = self.post(reverse("project-list"), data=data, content_type="application/json", user=self.user)
+        self.response_created(response)
+        project = Project.objects.get(name="New Project")
+        self.assertEqual(project.settings["project_creator"], str(self.user.id))
+        self.assertIn("project_creator", response.data["settings"])
+        self.assertEqual(response.data["settings"]["project_creator"], str(self.user.id))
 
 
 class ExclusionReasonsTest(TestCase):
