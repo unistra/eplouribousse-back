@@ -110,7 +110,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "list":
-            queryset = Project.objects.public_or_participant(user=self.request.user)
+            queryset = Project.objects.public_or_participant(user=self.request.user).distinct()
         return queryset
 
     def get_serializer_class(self):
