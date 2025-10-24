@@ -169,7 +169,7 @@ class FilterResourceOnStatusTest(TestCase):
         self.response_ok(response)
         self.assertEqual(
             response.data["count"],
-            9,
+            8,
         )
 
     def test_filter_positioning_with_library(self):

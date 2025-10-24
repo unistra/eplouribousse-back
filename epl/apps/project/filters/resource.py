@@ -65,15 +65,16 @@ class ResourceFilter(filters.BaseFilterBackend):
 
         return queryset
 
+    def _get_segments_annotation(self):
+        return Exists(Resource.objects.filter(id=OuterRef("id"), collections__segments__isnull=False))
+
     def filter_for_library(self, queryset, status, library, against_library=None):
         if status == ResourceStatus.POSITIONING:
             # If a Resource is in Instruction or Control positioning status but does
             # not have any segments assigned yet, we consider it can still be positioned.
-            has_segments = Exists(Resource.objects.filter(id=OuterRef("id"), collections__segments__isnull=False))
-
             queryset = (
                 queryset.filter(collections__library=library)
-                .annotate(has_segments=has_segments)
+                .annotate(has_segments=self._get_segments_annotation())
                 .filter(Q(status=status) | Q(has_segments=False))
                 .distinct()
             )
@@ -83,6 +84,7 @@ class ResourceFilter(filters.BaseFilterBackend):
                 status=status,
                 collections__library=library,
                 instruction_turns__bound_copies__turns__0__library=str(library.id),
+                arbitration=Arbitration.NONE,
             )
 
         elif status == ResourceStatus.INSTRUCTION_UNBOUND:
@@ -104,9 +106,16 @@ class ResourceFilter(filters.BaseFilterBackend):
         if status == ResourceStatus.POSITIONING:
             # If a Resource is in Instruction or Control positioning status but does
             # not have any segments assigned yet, we consider it can still be positioned.
+            queryset = (
+                queryset.annotate(has_segments=self._get_segments_annotation())
+                .filter(Q(status=status) | Q(has_segments=False))
+                .distinct()
+            )
+        if status == ResourceStatus.INSTRUCTION_BOUND:
             queryset = queryset.filter(
-                Q(status=ResourceStatus.POSITIONING) | Q(collections__segments__isnull=True)
-            ).distinct()
+                status=status,
+                arbitration=Arbitration.NONE,
+            )
         elif status > ResourceStatus.POSITIONING:
             queryset = queryset.filter(status=status)
         return queryset
