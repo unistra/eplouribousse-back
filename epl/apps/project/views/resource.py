@@ -275,6 +275,11 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         context = {
             "resource": resource,
             "collection": collection,
+            "main_collection": resource.collections.order_by("position").first(),
+            "participating_collections": resource.collections.exclude(id=collection.id, position=0)
+            .order_by("position")
+            .all(),
+            "excluded_collections": resource.collections.filter(position=0).all(),
             "segments": resource.segments.order_by("order").all(),
             "language_code": language_code,
         }

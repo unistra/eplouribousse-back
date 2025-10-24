@@ -3,12 +3,12 @@
 <html lang="{{ language_code }}">
 <head>
     <meta charset="UTF-8">
-    <title>{% translate "Resulting report" %}: {{ collection.library.name }}</title>
+    <title>{% translate "Resultant report" %}: {{ collection.library.name }}</title>
 </head>
 <body>
 
 <section>
-    <h1>{% translate "Resulting report" %}: {{ resource.title }}</h1>
+    <h1>{% translate "Resultant report" %}: {{ resource.title }}</h1>
     <dl>
         <dt>{% translate "Source(s)" %}</dt>
         <dd>{{ resource.title }}</dd>
@@ -21,15 +21,27 @@
         <dt>{% translate "Call number" %}</dt>
         <dd>{{ collection.call_number }}</dd>
         <dt>{% translate "Main collection" %}</dt>
-        <dd>{{ main_collection }}</dd>
+        <dd>{{ main_collection.call_number }}</dd>
         <dt>{% translate "Participating collections" %}</dt>
-        <dd>À compléter</dd>
+        <dd>
+            <ul>
+                {% for collection in participating_collections %}
+                <li>{{ collection.call_number }}</li>
+                {% endfor %}
+            </ul>
+        </dd>
         <dt>{% translate "Excluded collections" %}</dt>
-        <dd>À compléter</dd>
+        <dd>
+            <ul>
+                {% for collection in excluded_collections %}
+                <li>{{ collection.call_number }}</li>
+                {% endfor %}
+            </ul>
+        </dd>
         <dt>{% translate "Bound control" %}</dt>
-        <dd>À compléter</dd>
+        <dd>{{ resource.validations.control_bound|date: "d E Y" }}</dd>
         <dt>{% translate "Unbound control" %}</dt>
-        <dd>À compléter</dd>
+        <dd>{{ resource.validations.control_unbound|date: "d E Y" }}</dd>
     </dl>
     <table>
         <thead>
@@ -42,11 +54,10 @@
             <th scope="col">{% translate "Improvable element" %}</th>
             <th scope="col">{% translate "Exception" %}</th>
             <th scope="col">{% translate "Remediated library" %}</th>
-            <th scope="col">{% translate "Anomalies" %}</th>
         </tr>
         </thead>
         <tbody>
-        {% for segment in resource.segments %}
+        {% for segment in segments %}
             <tr class="segment {% if segment.collection.library.id == collection.library.id %}active{% else %}inactive{% endif %}">
                 <td>{{ segment.order }}</td>
                 <td>{{ segment.collection.library.name }}</td>
@@ -56,7 +67,6 @@
                 <td>{{ segment.improvable_element }}</td>
                 <td>{{ segment.exception }}</td>
                 <td>{{ segment.improved_segment.collection.library.name }}</td>
-                <td>{{ segment.anomalies | length }}</td>
             </tr>
         {% endfor %}
         </tbody>
