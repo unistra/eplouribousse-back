@@ -216,6 +216,7 @@ class ProjectDetailSerializer(AclSerializerMixin, serializers.ModelSerializer):
         help_text=_("Project settings"),
         validators=[JSONSchemaValidator("project_settings.schema.json")],
     )
+    created_by = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Project
@@ -227,6 +228,7 @@ class ProjectDetailSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "active_after",
             "status",
             "is_active",
+            "created_by",
             "settings",
             "invitations",
             "roles",
@@ -235,7 +237,18 @@ class ProjectDetailSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "updated_at",
             "acl",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_by", "created_at", "updated_at"]
+
+    @extend_schema_field(NestedUserSerializer(allow_null=True))
+    def get_created_by(self, obj):
+        project_creator_id = obj.settings.get("project_creator")
+        if project_creator_id:
+            try:
+                user = User.objects.get(pk=project_creator_id)
+                return NestedUserSerializer(user).data
+            except User.DoesNotExist:
+                return None
+        return None
 
 
 class ChangeStatusSerializer(serializers.ModelSerializer):
