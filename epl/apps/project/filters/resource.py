@@ -1,8 +1,10 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Exists, IntegerChoices, OuterRef, Q
+from django.utils.functional import _StrPromise
 from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
+from rest_framework.request import Request
 
 from epl.apps.project.filters import UUID_REGEX
 from epl.apps.project.models import Library, Project, Resource, ResourceStatus
@@ -51,23 +53,20 @@ class ResourceFilter(filters.BaseFilterBackend):
             raise ValidationError({"status": _("Invalid status value")})
         return status
 
-    def _get_library(self, request):
-        library_id = request.query_params.get(self.library_param, None)
+    def _get_library_param(self, request: Request, param_name: str, error_message: _StrPromise) -> Library | None:
+        library_id = request.query_params.get(param_name, None)
         if not library_id:
             return None
         try:
             return Library.objects.get(id=library_id)
         except (Library.DoesNotExist, DjangoValidationError):
-            raise ValidationError({"library": _("Library not found")})
+            raise ValidationError({param_name: error_message})
 
-    def _get_against_library(self, request):
-        against_id = request.query_params.get(self.against_param, None)
-        if not against_id:
-            return None
-        try:
-            return Library.objects.get(id=against_id)
-        except (Library.DoesNotExist, DjangoValidationError):
-            raise ValidationError({"against": _("Library to compare against not found")})
+    def _get_library(self, request) -> Library | None:
+        return self._get_library_param(request, self.library_param, _("Library not found"))
+
+    def _get_against_library(self, request) -> Library | None:
+        return self._get_library_param(request, self.against_param, _("Library to compare against not found"))
 
     def _apply_project_filter(self, request, queryset):
         project_id = request.query_params.get(self.project_param, None)
