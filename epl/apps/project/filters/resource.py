@@ -1,11 +1,19 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Exists, IntegerChoices, OuterRef, Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 
+from epl.apps.project.filters import UUID_REGEX
 from epl.apps.project.models import Library, Project, Resource, ResourceStatus
 from epl.apps.project.models.collection import Arbitration
+
+
+class PositioningFilter(IntegerChoices):
+    ALL = 0, _("All")
+    POSITIONING_ONLY = 10, _("Positioning only")
+    INSTRUCTION_NOT_STARTED = 20, _("Instruction not start")
+    # EXCLUDE_RESOURCES = 30, _("Exclude resources") Not yet
 
 
 class ResourceFilter(filters.BaseFilterBackend):
@@ -19,51 +27,88 @@ class ResourceFilter(filters.BaseFilterBackend):
     status_param_description = _("Filter by resource status")
     arbitration_param = "arbitration"
     arbitration_param_description = _("Filter by arbitration status")
+    positioning_filter_param = "positioning_filter"
+    positioning_filter_description = "Filter by positioning filter available"
 
     def filter_queryset(self, request, queryset, view):
-        if view.action == "list":
-            status = int(request.query_params.get(self.status_param, 0))
-            if status not in ResourceStatus:
-                raise ValidationError({"status": _("Invalid status value")})
+        if view.action != "list":
+            return queryset
 
-            library = None
-            if library_id := request.query_params.get(self.library_param, None):
-                try:
-                    library = Library.objects.get(id=library_id)
-                except (Library.DoesNotExist, DjangoValidationError):
-                    raise ValidationError({"library": _("Library not found")})
+        status = self._validate_status(request)
+        library = self._get_library(request)
+        against_library = self._get_against_library(request)
 
-            against_library = None
-            if against_id := request.query_params.get(self.against_param, None):
-                try:
-                    against_library = Library.objects.get(id=against_id)
-                except (Library.DoesNotExist, DjangoValidationError):
-                    raise ValidationError({"against": _("Library to compare against not found")})
-
-            if project_id := request.query_params.get(self.project_param, None):
-                try:
-                    project = Project.objects.get(id=project_id)
-                    queryset = queryset.filter(project=project)
-                except (Project.DoesNotExist, DjangoValidationError):
-                    raise ValidationError({"project": _("Project not found")})
-
-            if not library:
-                # Not for a specific library
-                queryset = self.filter_no_library(queryset, status)
-            else:
-                # Resources having collections in the specified library
-                # optionally in common with another library
-                queryset = self.filter_for_library(queryset, status, library, against_library)
-
-            if arbitration_param_value := request.query_params.get(self.arbitration_param, ""):
-                if arbitration_param_value.lower() == "1":
-                    queryset = queryset.filter(arbitration=Arbitration.ONE)
-                elif arbitration_param_value.lower() == "0":
-                    queryset = queryset.filter(arbitration=Arbitration.ZERO)
-                else:
-                    raise ValidationError({"arbitration": _("Invalid arbitration param, must be '0' or '1'")})
+        queryset = self._apply_project_filter(request, queryset)
+        queryset = self._apply_library_filter(queryset, status, library, against_library)
+        queryset = self._apply_positioning_filter(request, queryset, status)
+        queryset = self._apply_arbitration_filter(request, queryset)
 
         return queryset
+
+    def _validate_status(self, request):
+        status = int(request.query_params.get(self.status_param, 0))
+        if status not in ResourceStatus:
+            raise ValidationError({"status": _("Invalid status value")})
+        return status
+
+    def _get_library(self, request):
+        library_id = request.query_params.get(self.library_param, None)
+        if not library_id:
+            return None
+        try:
+            return Library.objects.get(id=library_id)
+        except (Library.DoesNotExist, DjangoValidationError):
+            raise ValidationError({"library": _("Library not found")})
+
+    def _get_against_library(self, request):
+        against_id = request.query_params.get(self.against_param, None)
+        if not against_id:
+            return None
+        try:
+            return Library.objects.get(id=against_id)
+        except (Library.DoesNotExist, DjangoValidationError):
+            raise ValidationError({"against": _("Library to compare against not found")})
+
+    def _apply_project_filter(self, request, queryset):
+        project_id = request.query_params.get(self.project_param, None)
+        if not project_id:
+            return queryset
+        try:
+            project = Project.objects.get(id=project_id)
+            return queryset.filter(project=project)
+        except (Project.DoesNotExist, DjangoValidationError):
+            raise ValidationError({"project": _("Project not found")})
+
+    def _apply_library_filter(self, queryset, status, library, against_library):
+        if not library:
+            return self.filter_no_library(queryset, status)
+        return self.filter_for_library(queryset, status, library, against_library)
+
+    def _apply_positioning_filter(self, request, queryset, status):
+        positioning_filter_value = int(request.query_params.get(self.positioning_filter_param, 0))
+        if not positioning_filter_value:
+            return queryset
+
+        if positioning_filter_value == PositioningFilter.POSITIONING_ONLY:
+            return queryset.filter(status=status, arbitration=Arbitration.NONE)
+        elif positioning_filter_value == PositioningFilter.INSTRUCTION_NOT_STARTED:
+            return queryset.filter(status=ResourceStatus.INSTRUCTION_BOUND, arbitration=Arbitration.NONE)
+
+        return queryset
+
+    def _apply_arbitration_filter(self, request, queryset):
+        arbitration_param_value = request.query_params.get(self.arbitration_param, "").lower()
+        if not arbitration_param_value:
+            return queryset
+
+        if arbitration_param_value == "1":
+            return queryset.filter(arbitration=Arbitration.ONE)
+        elif arbitration_param_value == "0":
+            return queryset.filter(arbitration=Arbitration.ZERO)
+        elif arbitration_param_value == "all":
+            return queryset.filter(arbitration__in=[Arbitration.ZERO, Arbitration.ONE])
+        else:
+            raise ValidationError({"arbitration": _("Invalid arbitration param, must be '0', '1' or 'all'")})
 
     def _get_segments_annotation(self):
         return Exists(Resource.objects.filter(id=OuterRef("id"), collections__segments__isnull=False))
@@ -130,7 +175,7 @@ class ResourceFilter(filters.BaseFilterBackend):
                 "schema": {
                     "type": "string",
                     "format": "uuid",
-                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "pattern": UUID_REGEX,
                 },
             },
             {
@@ -141,7 +186,7 @@ class ResourceFilter(filters.BaseFilterBackend):
                 "schema": {
                     "type": "string",
                     "format": "uuid",
-                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "pattern": UUID_REGEX,
                 },
             },
             {
@@ -152,7 +197,7 @@ class ResourceFilter(filters.BaseFilterBackend):
                 "schema": {
                     "type": "string",
                     "format": "uuid",
-                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "pattern": UUID_REGEX,
                 },
             },
             {
@@ -172,8 +217,21 @@ class ResourceFilter(filters.BaseFilterBackend):
                 "description": str(self.arbitration_param_description),
                 "schema": {
                     "type": "string",
-                    "enum": ["0", "1"],
-                    "description": _("'0' for arbitration type 0, '1' for arbitration type 1"),
+                    "enum": ["0", "1", "all"],
+                    "description": _(
+                        "'0' for arbitration type 0, '1' for arbitration type 1, 'all' for all arbitration types"
+                    ),
+                },
+            },
+            {
+                "name": self.positioning_filter_param,
+                "required": False,
+                "in": "query",
+                "description": str(self.positioning_filter_description),
+                "schema": {
+                    "type": "integer",
+                    "enum": [_[0] for _ in PositioningFilter.choices],
+                    "description": _("'10' for Positioning only, '20' for Instruction not start"),
                 },
             },
         ]
