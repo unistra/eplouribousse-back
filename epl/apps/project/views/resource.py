@@ -1,7 +1,7 @@
 from django.contrib.postgres.aggregates import StringAgg
 from django.db import models
 from django.http import HttpResponse
-from django.utils import translation
+from django.utils import timezone, translation
 from django.utils.translation import gettext_lazy as _
 from django_weasyprint import WeasyTemplateResponse
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -271,8 +271,9 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
                 {"detail": _("A valid collection ID must be provided to generate the outcome report.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        language_code = get_user_language(request.user, resource.project)
+        language_code = request.query_params.get("lang") or get_user_language(request.user, resource.project)
         context = {
+            "now": timezone.now(),
             "resource": resource,
             "collection": collection,
             "main_collection": resource.collections.order_by("position").first(),
@@ -285,10 +286,15 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         }
         filename = f"outcome-report-{resource.code}-{collection.library.code}.pdf"
         with translation.override(language_code):
-            return WeasyTemplateResponse(
-                request,
-                "resulting-report.html",
-                context=context,
-                attachment=True,
-                filename=filename,
-            )
+            if request.query_params.get("preview") == "true":
+                from django.shortcuts import render
+
+                return render(request, "pdf/resulting-report.html", context)
+            else:
+                return WeasyTemplateResponse(
+                    request,
+                    "pdf/resulting-report.html",
+                    context=context,
+                    attachment=True,
+                    filename=filename,
+                )

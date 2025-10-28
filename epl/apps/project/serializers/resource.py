@@ -148,7 +148,7 @@ class ValidateControlSerializer(serializers.ModelSerializer):
                 self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
                 turn = self.instance.next_turn
                 library = Library.objects.get(id=turn["library"])
-                self.instance.validations["control_bound"] = now()
+                self.instance.validations["control_bound"] = now().isoformat()
                 notify_instructors_of_instruction_turn(self.instance, library, self.context["request"])
                 ActionLog.log(
                     f"{ResourceStatus(ResourceStatus.CONTROL_BOUND).name} validated: unbound instruction turn notified to <lib:{turn['library']}/col:{turn['collection']}>",
@@ -157,7 +157,7 @@ class ValidateControlSerializer(serializers.ModelSerializer):
                     request=self.context.get("request"),
                 )
             elif self.instance.status == ResourceStatus.CONTROL_UNBOUND:
-                self.instance.validations["control_unbound"] = now()
+                self.instance.validations["control_unbound"] = now().isoformat()
                 self.instance.status = ResourceStatus.EDITION
                 # todo send email to all instructors (notify them that a resulting report is available)
                 # https://gitlab.unistra.fr/di/eplouribousse/eplouribousse/-/issues/22
