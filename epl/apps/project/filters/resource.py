@@ -1,6 +1,5 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Exists, IntegerChoices, OuterRef, Q
-from django.utils.functional import _StrPromise
 from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
@@ -53,7 +52,8 @@ class ResourceFilter(filters.BaseFilterBackend):
             raise ValidationError({"status": _("Invalid status value")})
         return status
 
-    def _get_library_param(self, request: Request, param_name: str, error_message: _StrPromise) -> Library | None:
+    @staticmethod
+    def _get_library_param(request: Request, param_name: str, error_message) -> Library | None:
         library_id = request.query_params.get(param_name, None)
         if not library_id:
             return None
