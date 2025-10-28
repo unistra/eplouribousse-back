@@ -2,6 +2,8 @@ import random
 
 import factory
 
+from epl.apps.project.models.collection import Arbitration
+
 
 class ResourceFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -11,6 +13,7 @@ class ResourceFactory(factory.django.DjangoModelFactory):
     title = factory.Faker("sentence", nb_words=6)
     project = factory.SubFactory("epl.apps.project.tests.factories.project.ProjectFactory")
     issn = factory.LazyAttribute(lambda _: ResourceFactory.generate_valid_issn())
+    arbitration = Arbitration.NONE
 
     @staticmethod
     def random_string(length=12):
