@@ -2,7 +2,8 @@ import uuid
 
 from django_tenants.urlresolvers import reverse
 
-from epl.apps.project.models import ResourceStatus, Role
+from epl.apps.project.models import ProjectStatus, ResourceStatus, Role
+from epl.apps.project.models.collection import Arbitration
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
@@ -145,6 +146,63 @@ class FilterResourceOnStatusTest(TestCase):
             "bound_copies": {"turns": [{"library": str(uuid.uuid4()), "collection": str(_c9.id)}]}
         }
         self.resource_instruction_bound_with_segment.save()
+
+        # Test positioning_filter ======
+        self.project_positioning_filter = ProjectFactory(status=ProjectStatus.LAUNCHED)
+        self.project_positioning_filter.libraries.add(self.library1, self.library2)
+
+        # Create resources with different statuses and arbitration values
+        self.resource_positioning_no_arbitration = ResourceFactory(
+            project=self.project_positioning_filter,
+            status=ResourceStatus.POSITIONING,
+        )
+        CollectionFactory(
+            library=self.library1,
+            project=self.project_positioning_filter,
+            resource=self.resource_positioning_no_arbitration,
+        )
+        CollectionFactory(
+            library=self.library2,
+            project=self.project_positioning_filter,
+            resource=self.resource_positioning_no_arbitration,
+        )
+
+        self.resource_positioning_with_arbitration = ResourceFactory(
+            project=self.project_positioning_filter,
+            status=ResourceStatus.POSITIONING,
+            arbitration=Arbitration.ONE,
+        )
+        CollectionFactory(
+            library=self.library1,
+            project=self.project_positioning_filter,
+            resource=self.resource_positioning_with_arbitration,
+        )
+        CollectionFactory(
+            library=self.library2,
+            project=self.project_positioning_filter,
+            resource=self.resource_positioning_with_arbitration,
+        )
+
+        self.resource_instruction_bound_no_arbitration = ResourceFactory(
+            project=self.project_positioning_filter,
+            status=ResourceStatus.INSTRUCTION_BOUND,
+            arbitration=Arbitration.NONE,
+        )
+        _c_instruction = CollectionFactory(
+            library=self.library1,
+            project=self.project_positioning_filter,
+            resource=self.resource_instruction_bound_no_arbitration,
+        )
+        CollectionFactory(
+            library=self.library2,
+            project=self.project_positioning_filter,
+            resource=self.resource_instruction_bound_no_arbitration,
+        )
+
+        self.resource_instruction_bound_no_arbitration.instruction_turns = {
+            "bound_copies": {"turns": [{"library": str(self.library1.id), "collection": str(_c_instruction.id)}]}
+        }
+        self.resource_instruction_bound_no_arbitration.save()
 
     def _get_url(self, name, url_params=None, query_params=None):
         url = reverse(name, kwargs=url_params or {})
@@ -422,3 +480,117 @@ class FilterResourceOnStatusTest(TestCase):
             response.data["results"][0]["id"],
             str(self.resource_instruction_bound_for_user.id),
         )
+
+    def test_filter_positioning_with_positioning_filter(self):
+        # Test positioning_filter=10 (POSITIONING_ONLY) - should return only resources in POSITIONING status with no arbitration
+
+        query_params = {
+            "project": self.project_positioning_filter.id,
+            "status": ResourceStatus.POSITIONING,
+            "positioning_filter": 10,  # POSITIONING_ONLY
+        }
+        response = self.get(
+            self._get_url("resource-list", query_params=query_params),
+            user=self.instructor,
+        )
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(
+            response.data["results"][0]["id"],
+            str(self.resource_positioning_no_arbitration.id),
+        )
+
+    def test_filter_positioning_only_with_library(self):
+        # Test positioning_filter=10 (POSITIONING_ONLY) with library filter
+        query_params = {
+            "project": self.project_positioning_filter.id,
+            "library": self.library1.id,
+            "status": ResourceStatus.POSITIONING,
+            "positioning_filter": 10,  # POSITIONING_ONLY
+        }
+        response = self.get(
+            self._get_url("resource-list", query_params=query_params),
+            user=self.instructor,
+        )
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(
+            response.data["results"][0]["id"],
+            str(self.resource_positioning_no_arbitration.id),
+        )
+
+    def test_filter_instruction_not_started(self):
+        # Test positioning_filter=20 (INSTRUCTION_NOT_STARTED) - should return only INSTRUCTION_BOUND resources with no arbitration
+        query_params = {
+            "project": self.project_positioning_filter.id,
+            "status": ResourceStatus.INSTRUCTION_BOUND,
+            "positioning_filter": 20,  # INSTRUCTION_NOT_STARTED
+        }
+        response = self.get(
+            self._get_url("resource-list", query_params=query_params),
+            user=self.instructor,
+        )
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(
+            response.data["results"][0]["id"],
+            str(self.resource_instruction_bound_no_arbitration.id),
+        )
+
+    def test_filter_instruction_not_started_with_library(self):
+        # Test positioning_filter=20 (INSTRUCTION_NOT_STARTED) with library filter
+        query_params = {
+            "project": self.project_positioning_filter.id,
+            "library": self.library1.id,
+            "status": ResourceStatus.INSTRUCTION_BOUND,
+            "positioning_filter": 20,  # INSTRUCTION_NOT_STARTED
+        }
+        response = self.get(
+            self._get_url("resource-list", query_params=query_params),
+            user=self.instructor,
+        )
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(
+            response.data["results"][0]["id"],
+            str(self.resource_instruction_bound_no_arbitration.id),
+        )
+
+    def test_filter_arbitration_all(self):
+        # Test arbitration=all - should return resources with arbitration type 0 or 1
+
+        resource_positioning_with_arbitration_zero = ResourceFactory(
+            project=self.project_positioning_filter,
+            status=ResourceStatus.POSITIONING,
+            arbitration=Arbitration.ZERO,
+        )
+        CollectionFactory(
+            library=self.library1,
+            project=self.project_positioning_filter,
+            resource=resource_positioning_with_arbitration_zero,
+        )
+        CollectionFactory(
+            library=self.library2,
+            project=self.project_positioning_filter,
+            resource=resource_positioning_with_arbitration_zero,
+        )
+
+        query_params = {
+            "project": self.project_positioning_filter.id,
+            "status": ResourceStatus.POSITIONING,
+            "arbitration": "all",
+        }
+        response = self.get(
+            self._get_url("resource-list", query_params=query_params),
+            user=self.instructor,
+        )
+        self.response_ok(response)
+        self.assertEqual(response.data["count"], 2)
+        result_ids = sorted([result["id"] for result in response.data["results"]])
+        expected_ids = sorted(
+            [
+                str(self.resource_positioning_with_arbitration.id),
+                str(resource_positioning_with_arbitration_zero.id),
+            ]
+        )
+        self.assertListEqual(result_ids, expected_ids)

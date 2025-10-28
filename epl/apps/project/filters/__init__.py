@@ -1,5 +1,7 @@
 from uuid import UUID
 
+UUID_REGEX = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
 
 class QueryParamMixin:
     TRUE_VALUES = ("true", "1", "yes", "y")
