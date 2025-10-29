@@ -58,6 +58,7 @@ class Resource(models.Model):
     )
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     comments = GenericRelation(Comment)
+    validations = models.JSONField(_("Validations"), default=dict, blank=True)
 
     _extended_permissions = [
         "list_statuses",

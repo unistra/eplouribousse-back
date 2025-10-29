@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
@@ -147,6 +148,7 @@ class ValidateControlSerializer(serializers.ModelSerializer):
                 self.instance.status = ResourceStatus.INSTRUCTION_UNBOUND
                 turn = self.instance.next_turn
                 library = Library.objects.get(id=turn["library"])
+                self.instance.validations["control_bound"] = now().isoformat()
                 notify_instructors_of_instruction_turn(self.instance, library, self.context["request"])
                 ActionLog.log(
                     f"{ResourceStatus(ResourceStatus.CONTROL_BOUND).name} validated: unbound instruction turn notified to <lib:{turn['library']}/col:{turn['collection']}>",
@@ -155,12 +157,13 @@ class ValidateControlSerializer(serializers.ModelSerializer):
                     request=self.context.get("request"),
                 )
             elif self.instance.status == ResourceStatus.CONTROL_UNBOUND:
+                self.instance.validations["control_unbound"] = now().isoformat()
                 self.instance.status = ResourceStatus.EDITION
                 # todo send email to all instructors (notify them that a resulting report is available)
                 # https://gitlab.unistra.fr/di/eplouribousse/eplouribousse/-/issues/22
                 # https://gitlab.unistra.fr/di/eplouribousse/eplouribousse/-/issues/80
 
-            self.instance.save(update_fields=["status"])
+            self.instance.save(update_fields=["status", "validations"])
 
         return self.instance
 

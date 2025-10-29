@@ -112,6 +112,10 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def default_language(self) -> str | None:
+        return self.settings.get("default_language")
+
     def delete(self, *args, **kwargs):
         self.libraries.clear()
         super().delete(*args, **kwargs)
