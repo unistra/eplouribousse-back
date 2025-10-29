@@ -245,7 +245,7 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
-        summary=_("Get outcome report in PDF format"),
+        summary=_("Get resultant report in PDF format"),
         tags=["resource"],
         request=None,
         responses={
@@ -255,20 +255,20 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
             status.HTTP_404_NOT_FOUND: None,
         },
     )
-    @action(detail=True, methods=["GET"], url_path="outcome-report")
-    def outcome_report(self, request, pk) -> HttpResponse:
+    @action(detail=True, methods=["GET"], url_path="resultant-report")
+    def resultant_report(self, request, pk) -> HttpResponse:
         collection_id = request.query_params.get("collection", None)
         resource = self.get_object()
         if resource.status < ResourceStatus.EDITION:
             return Response(
-                {"detail": _("Outcome report is only available for resources in EDITION status or beyond.")},
+                {"detail": _("Resultant report is only available for resources in EDITION status or beyond.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             collection = resource.collections.get(id=collection_id)
         except Collection.DoesNotExist:
             return Response(
-                {"detail": _("A valid collection ID must be provided to generate the outcome report.")},
+                {"detail": _("A valid collection ID must be provided to generate the resultant report.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         language_code = request.query_params.get("lang") or get_user_language(request.user, resource.project)
@@ -284,7 +284,7 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
             "segments": resource.segments.order_by("order").all(),
             "language_code": language_code,
         }
-        filename = f"outcome-report-{resource.code}-{collection.library.code}.pdf"
+        filename = f"resultant-report-{resource.code}-{collection.library.code}.pdf"
         with translation.override(language_code):
             if request.query_params.get("preview") == "true":
                 from django.shortcuts import render

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-29 14:55+0100\n"
+"POT-Creation-Date: 2025-10-29 16:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,14 +96,13 @@ msgid ""
 "'0' for arbitration type 0, '1' for arbitration type 1, 'all' for all "
 "arbitration types"
 msgstr ""
-"'0' pour le type d'arbitrage 0, '1' pour le type d'arbitrage 1, "
-"'all' pour tous les types d'arbitrage"
+"'0' pour le type d'arbitrage 0, '1' pour le type d'arbitrage 1, 'all' pour "
+"tous les types d'arbitrage"
 
 #: epl/apps/project/filters/resource.py:253
 msgid "'10' for Positioning only, '20' for Instruction not start"
 msgstr ""
-"'10' pour positionnement uniquement, '20' pour instruction "
-"non démarrée"
+"'10' pour positionnement uniquement, '20' pour instruction non démarrée"
 
 #: epl/apps/project/models/anomaly.py:45
 msgid "Anomaly"
@@ -1007,17 +1006,22 @@ msgid "Reassign instruction turns"
 msgstr "Réaffecter les tours d'instruction"
 
 #: epl/apps/project/views/resource.py:248
-msgid "Get outcome report in PDF format"
-msgstr ""
+msgid "Get resultant report in PDF format"
+msgstr "Édition de la résultante au format PDF"
 
 #: epl/apps/project/views/resource.py:264
 msgid ""
-"Outcome report is only available for resources in EDITION status or beyond."
+"Resultant report is only available for resources in EDITION status or beyond."
 msgstr ""
+"L'édition de la résultante n'est disponible que pour les ressources dont le "
+"statut est EDITION ou supérieur."
 
 #: epl/apps/project/views/resource.py:271
-msgid "A valid collection ID must be provided to generate the outcome report."
+msgid ""
+"A valid collection ID must be provided to generate the resultant report."
 msgstr ""
+"Un ID de collection valide doit être fourni pour générer l'édition de la "
+"résultante."
 
 #: epl/apps/project/views/segment.py:21
 msgid "List segments"
@@ -1713,8 +1717,9 @@ msgstr ""
 "%(launcher_name)s"
 
 #: epl/templates/pdf/resulting-report.html:6
+#: epl/templates/pdf/resulting-report.html:84
 msgid "Resultant report"
-msgstr ""
+msgstr "Édition de la résultante"
 
 #: epl/templates/pdf/resulting-report.html:86
 msgid "Source(s)"
