@@ -24,7 +24,7 @@ class ResourceFilter(filters.BaseFilterBackend):
     library_param_description = _("Library ID to which the collection belongs")
     against_param = "against"
     against_param_description = _("ID of the library to compare against")
-    status_param = "status"
+    status_param = "status[]"
     status_param_description = _("Filter by resource status")
     arbitration_param = "arbitration"
     arbitration_param_description = _("Filter by arbitration status")
@@ -35,22 +35,29 @@ class ResourceFilter(filters.BaseFilterBackend):
         if view.action != "list":
             return queryset
 
-        status = self._validate_status(request)
+        statuses = self._validate_status(request)
         library = self._get_library(request)
         against_library = self._get_against_library(request)
 
         queryset = self._apply_project_filter(request, queryset)
-        queryset = self._apply_library_filter(queryset, status, library, against_library)
-        queryset = self._apply_positioning_filter(request, queryset, status)
+        queryset = self._apply_library_filter(queryset, statuses, library, against_library)
+        queryset = self._apply_positioning_filter(request, queryset)
         queryset = self._apply_arbitration_filter(request, queryset)
 
         return queryset
 
     def _validate_status(self, request):
-        status = int(request.query_params.get(self.status_param, 0))
-        if status not in ResourceStatus:
+        statuses = request.query_params.getlist(self.status_param, ["0"])
+
+        try:
+            statuses = [int(v) for v in statuses]
+        except (ValueError, TypeError):
             raise ValidationError({"status": _("Invalid status value")})
-        return status
+
+        for s in statuses:
+            if s not in ResourceStatus:
+                raise ValidationError({"status": _("Invalid status value")})
+        return statuses
 
     @staticmethod
     def _get_library_param(request: Request, param_name: str, error_message) -> Library | None:
@@ -78,18 +85,18 @@ class ResourceFilter(filters.BaseFilterBackend):
         except (Project.DoesNotExist, DjangoValidationError):
             raise ValidationError({"project": _("Project not found")})
 
-    def _apply_library_filter(self, queryset, status, library, against_library):
+    def _apply_library_filter(self, queryset, statuses, library, against_library):
         if not library:
-            return self.filter_no_library(queryset, status)
-        return self.filter_for_library(queryset, status, library, against_library)
+            return self.filter_no_library(queryset, statuses)
+        return self.filter_for_library(queryset, statuses, library, against_library)
 
-    def _apply_positioning_filter(self, request, queryset, status):
+    def _apply_positioning_filter(self, request, queryset):
         positioning_filter_value = int(request.query_params.get(self.positioning_filter_param, 0))
         if not positioning_filter_value:
             return queryset
 
         if positioning_filter_value == PositioningFilter.POSITIONING_ONLY:
-            return queryset.filter(status=status, arbitration=Arbitration.NONE)
+            return queryset.filter(status=ResourceStatus.POSITIONING, arbitration=Arbitration.NONE)
         elif positioning_filter_value == PositioningFilter.INSTRUCTION_NOT_STARTED:
             return queryset.filter(status=ResourceStatus.INSTRUCTION_BOUND, arbitration=Arbitration.NONE)
 
@@ -112,56 +119,66 @@ class ResourceFilter(filters.BaseFilterBackend):
     def _get_segments_annotation(self):
         return Exists(Resource.objects.filter(id=OuterRef("id"), collections__segments__isnull=False))
 
-    def filter_for_library(self, queryset, status, library, against_library=None):
-        if status == ResourceStatus.POSITIONING:
-            # If a Resource is in Instruction or Control positioning status but does
-            # not have any segments assigned yet, we consider it can still be positioned.
-            queryset = (
-                queryset.filter(collections__library=library)
-                .annotate(has_segments=self._get_segments_annotation())
-                .filter(Q(status=status) | Q(has_segments=False))
-                .distinct()
-            )
+    def filter_for_library(self, queryset, statuses, library, against_library=None):
+        # Ensure list
+        if not isinstance(statuses, (list, tuple)):
+            statuses = [statuses]
 
-        elif status == ResourceStatus.INSTRUCTION_BOUND:
-            queryset = queryset.filter(
-                status=status,
-                collections__library=library,
-                instruction_turns__bound_copies__turns__0__library=str(library.id),
-                arbitration=Arbitration.NONE,
-            )
+        need_has_segments = ResourceStatus.POSITIONING in statuses
+        if need_has_segments:
+            queryset = queryset.annotate(has_segments=self._get_segments_annotation())
 
-        elif status == ResourceStatus.INSTRUCTION_UNBOUND:
-            queryset = queryset.filter(
-                status=status,
-                collections__library=library,
-                instruction_turns__unbound_copies__turns__0__library=str(library.id),
-            )
+        combined_q = Q()
+        for s in statuses:
+            if s == ResourceStatus.POSITIONING:
+                combined_q |= Q(status=s) | Q(has_segments=False)
+            elif s == ResourceStatus.INSTRUCTION_BOUND:
+                combined_q |= Q(
+                    status=s,
+                    collections__library=library,
+                    instruction_turns__bound_copies__turns__0__library=str(library.id),
+                    arbitration=Arbitration.NONE,
+                )
+            elif s == ResourceStatus.INSTRUCTION_UNBOUND:
+                combined_q |= Q(
+                    status=s,
+                    collections__library=library,
+                    instruction_turns__unbound_copies__turns__0__library=str(library.id),
+                )
+            elif s in [ResourceStatus.CONTROL_BOUND, ResourceStatus.CONTROL_UNBOUND]:
+                combined_q |= Q(status=s, collections__library=library)
+            else:
+                # fallback to require collection membership for other statuses
+                combined_q |= Q(status=s, collections__library=library)
 
-        elif status in [ResourceStatus.CONTROL_BOUND, ResourceStatus.CONTROL_UNBOUND]:
-            queryset = queryset.filter(status=status, collections__library=library)
+        if combined_q:
+            queryset = queryset.filter(combined_q).distinct()
 
         if against_library:
             queryset = queryset.filter(collections__library=against_library)
 
         return queryset
 
-    def filter_no_library(self, queryset, status):
-        if status == ResourceStatus.POSITIONING:
-            # If a Resource is in Instruction or Control positioning status but does
-            # not have any segments assigned yet, we consider it can still be positioned.
-            queryset = (
-                queryset.annotate(has_segments=self._get_segments_annotation())
-                .filter(Q(status=status) | Q(has_segments=False))
-                .distinct()
-            )
-        if status == ResourceStatus.INSTRUCTION_BOUND:
-            queryset = queryset.filter(
-                status=status,
-                arbitration=Arbitration.NONE,
-            )
-        elif status > ResourceStatus.POSITIONING:
-            queryset = queryset.filter(status=status)
+    def filter_no_library(self, queryset, statuses):
+        if not isinstance(statuses, (list, tuple)):
+            statuses = [statuses]
+
+        need_has_segments = ResourceStatus.POSITIONING in statuses
+        if need_has_segments:
+            queryset = queryset.annotate(has_segments=self._get_segments_annotation())
+
+        combined_q = Q()
+        for s in statuses:
+            if s == ResourceStatus.POSITIONING:
+                combined_q |= Q(status=s) | Q(has_segments=False)
+            elif s == ResourceStatus.INSTRUCTION_BOUND:
+                combined_q |= Q(status=s, arbitration=Arbitration.NONE)
+            elif s > ResourceStatus.POSITIONING:
+                combined_q |= Q(status=s)
+
+        if combined_q:
+            queryset = queryset.filter(combined_q).distinct()
+
         return queryset
 
     def get_schema_operation_parameters(self, view):
@@ -205,8 +222,11 @@ class ResourceFilter(filters.BaseFilterBackend):
                 "in": "query",
                 "description": str(self.status_param_description),
                 "schema": {
-                    "type": "integer",
-                    "enum": [_[0] for _ in ResourceStatus.choices],
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "enum": [_[0] for _ in ResourceStatus.choices],
+                    },
                 },
             },
             {
