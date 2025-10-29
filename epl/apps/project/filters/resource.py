@@ -47,10 +47,7 @@ class ResourceFilter(filters.BaseFilterBackend):
         return queryset
 
     def _validate_status(self, request):
-        statuses = request.query_params.getlist(self.status_param)
-
-        if not statuses:
-            statuses = [str(0)]
+        statuses = request.query_params.getlist(self.status_param, ["0"])
 
         try:
             statuses = [int(v) for v in statuses]
