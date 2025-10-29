@@ -18,7 +18,8 @@ services:
 unittest:
   stage: test
   tags:
-    - python3.12
+    - cluster
+  image: registry.app.unistra.fr/docker/python$PYTHON_VERSION-ci:latest
   script:
     - apt-get update && apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
     - pip3 install tox
