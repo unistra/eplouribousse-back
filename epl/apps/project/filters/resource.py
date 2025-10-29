@@ -13,7 +13,7 @@ from epl.apps.project.models.collection import Arbitration
 class PositioningFilter(IntegerChoices):
     ALL = 0, _("All")
     POSITIONING_ONLY = 10, _("Positioning only")
-    INSTRUCTION_NOT_STARTED = 20, _("Instruction not start")
+    INSTRUCTION_NOT_STARTED = 20, _("Instruction not started")
     # EXCLUDE_RESOURCES = 30, _("Exclude resources") Not yet
 
 
