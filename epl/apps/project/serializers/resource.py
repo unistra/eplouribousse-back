@@ -52,6 +52,7 @@ class ResourceSerializer(AclSerializerMixin, ResourceInstructionMixin, serialize
             "status",
             "arbitration",
             "anomalies",
+            "validations",
             "acl",
         ]
 
