@@ -15,6 +15,7 @@ from epl.apps.project.models import ActionLog, Collection, Library, Project, Res
 from epl.apps.project.models.collection import Arbitration, TurnType
 from epl.apps.project.models.comment import Comment
 from epl.apps.project.permissions.collection import CollectionPermission
+from epl.apps.project.serializers.mixins import ResourceInstructionMixin
 from epl.libs.csv_import import handle_import
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
@@ -181,14 +182,16 @@ class MoveToInstructionMixin:
                 notify_instructors_of_instruction_turn(resource, library_to_instruct, self.context["request"])
 
 
-class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
+class PositionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, serializers.ModelSerializer):
     position = serializers.IntegerField(min_value=1, max_value=4, help_text=_("Position (rank) between 1 and 4"))
     arbitration = serializers.ChoiceField(Arbitration, read_only=True, source="resource.arbitration")
     status = serializers.ChoiceField(ResourceStatus, read_only=True, source="resource.status")
+    should_instruct = serializers.SerializerMethodField()
+    should_position = serializers.SerializerMethodField()
 
     class Meta:
         model = Collection
-        fields = ["position", "arbitration", "status"]
+        fields = ["position", "arbitration", "status", "should_instruct", "should_position"]
 
     def save(self, **kwargs):
         position = self.validated_data["position"]
@@ -235,7 +238,7 @@ class PositionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
         return collection
 
 
-class ExclusionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
+class ExclusionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, serializers.ModelSerializer):
     exclusion_reason = serializers.CharField(
         max_length=255,
         required=True,
@@ -244,10 +247,12 @@ class ExclusionSerializer(MoveToInstructionMixin, serializers.ModelSerializer):
     )
     arbitration = serializers.ChoiceField(Arbitration, read_only=True, source="resource.arbitration")
     status = serializers.ChoiceField(ResourceStatus, read_only=True, source="resource.status")
+    should_instruct = serializers.SerializerMethodField()
+    should_position = serializers.SerializerMethodField()
 
     class Meta:
         model = Collection
-        fields = ["exclusion_reason", "arbitration", "status"]
+        fields = ["exclusion_reason", "arbitration", "status", "should_instruct", "should_position"]
 
     def validate_exclusion_reason(self, value):
         collection = self.instance

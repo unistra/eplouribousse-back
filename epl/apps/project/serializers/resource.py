@@ -6,9 +6,8 @@ from rest_framework import serializers
 
 from epl.apps.project.models import ActionLog, Anomaly, Collection, Library, Resource, ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
-from epl.apps.project.models.collection import TurnType
 from epl.apps.project.serializers.collection import CollectionPositioningSerializer
-from epl.apps.user.models import User
+from epl.apps.project.serializers.mixins import ResourceInstructionMixin
 from epl.libs.schema import load_json_schema
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
@@ -22,7 +21,7 @@ from epl.services.project.notifications import (
 class InstructionTurnsField(serializers.JSONField): ...
 
 
-class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
+class ResourceSerializer(AclSerializerMixin, ResourceInstructionMixin, serializers.ModelSerializer):
     acl = AclField()
     count = serializers.IntegerField(read_only=True)
     call_numbers = serializers.CharField(read_only=True)
@@ -55,30 +54,6 @@ class ResourceSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "anomalies",
             "acl",
         ]
-
-    def get_should_instruct(self, obj: Resource) -> bool:
-        next_turn: TurnType | None = obj.next_turn
-        library_id = next_turn["library"] if next_turn else None
-        user: User = self.context.get("request").user
-
-        if not user or not user.is_authenticated or not library_id:
-            return False
-        return user.is_instructor(obj.project, library_id)
-
-    def get_should_position(self, obj: Resource) -> bool:
-        user: User = self.context.get("request").user
-        library_id_selected = self.context.get("library")
-
-        if (
-            library_id_selected
-            and user.is_authenticated
-            and user.is_instructor(project=obj.project, library=library_id_selected)
-        ):
-            return Collection.objects.filter(
-                resource=obj, library_id=library_id_selected, position=None, exclusion_reason__in=["", None]
-            ).exists()
-
-        return False
 
     def to_representation(self, instance):
         # In this particular case, resources don't have anomalies counts
