@@ -21,7 +21,7 @@ class ResourceInstructionMixin:
         # obj can be either a Resource or a Collection
         resource = obj if isinstance(obj, Resource) else obj.resource
         user: User = self.context.get("request").user
-        library_id_selected = self.context.get("library")
+        library_id_selected = self.context.get("library") if isinstance(obj, Resource) else obj.library.id
 
         if (
             library_id_selected
