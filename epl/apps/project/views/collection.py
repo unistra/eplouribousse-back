@@ -207,7 +207,9 @@ class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, Generic
         serializer = self.get_serializer(collection, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(PositionSerializer(collection).data, status=status.HTTP_200_OK)
+        return Response(
+            PositionSerializer(collection, context=self.get_serializer_context()).data, status=status.HTTP_200_OK
+        )
 
     @extend_schema(
         tags=["collection"],
@@ -227,7 +229,9 @@ class CollectionViewSet(mixins.ListModelMixin, mixins.DestroyModelMixin, Generic
         serializer = self.get_serializer(collection, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(ExclusionSerializer(collection).data, status=status.HTTP_200_OK)
+        return Response(
+            ExclusionSerializer(collection, context=self.get_serializer_context()).data, status=status.HTTP_200_OK
+        )
 
     @extend_schema(
         tags=[
