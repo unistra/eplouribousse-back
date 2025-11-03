@@ -420,3 +420,36 @@ def send_anomaly_resolved_notification_email(
     )
 
     email_message.send(fail_silently=False)
+
+
+def send_resultant_sheet_available_notification_email(
+    email: str,
+    request: Request,
+    resource: Resource,
+    library_code: str,
+) -> None:
+    """
+    Notifies an instructor that the resultant sheet is available.
+    """
+    front_domain = get_front_domain(request)
+    project = resource.project
+    tenant = request.tenant
+    project_url = f"{front_domain}/project/{project.id}"
+
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('resultant')}"
+
+    email_content = render_to_string(
+        "emails/notify_resultant_sheet_available.txt",
+        {
+            "resource_title": resource.title,
+            "project_url": project_url,
+        },
+    )
+
+    send_mail(
+        subject=str(subject),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+        message=email_content,
+    )

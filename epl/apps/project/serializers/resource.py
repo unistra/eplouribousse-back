@@ -14,6 +14,7 @@ from epl.services.project.notifications import (
     notify_anomaly_reported,
     notify_anomaly_resolved,
     notify_instructors_of_instruction_turn,
+    notify_resultant_sheet_available,
 )
 
 
@@ -135,9 +136,7 @@ class ValidateControlSerializer(serializers.ModelSerializer):
             elif self.instance.status == ResourceStatus.CONTROL_UNBOUND:
                 self.instance.validations["control_unbound"] = now().isoformat()
                 self.instance.status = ResourceStatus.EDITION
-                # todo send email to all instructors (notify them that a resulting report is available)
-                # https://gitlab.unistra.fr/di/eplouribousse/eplouribousse/-/issues/22
-                # https://gitlab.unistra.fr/di/eplouribousse/eplouribousse/-/issues/80
+                notify_resultant_sheet_available(self.instance, self.context["request"])
 
             self.instance.save(update_fields=["status", "validations"])
 

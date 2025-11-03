@@ -17,6 +17,7 @@ from epl.services.user.email import (
     send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
     send_project_launched_email,
+    send_resultant_sheet_available_notification_email,
 )
 
 
@@ -494,3 +495,35 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
             library_code=library_codes_str,
             admin_user=admin_user,
         )
+
+
+def notify_resultant_sheet_available(resource: Resource, request) -> None:
+    """
+    Notify instructors that the resultant sheet is available.
+    Instructors with excluded collections should not receive the email.
+    """
+    project = resource.project
+
+    # Get instructors concerned by the resource instruction (excluding those with excluded collections)
+    instructors_to_notify = (
+        UserRole.objects.filter(
+            project=project,
+            role=Role.INSTRUCTOR,
+            library__collections__resource=resource,
+        )
+        .exclude(library__collections__position=0)
+        .select_related("user", "library")
+        .distinct()
+    )
+
+    if not instructors_to_notify:
+        return
+
+    for instructor in instructors_to_notify:
+        if should_send_alert(instructor.user, resource.project, AlertType.EDITION):
+            send_resultant_sheet_available_notification_email(
+                email=instructor.user.email,
+                request=request,
+                resource=resource,
+                library_code=instructor.library.code,
+            )
