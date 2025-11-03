@@ -213,10 +213,9 @@ def notify_project_launched(project: Project, request, is_starting_now: bool):
 
 def notify_instructors_of_arbitration(resource: Resource, request):
     """
-    Notifie les instructeurs concernés par un cas d'arbitrage (type 0 ou 1).
+    Notifies instructors concerned by an arbitration case (type 0 or 1).
     """
-    # check project settings to see if arbitration emails should be sent
-    # to avoid unnecessary queries if arbitration is disabled
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = resource.project.settings.get("alerts", {})
     if project_alerts.get(AlertType.ARBITRATION.value, True) is False:
         return
@@ -259,8 +258,7 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
     - The user who performed the action.
     - Any instructor who has already positioned their collection for this resource.
     """
-    # check project settings to see if arbitration emails should be sent
-    # to avoid unnecessary queries if arbitration is disabled
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = resource.project.settings.get("alerts", {})
     if project_alerts.get(AlertType.POSITIONING.value, True) is False:
         return
@@ -298,8 +296,7 @@ def notify_instructors_of_instruction_turn(resource: Resource, library: Library,
     """
     project = resource.project
 
-    # check project settings to see if arbitration emails should be sent
-    # to avoid unnecessary queries if arbitration is disabled
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = resource.project.settings.get("alerts", {})
     if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
@@ -326,8 +323,7 @@ def notify_controllers_of_control(resource, request, cycle):
     Notifies controllers (role CONTROLLER) at the end of the instruction cycle.
     """
     project = resource.project
-    # check project settings to see if arbitration emails should be sent
-    # to avoid unnecessary queries if arbitration is disabled
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = resource.project.settings.get("alerts", {})
     if project_alerts.get(AlertType.CONTROL.value, True) is False:
         return
@@ -355,7 +351,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     """
     project = resource.project
 
-    # Check project settings to see if anomaly emails should be sent
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = resource.project.settings.get("alerts", {})
     if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
@@ -418,7 +414,7 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
     """
     project = resource.project
 
-    # Check project settings to see if anomaly emails should be sent
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = resource.project.settings.get("alerts", {})
     if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
@@ -503,6 +499,11 @@ def notify_resultant_sheet_available(resource: Resource, request) -> None:
     Instructors with excluded collections should not receive the email.
     """
     project = resource.project
+
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
+    project_alerts = resource.project.settings.get("alerts", {})
+    if project_alerts.get(AlertType.EDITION.value, True) is False:
+        return
 
     # Get instructors concerned by the resource instruction (excluding those with excluded collections)
     instructors_to_notify = (
