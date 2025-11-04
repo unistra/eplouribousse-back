@@ -422,7 +422,7 @@ def send_anomaly_resolved_notification_email(
     email_message.send(fail_silently=False)
 
 
-def send_resultant_sheet_available_notification_email(
+def send_resultant_report_available_notification_email(
     email: str,
     request: Request,
     resource: Resource,
@@ -439,7 +439,7 @@ def send_resultant_sheet_available_notification_email(
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('resultant')}"
 
     email_content = render_to_string(
-        "emails/notify_resultant_sheet_available.txt",
+        "emails/notify_resultant_report_available.txt",
         {
             "resource_title": resource.title,
             "project_url": project_url,

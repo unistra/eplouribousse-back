@@ -17,7 +17,7 @@ from epl.services.user.email import (
     send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
     send_project_launched_email,
-    send_resultant_sheet_available_notification_email,
+    send_resultant_report_available_notification_email,
 )
 
 
@@ -215,8 +215,9 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     """
     Notifies instructors concerned by an arbitration case (type 0 or 1).
     """
+    project = resource.project
     # Avoid unnecessary queries if notifications are already disabled at the project level.
-    project_alerts = resource.project.settings.get("alerts", {})
+    project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.ARBITRATION.value, True) is False:
         return
 
@@ -235,13 +236,13 @@ def notify_instructors_of_arbitration(resource: Resource, request):
             return
 
     instructors_to_notify = (
-        UserRole.objects.filter(project=resource.project, role=Role.INSTRUCTOR, library_id__in=library_ids_to_notify)
+        UserRole.objects.filter(project=project, role=Role.INSTRUCTOR, library_id__in=library_ids_to_notify)
         .select_related("user", "library")
         .distinct()  # prevent sending multiple emails to the same user if the code eventually evolves.
     )
 
     for instructor in instructors_to_notify:
-        if should_send_alert(instructor.user, resource.project, AlertType.ARBITRATION):
+        if should_send_alert(instructor.user, project, AlertType.ARBITRATION):
             send_arbitration_notification_email(
                 email=instructor.user.email,
                 request=request,
@@ -258,8 +259,9 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
     - The user who performed the action.
     - Any instructor who has already positioned their collection for this resource.
     """
+    project = resource.project
     # Avoid unnecessary queries if notifications are already disabled at the project level.
-    project_alerts = resource.project.settings.get("alerts", {})
+    project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.POSITIONING.value, True) is False:
         return
 
@@ -269,7 +271,7 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
 
     instructors_to_notify = (
         UserRole.objects.filter(
-            project=resource.project,
+            project=project,
             role=Role.INSTRUCTOR,
             library_id__in=unpositioned_library_ids,
         )
@@ -281,7 +283,7 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
         if instructor_role.user == acting_user:  # double-check that the user is not already positioned.
             continue
 
-        if should_send_alert(instructor_role.user, resource.project, AlertType.POSITIONING):
+        if should_send_alert(instructor_role.user, project, AlertType.POSITIONING):
             send_collection_positioned_email(
                 email=instructor_role.user.email,
                 request=request,
@@ -297,7 +299,7 @@ def notify_instructors_of_instruction_turn(resource: Resource, library: Library,
     project = resource.project
 
     # Avoid unnecessary queries if notifications are already disabled at the project level.
-    project_alerts = resource.project.settings.get("alerts", {})
+    project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
@@ -309,7 +311,7 @@ def notify_instructors_of_instruction_turn(resource: Resource, library: Library,
     )
 
     for instructor_to_notify in instructors_to_notify:
-        if should_send_alert(instructor_to_notify.user, resource.project, AlertType.INSTRUCTION):
+        if should_send_alert(instructor_to_notify.user, project, AlertType.INSTRUCTION):
             send_instruction_turn_email(
                 email=instructor_to_notify.user.email,
                 request=request,
@@ -324,13 +326,13 @@ def notify_controllers_of_control(resource, request, cycle):
     """
     project = resource.project
     # Avoid unnecessary queries if notifications are already disabled at the project level.
-    project_alerts = resource.project.settings.get("alerts", {})
+    project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.CONTROL.value, True) is False:
         return
     controllers = UserRole.objects.filter(project=project, role=Role.CONTROLLER).select_related("user").distinct()
 
     for controller in controllers:
-        if should_send_alert(controller.user, resource.project, AlertType.CONTROL):
+        if should_send_alert(controller.user, project, AlertType.CONTROL):
             send_control_notification_email(
                 email=controller.user.email,
                 request=request,
@@ -352,7 +354,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     project = resource.project
 
     # Avoid unnecessary queries if notifications are already disabled at the project level.
-    project_alerts = resource.project.settings.get("alerts", {})
+    project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
@@ -415,7 +417,7 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
     project = resource.project
 
     # Avoid unnecessary queries if notifications are already disabled at the project level.
-    project_alerts = resource.project.settings.get("alerts", {})
+    project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
@@ -493,7 +495,7 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
         )
 
 
-def notify_resultant_sheet_available(resource: Resource, request) -> None:
+def notify_resultant_report_available(resource: Resource, request) -> None:
     """
     Notify instructors that the resultant sheet is available.
     Instructors with excluded collections should not receive the email.
@@ -501,7 +503,7 @@ def notify_resultant_sheet_available(resource: Resource, request) -> None:
     project = resource.project
 
     # Avoid unnecessary queries if notifications are already disabled at the project level.
-    project_alerts = resource.project.settings.get("alerts", {})
+    project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.EDITION.value, True) is False:
         return
 
@@ -521,8 +523,8 @@ def notify_resultant_sheet_available(resource: Resource, request) -> None:
         return
 
     for instructor in instructors_to_notify:
-        if should_send_alert(instructor.user, resource.project, AlertType.EDITION):
-            send_resultant_sheet_available_notification_email(
+        if should_send_alert(instructor.user, project, AlertType.EDITION):
+            send_resultant_report_available_notification_email(
                 email=instructor.user.email,
                 request=request,
                 resource=resource,

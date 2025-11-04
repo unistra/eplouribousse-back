@@ -14,7 +14,7 @@ from epl.services.project.notifications import (
     notify_anomaly_reported,
     notify_anomaly_resolved,
     notify_instructors_of_instruction_turn,
-    notify_resultant_sheet_available,
+    notify_resultant_report_available,
 )
 
 
@@ -136,7 +136,7 @@ class ValidateControlSerializer(serializers.ModelSerializer):
             elif self.instance.status == ResourceStatus.CONTROL_UNBOUND:
                 self.instance.validations["control_unbound"] = now().isoformat()
                 self.instance.status = ResourceStatus.EDITION
-                notify_resultant_sheet_available(self.instance, self.context["request"])
+                notify_resultant_report_available(self.instance, self.context["request"])
 
             self.instance.save(update_fields=["status", "validations"])
 

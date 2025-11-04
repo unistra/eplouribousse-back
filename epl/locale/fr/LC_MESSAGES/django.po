@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-03 14:18+0100\n"
+"POT-Creation-Date: 2025-11-04 08:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -821,6 +821,8 @@ msgstr ""
 "En tant qu'administrateur, vous devez, en concertation avec vos co-"
 "administrateurs"
 
+#: epl/apps/project/tests/views/test_resultant_report_available.py:65
+#: epl/apps/project/tests/views/test_resultant_report_available.py:170
 #: epl/apps/project/tests/views/test_resultant_sheet_available.py:65
 #: epl/apps/project/tests/views/test_resultant_sheet_available.py:170
 #: epl/services/user/email.py:439
@@ -1455,7 +1457,7 @@ msgstr "Pour mémoire, votre identifiant est : "
 #: epl/templates/emails/notify_control.txt:4
 #: epl/templates/emails/notify_instruction_turn.txt:5
 #: epl/templates/emails/notify_positioning.txt:6
-#: epl/templates/emails/notify_resultant_sheet_available.txt:7
+#: epl/templates/emails/notify_resultant_report_available.txt:7
 msgid "This is an automated message, please do not reply."
 msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
@@ -1633,7 +1635,8 @@ msgstr ""
 "Votre tour est venu d'instruire la collection résultante pour la ressource "
 "\"%(resource_title)s\": %(project_url)s"
 
-#: epl/templates/emails/notify_resultant_sheet_available.txt:3
+#: epl/templates/emails/notify_resultant_report_available.txt:3
+#, python-format
 msgid ""
 "The resulting collection for the resource %(resource_title)s is now "
 "available with details of your collection's contributions :"
