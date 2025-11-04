@@ -314,7 +314,7 @@ msgstr "resources"
 #: epl/apps/project/models/collection.py:128
 #: epl/templates/pdf/resulting-report.html:94
 msgid "Call number"
-msgstr "Numéro de téléphone"
+msgstr "Cote"
 
 #: epl/apps/project/models/collection.py:129
 msgid "Hold statement"
