@@ -79,7 +79,12 @@ class CreateProjectSerializer(serializers.ModelSerializer):
         self.validated_data["settings"] = current_settings
 
         project = super().save()
-        ActionLog.log(f"Project <{project.name}> created", project_creator, obj=project)
+        ActionLog.log(
+            f"Project <{project.name}> created",
+            project_creator,
+            obj=project,
+            request=self.context["request"],
+        )
         return project
 
 
