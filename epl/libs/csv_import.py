@@ -73,8 +73,8 @@ def handle_import(
         ppn = row.pop("PPN").strip()
         titre = row.pop("Titre").strip()
         issn = row.pop("Issn", "").strip()
-        numbering = row.pop("PublieEn", "").strip()
-        publication_history = row.pop("Publication history", "").strip()
+        numbering = row.pop("Numerotation", "").strip()  # Non disponible dans les fichiers actuels
+        publication_history = row.pop("PublieEn", "").strip().split(",", 1)[0]
 
         if not codes.get(ppn):
             try:
