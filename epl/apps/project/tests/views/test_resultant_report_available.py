@@ -13,7 +13,7 @@ from epl.apps.project.tests.factories.user import UserWithRoleFactory
 from epl.tests import TestCase
 
 
-class ResultantSheetAvailableNotificationTest(TestCase):
+class ResultantReportAvailableNotificationTest(TestCase):
     """Test resultant report available notification"""
 
     def setUp(self):
