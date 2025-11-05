@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-04 08:26+0100\n"
+"POT-Creation-Date: 2025-11-05 10:21+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -600,7 +600,7 @@ msgid "Invalid turn data"
 msgstr "Données de tour non valides"
 
 #: epl/apps/project/serializers/common.py:6
-#: epl/apps/project/serializers/project.py:255
+#: epl/apps/project/serializers/project.py:260
 msgid "Project status"
 msgstr "Statut du projet"
 
@@ -610,66 +610,66 @@ msgstr "Label"
 
 #: epl/apps/project/serializers/project.py:44
 #: epl/apps/project/serializers/project.py:58
-#: epl/apps/project/serializers/project.py:216
+#: epl/apps/project/serializers/project.py:221
 msgid "Project settings"
 msgstr "Paramètres du projet"
 
-#: epl/apps/project/serializers/project.py:88 epl/apps/user/serializers.py:214
+#: epl/apps/project/serializers/project.py:93 epl/apps/user/serializers.py:214
 msgid "User's roles in this project"
 msgstr "Rôles de l'utilisateur dans ce projet"
 
-#: epl/apps/project/serializers/project.py:102
+#: epl/apps/project/serializers/project.py:107
 msgid "Role label"
 msgstr "Étiquette du rôle"
 
-#: epl/apps/project/serializers/project.py:122
+#: epl/apps/project/serializers/project.py:127
 msgid "Library should not be provided for this role."
 msgstr "La bibliothèque ne doit être renseignée pour ce rôle"
 
-#: epl/apps/project/serializers/project.py:125
-#: epl/apps/project/serializers/project.py:413
+#: epl/apps/project/serializers/project.py:130
+#: epl/apps/project/serializers/project.py:418
 msgid "Library is not attached to the project."
 msgstr "La bibliothèque n'est pas rattachée au projet"
 
-#: epl/apps/project/serializers/project.py:133 epl/apps/user/serializers.py:259
+#: epl/apps/project/serializers/project.py:138 epl/apps/user/serializers.py:259
 #: epl/apps/user/serializers.py:495
 msgid "Project does not exist."
 msgstr "Le projet n'existe pas."
 
-#: epl/apps/project/serializers/project.py:137 epl/apps/user/serializers.py:277
+#: epl/apps/project/serializers/project.py:142 epl/apps/user/serializers.py:277
 msgid "Library must be provided for instructor role."
 msgstr "La bibliothèque doit être fournie pour le rôle d'instructeur."
 
-#: epl/apps/project/serializers/project.py:152
+#: epl/apps/project/serializers/project.py:157
 msgid "This invitation already exists."
 msgstr "Cette invitation existe déjà."
 
-#: epl/apps/project/serializers/project.py:180
+#: epl/apps/project/serializers/project.py:185
 msgid "Invitation not found."
 msgstr "Invitation non trouvée"
 
-#: epl/apps/project/serializers/project.py:312
+#: epl/apps/project/serializers/project.py:317
 msgid "User id"
 msgstr "Id de l'utilisateur"
 
-#: epl/apps/project/serializers/project.py:313
+#: epl/apps/project/serializers/project.py:318
 msgid "Library id"
 msgstr "Id de la Bibliothèque"
 
-#: epl/apps/project/serializers/project.py:319
+#: epl/apps/project/serializers/project.py:324
 msgid "User does not exist."
 msgstr "L'utilisateur n'existe pas."
 
-#: epl/apps/project/serializers/project.py:326
-#: epl/apps/project/serializers/project.py:408 epl/apps/user/serializers.py:264
+#: epl/apps/project/serializers/project.py:331
+#: epl/apps/project/serializers/project.py:413 epl/apps/user/serializers.py:264
 msgid "Library does not exist."
 msgstr "La bibliothèque n'existe pas."
 
-#: epl/apps/project/serializers/project.py:390
+#: epl/apps/project/serializers/project.py:395
 msgid "Role not found for this user in the project."
 msgstr "Rôle non trouvé pour cet utilisateur dans le projet."
 
-#: epl/apps/project/serializers/project.py:442
+#: epl/apps/project/serializers/project.py:447
 msgid "Exclusion reason to add or delete from the project"
 msgstr "Motifs d'exclusion à ajouter ou à supprimer du projet"
 
@@ -823,8 +823,6 @@ msgstr ""
 
 #: epl/apps/project/tests/views/test_resultant_report_available.py:65
 #: epl/apps/project/tests/views/test_resultant_report_available.py:170
-#: epl/apps/project/tests/views/test_resultant_sheet_available.py:65
-#: epl/apps/project/tests/views/test_resultant_sheet_available.py:170
 #: epl/services/user/email.py:439
 msgid "resultant"
 msgstr "résultante"
@@ -1634,6 +1632,15 @@ msgid ""
 msgstr ""
 "Votre tour est venu d'instruire la collection résultante pour la ressource "
 "\"%(resource_title)s\": %(project_url)s"
+
+#: epl/templates/emails/notify_positioning.txt:3
+#, python-format
+msgid ""
+"The collection from the library %(library_code)s has just been positioned; "
+"to position yours, please go to %(project_url)s"
+msgstr ""
+"La collection de la bibliothèque %(library_code)s vient d'être positionnée; "
+"pour positionner la vôtre, veuillez vous rendre sur %(project_url)s"
 
 #: epl/templates/emails/notify_resultant_report_available.txt:3
 #, python-format
