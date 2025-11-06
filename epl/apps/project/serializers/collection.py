@@ -92,35 +92,57 @@ class ImportSerializer(serializers.Serializer):
         resource_ids_to_replace = {}  # To track resources that were already in the database
 
         collections, resources, codes, errors = handle_import(csv_reader, library.id, project.id, user.id)
+        # resources_in_database = Resource.objects.filter(project_id=project.id).only("id", "code")
+        existing_resources = {
+            _res.code: _res.id for _res in Resource.objects.filter(project_id=project.id).only("id", "code")
+        }
+        resources_to_create = []
+        collections_to_create = []
 
         if errors:
             raise serializers.ValidationError({"csv_file": [{"row": row, "errors": errs} for row, errs in errors]})
         else:
             # Resource may already be imported for a project, we need to check
             for resource in resources:
-                resource_in_database, _created = Resource.objects.get_or_create(
-                    project_id=project.id,
-                    code=resource.code,
-                    issn=resource.issn,
-                    publication_history=resource.publication_history,
-                    numbering=resource.numbering,
-                    defaults={"id": resource.id, "title": resource.title},
-                )
-                if not _created:
-                    # If the resource already existed, we need to reuse the existing resource ID when creating collections
-                    resource_ids_to_replace[resource.id] = resource_in_database.id
+                if resource.code in existing_resources:
+                    # Resource already exists, reuse its ID
+                    resource_ids_to_replace[resource.id] = existing_resources[resource.code]
+                else:
+                    # Create the resource
+                    resources_to_create.append(
+                        Resource(
+                            project_id=project.id,
+                            code=resource.code,
+                            issn=resource.issn,
+                            publication_history=resource.publication_history,
+                            numbering=resource.numbering,
+                            title=resource.title,
+                            id=resource.id,
+                        )
+                    )
+
+            BATCH_SIZE = 100
+            for i in range(0, len(resources_to_create), BATCH_SIZE):
+                batch = resources_to_create[i : i + BATCH_SIZE]
+                Resource.objects.bulk_create(batch)
 
             for collection in collections:
-                Collection.objects.create(
-                    call_number=collection.call_number,
-                    hold_statement=collection.hold_statement,
-                    missing=collection.missing,
-                    # replace with existing resource ID if it existed, else use the new one
-                    resource_id=resource_ids_to_replace.get(collection.resource_id) or collection.resource_id,
-                    created_by_id=collection.created_by_id,
-                    project_id=collection.project_id,
-                    library_id=collection.library_id,
+                collections_to_create.append(
+                    Collection(
+                        call_number=collection.call_number,
+                        hold_statement=collection.hold_statement,
+                        missing=collection.missing,
+                        # replace with existing resource ID if it existed, else use the new one
+                        resource_id=resource_ids_to_replace.get(collection.resource_id) or collection.resource_id,
+                        created_by_id=collection.created_by_id,
+                        project_id=collection.project_id,
+                        library_id=collection.library_id,
+                    )
                 )
+
+            for i in range(0, len(collections_to_create), BATCH_SIZE):
+                batch = collections_to_create[i : i + BATCH_SIZE]
+                Collection.objects.bulk_create(batch)
 
         loaded_collections = {_code: _data["count"] for _code, _data in codes.items()}
 
