@@ -36,7 +36,6 @@ class ProjectAlertSettingsViewSetTest(TestCase):
         alerts_to_update = {"alerts": {choice[0]: True for choice in AlertType.choices}}
 
         response = self.patch(self.url, user=self.admin_user, data=alerts_to_update, content_type="application/json")
-        print(response.data)
         self.assertEqual(response.status_code, 200)
 
         # Verify all alerts are now True
