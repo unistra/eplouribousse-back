@@ -10,7 +10,7 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema
 from ipware import get_client_ip
 from rest_framework import filters, mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -261,17 +261,22 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     search_fields = ["first_name", "last_name", "email", "username"]
     ordering_fields = ["first_name", "last_name", "email"]
 
+    project_creator_inline_serializer = inline_serializer(
+        name="ProjectCreatorSerializer",
+        fields={"is_project_creator": serializers.BooleanField(help_text=_("User is project creator"))},
+    )
+
     @extend_schema(
         tags=["user"],
         summary=_("Get, set or delete a user's project creator role"),
         description=_("Check if a user has project creator role or set or delete that role"),
         request=None,
         responses={
-            status.HTTP_200_OK: inline_serializer(
-                name="ProjectCreatorResponse",
-                fields={"is_project_creator": serializers.BooleanField(help_text=_("User is project creator"))},
-            ),
+            status.HTTP_200_OK: project_creator_inline_serializer,
+            status.HTTP_201_CREATED: project_creator_inline_serializer,
+            status.HTTP_204_NO_CONTENT: None,
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: None,
             status.HTTP_405_METHOD_NOT_ALLOWED: None,
         },
     )
@@ -283,18 +288,61 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     )
     def project_creator(self, request, pk=None):
         user = self.get_object()
-        if not request.user.is_superuser:
-            raise PermissionDenied(_("Only superusers can set a user as project creator"))
 
         match request.method:
             case "GET":
                 return Response({"is_project_creator": user.is_project_creator})
             case "POST":
                 user.set_is_project_creator(True, request.user)
-                return Response({"is_project_creator": user.is_project_creator})
+                return Response({"is_project_creator": user.is_project_creator}, status=status.HTTP_201_CREATED)
             case "DELETE":
                 user.set_is_project_creator(False, request.user)
-                return Response({"is_project_creator": user.is_project_creator})
+                return Response({"is_project_creator": user.is_project_creator}, status=status.HTTP_204_NO_CONTENT)
+            case _:
+                return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    super_user_inline_serializer = inline_serializer(
+        name="SuperUserSerializer",
+        fields={"is_superuser": serializers.BooleanField(help_text=_("User is superuser"))},
+    )
+
+    @extend_schema(
+        tags=["user"],
+        summary=_("Get, set or delete a user's superuser status"),
+        description=_("Check if a user is a superuser or set or delete that status for the tenant"),
+        request=None,
+        responses={
+            status.HTTP_200_OK: super_user_inline_serializer,
+            status.HTTP_201_CREATED: super_user_inline_serializer,
+            status.HTTP_204_NO_CONTENT: None,
+            status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
+            status.HTTP_404_NOT_FOUND: None,
+            status.HTTP_405_METHOD_NOT_ALLOWED: None,
+        },
+    )
+    @action(
+        methods=["GET", "POST", "DELETE"],
+        detail=True,
+        permission_classes=[IsSuperUser],
+    )
+    def superuser(self, request, pk=None) -> Response:
+        user: User = self.get_object()
+
+        match request.method:
+            case "GET":
+                return Response({"is_superuser": user.is_superuser})
+            case "POST":
+                user.is_superuser = True
+                user.save(update_fields=["is_superuser"])
+                return Response({"is_superuser": user.is_superuser}, status=status.HTTP_201_CREATED)
+            case "DELETE":
+                if not user.is_superuser:
+                    raise ValidationError(_("User is not a superuser"))
+                if User.objects.filter(is_superuser=True).exclude(id=user.id).count() == 0:
+                    raise ValidationError(_("There must remain at least one superuser in the tenant"))
+                user.is_superuser = False
+                user.save(update_fields=["is_superuser"])
+                return Response(status=status.HTTP_204_NO_CONTENT)
             case _:
                 return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
