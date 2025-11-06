@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-05 10:21+0100\n"
+"POT-Creation-Date: 2025-11-06 10:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1291,31 +1291,51 @@ msgid "Search string"
 msgstr "Chaîne de caractère de recherche"
 
 #: epl/apps/user/views.py:266
+msgid "User is project creator"
+msgstr "L'utilisateur est monteur de projet"
+
+#: epl/apps/user/views.py:271
 msgid "Get, set or delete a user's project creator role"
 msgstr ""
 "Obtenir, définir ou supprimer le rôle de créateur de projet d'un utilisateur"
 
-#: epl/apps/user/views.py:267
+#: epl/apps/user/views.py:272
 msgid "Check if a user has project creator role or set or delete that role"
 msgstr ""
 "Vérifier si un utilisateur a le rôle de créateur de projet ou définir ou "
 "supprimer ce rôle"
 
-#: epl/apps/user/views.py:272
-msgid "User is project creator"
-msgstr "L'utilisateur est le créateur du projet"
+#: epl/apps/user/views.py:306
+msgid "User is superuser"
+msgstr "L'utilisateur est super-administrateur"
 
-#: epl/apps/user/views.py:287
-msgid "Only superusers can set a user as project creator"
+#: epl/apps/user/views.py:311
+msgid "Get, set or delete a user's superuser status"
 msgstr ""
-"Seuls les superutilisateurs peuvent désigner un utilisateur comme créateur "
-"de projet."
+"Obtenir, définir ou supprimer le statut super-administrateur d'un utilisateur"
 
-#: epl/apps/user/views.py:350
+#: epl/apps/user/views.py:312
+msgid ""
+"Check if a user is a superuser or set or delete that status for the tenant"
+msgstr ""
+"Vérifier si un utilisateur a le status de super-administrateur du tenant "
+"ou attribuer ou supprimer ce statut"
+
+#: epl/apps/user/views.py:340
+#, fuzzy
+#| msgid "User does not exist."
+msgid "User is not a superuser"
+msgstr "L'utilisateur n'est pas super-administrateur"
+
+#: epl/apps/user/views.py:342
+msgid "There must remain at least one superuser in the tenant"
+msgstr "Il doit rester au moins un super-administrateur dans le tenant"
+
+#: epl/apps/user/views.py:398
 msgid "Send an invitation email"
 msgstr "Envoyer un email d'invitation"
 
-#: epl/apps/user/views.py:352
+#: epl/apps/user/views.py:400
 msgid ""
 "Send an invitation email to a user. For simple invitations, only email is "
 "required. For project invitations, include project_id and role. For "
@@ -1327,34 +1347,34 @@ msgstr ""
 "project_id et role. Pour les rôles d'instructeur, library_id est requis. "
 "Cette route n'est pas encore utilisée par le frontend"
 
-#: epl/apps/user/views.py:362 epl/apps/user/views.py:386
+#: epl/apps/user/views.py:410 epl/apps/user/views.py:434
 msgid "Invitation email sent successfully."
 msgstr "L'email d'invitation a été envoyé."
 
-#: epl/apps/user/views.py:395
+#: epl/apps/user/views.py:443
 msgid "Validate invitation token"
 msgstr "Valider le jeton d'invitation"
 
-#: epl/apps/user/views.py:396
+#: epl/apps/user/views.py:444
 msgid ""
 "Validates an invitation token and returns the associated email address if "
 "valid."
 msgstr ""
 "Valide un jeton d'invitation et retourne l'adresse email associée si valide."
 
-#: epl/apps/user/views.py:401
+#: epl/apps/user/views.py:449
 msgid "Email address associated with the invitation"
 msgstr "Adresse email associée à l'invitation"
 
-#: epl/apps/user/views.py:419
+#: epl/apps/user/views.py:467
 msgid "Create a new user account"
 msgstr "Créer un nouveau compte utilisateur"
 
-#: epl/apps/user/views.py:420
+#: epl/apps/user/views.py:468
 msgid "Creates a new user account based on an invitation token"
 msgstr "Crée un nouveau compte utilisateur basé sur un jeton d'invitation"
 
-#: epl/apps/user/views.py:425 epl/apps/user/views.py:438
+#: epl/apps/user/views.py:473 epl/apps/user/views.py:486
 msgid "Account created successfully."
 msgstr "Compte créé avec succès."
 
@@ -1801,6 +1821,11 @@ msgstr "Bibliothèque remédiée"
 #: epl/validators.py:61
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
+
+#~ msgid "Only superusers can set a user as project creator"
+#~ msgstr ""
+#~ "Seuls les superutilisateurs peuvent désigner un utilisateur comme "
+#~ "créateur de projet."
 
 #~ msgid "Referenced segment belongs to a different collection"
 #~ msgstr "Le segment référencé appartient à une autre collection"

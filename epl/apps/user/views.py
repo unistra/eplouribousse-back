@@ -337,9 +337,9 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 return Response({"is_superuser": user.is_superuser}, status=status.HTTP_201_CREATED)
             case "DELETE":
                 if not user.is_superuser:
-                    raise ValidationError(_("User is not a superuser."))
+                    raise ValidationError(_("User is not a superuser"))
                 if User.objects.filter(is_superuser=True).exclude(id=user.id).count() == 0:
-                    raise ValidationError(_("There must remain at least one superuser in the system."))
+                    raise ValidationError(_("There must remain at least one superuser in the tenant"))
                 user.is_superuser = False
                 user.save(update_fields=["is_superuser"])
                 return Response(status=status.HTTP_204_NO_CONTENT)
