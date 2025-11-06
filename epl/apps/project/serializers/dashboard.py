@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -20,11 +21,23 @@ class ProjectDashboardSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         project = instance
+        cache_key = f"project_dashboard_{project.id}"
+
+        # check cache
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data
+
+        # if not cached, calculate and cache
 
         initial_collections_count = Collection.objects.filter(project=project).count()
         initial_resources_count = Resource.objects.filter(project=project).count()
 
-        return {
+        data = {
             "initial_collections_count": initial_collections_count,
             "initial_resources_count": initial_resources_count,
         }
+
+        # cach for 3h
+        cache.set(cache_key, data, timeout=3600 * 3)
+        return data
