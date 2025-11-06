@@ -121,7 +121,7 @@ class ImportSerializer(serializers.Serializer):
                         )
                     )
 
-            BATCH_SIZE = 100
+            BATCH_SIZE = 500
             for i in range(0, len(resources_to_create), BATCH_SIZE):
                 batch = resources_to_create[i : i + BATCH_SIZE]
                 Resource.objects.bulk_create(batch)
@@ -145,6 +145,12 @@ class ImportSerializer(serializers.Serializer):
                 Collection.objects.bulk_create(batch)
 
         loaded_collections = {_code: _data["count"] for _code, _data in codes.items()}
+        ActionLog.log(
+            f"Imported {len(collections_to_create)} collections in {library.name}",
+            actor=user,
+            obj=project,
+            request=self.context.get("request"),
+        )
 
         return Counter(loaded_collections.values())
 

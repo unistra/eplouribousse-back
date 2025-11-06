@@ -2,14 +2,13 @@ from django.db.models import Prefetch
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema, extend_schema_view
-from ipware import get_client_ip
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from epl.apps.project.filters.project import ProjectFilter
-from epl.apps.project.models import ActionLog, Project, ProjectStatus, Role, UserRole
+from epl.apps.project.models import Project, ProjectStatus, Role, UserRole
 from epl.apps.project.permissions.project import ProjectAlertSettingsPermissions, ProjectPermissions
 from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.project import (
@@ -407,7 +406,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        ActionLog.log("Project has been launched", actor=request.user, obj=project, ip=get_client_ip(request)[0])
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

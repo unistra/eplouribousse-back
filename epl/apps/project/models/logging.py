@@ -42,6 +42,8 @@ class ActionLog(models.Model):
     ):
         if not ip.strip() and request:
             ip = get_client_ip(request)[0] or ""
+        if len(message) > 255:
+            message = message[:252] + "..."
         ActionLog.objects.create(
             action_message=message,
             actor=f"{actor.first_name} {actor.last_name} <{actor.username}>".strip(),

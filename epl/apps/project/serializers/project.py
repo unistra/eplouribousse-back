@@ -274,6 +274,12 @@ class ChangeStatusSerializer(serializers.ModelSerializer):
 
         project.status = new_status
         project.save(update_fields=["status"])
+        ActionLog.log(
+            f"Project <{project.name}> status changed from {ProjectStatus(old_status).name} to {ProjectStatus(new_status).name}",
+            actor=self.context["request"].user,
+            obj=project,
+            request=self.context["request"],
+        )
 
         match old_status, new_status:
             case ProjectStatus.DRAFT, ProjectStatus.REVIEW:
@@ -306,8 +312,14 @@ class LaunchProjectSerializer(serializers.Serializer):
 
         project.status = ProjectStatus.LAUNCHED
         notify_project_launched(project, self.context["request"], is_starting_now)
-
         project.save()
+
+        ActionLog.log(
+            f"Project <{project.name}> launched to be active after {project.active_after:%Y-%m-%d %H:%M:%S.%f%z}",
+            actor=self.context["request"].user,
+            obj=project,
+            request=self.context["request"],
+        )
 
         return project
 
@@ -424,6 +436,12 @@ class ProjectLibrarySerializer(serializers.Serializer):
         if self.context["request"].method == "POST":
             if not project.libraries.filter(id=library.id).exists():
                 project.libraries.add(library)
+                ActionLog.log(
+                    f"Library <{library.name}> attached to project <{project.name}>",
+                    actor=self.context["request"].user,
+                    obj=project,
+                    request=self.context["request"],
+                )
         elif self.context["request"].method == "DELETE":
             project.libraries.remove(library)
             UserRole.objects.filter(project_id=project.id, library_id=library.id).delete()
@@ -432,6 +450,12 @@ class ProjectLibrarySerializer(serializers.Serializer):
                 inv for inv in (project.invitations or []) if inv.get("library_id") != str(library.id)
             ]
             project.save()
+            ActionLog.log(
+                f"Library <{library.name}> detached from project <{project.name}>",
+                actor=self.context["request"].user,
+                obj=project,
+                request=self.context["request"],
+            )
         return None
 
 
