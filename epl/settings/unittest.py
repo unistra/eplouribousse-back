@@ -73,3 +73,8 @@ REST_FRAMEWORK.update(
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = "en-US"
+
+#########
+# Cache #
+#########
+CACHES["default"]["BACKEND"] = "django.core.cache.backends.dummy.DummyCache"
