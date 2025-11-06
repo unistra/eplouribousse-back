@@ -16,6 +16,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from epl.apps.project.models import ActionLog
+from epl.apps.user.filters import UserRoleFilter
 from epl.apps.user.models import User
 from epl.apps.user.serializers import (
     CreateAccountFromTokenSerializer,
@@ -257,7 +258,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = UserListSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ExcludeFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ExcludeFilter, UserRoleFilter]
     search_fields = ["first_name", "last_name", "email", "username"]
     ordering_fields = ["first_name", "last_name", "email"]
 
