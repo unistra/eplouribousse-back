@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from epl.apps.project.models.collection import Collection, Resource
+from epl.settings import base as base_settings
 
 
 class ProjectDashboardSerializer(serializers.Serializer):
@@ -39,5 +40,5 @@ class ProjectDashboardSerializer(serializers.Serializer):
         }
 
         # cach for 3h
-        cache.set(cache_key, data, timeout=3600 * 3)
+        cache.set(cache_key, data, timeout=base_settings.CACHE_TIMEOUT_DASHBOARD)
         return data

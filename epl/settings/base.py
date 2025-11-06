@@ -623,3 +623,5 @@ CACHES = {
         "KEY_PREFIX": "epl",
     },
 }
+
+CACHE_TIMEOUT_DASHBOARD = 3600 * 3
