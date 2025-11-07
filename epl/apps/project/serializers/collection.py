@@ -189,7 +189,11 @@ class ImportSerializer(serializers.Serializer):
 
 class MoveToInstructionMixin:
     def move_to_instruction_if_possible(self, collections: QuerySet[Collection], resource: Resource) -> None:
-        if all(c.position is not None for c in collections) and resource.arbitration is Arbitration.NONE:
+        if (
+            all(c.position is not None for c in collections)
+            and resource.arbitration is Arbitration.NONE
+            and resource.status is not ResourceStatus.EXCLUDED
+        ):
             # All libraries have positioned and no arbitration is needed: move to Instruction Bound and set turns
             resource.status = ResourceStatus.INSTRUCTION_BOUND
             turns: list[TurnType] = resource.calculate_turns()
@@ -255,11 +259,20 @@ class PositionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, seria
                 request=self.context["request"],
             )
 
-        # si au moins une autre collection n'a pas encore été positionnée, on envoie le message de positionnement
+        # if at least one other collection hasn't been positioned yet, notify other instructors of positioning'
         if any(c.position is None for c in collections):
             notify_other_instructors_of_positioning(
                 resource=resource, request=self.context["request"], positioned_collection=collection
             )
+
+        # if every library has positioned, one library has chosen rank 1 and all others exclusion
+        # the resource status is set to EXCLUDED and should never be instructed
+        if (
+            sum(c.position == 1 for c in collections) == 1
+            and sum(bool(c.position == 0) for c in collections) == len(collections) - 1
+        ):
+            resource.status = ResourceStatus.EXCLUDED
+            resource.save(update_fields=["status"])
 
         self.move_to_instruction_if_possible(collections, resource)
 
@@ -311,6 +324,16 @@ class ExclusionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, seri
 
         if resource.arbitration == Arbitration.ZERO:
             notify_instructors_of_arbitration(resource, self.context["request"])
+
+        # if every library has positioned, one library has chosen rank 1 and all others exclusion
+        # the resource status is set to EXCLUDED and should never be instructed
+
+        if (
+            sum(c.position == 1 for c in collections) == 1
+            and sum(bool(c.position == 0) for c in collections) == len(collections) - 1
+        ):
+            resource.status = ResourceStatus.EXCLUDED
+            resource.save(update_fields=["status"])
 
         self.move_to_instruction_if_possible(collections, resource)
 

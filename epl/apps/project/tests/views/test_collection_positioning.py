@@ -252,6 +252,106 @@ class CollectionPositionViewSetTest(TestCase):
         self.assertEqual(resource.status, ResourceStatus.POSITIONING)
 
 
+class ResourceExclusionTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        with tenant_context(self.tenant):
+            self.project = ProjectFactory()
+            self.resource = ResourceFactory(project=self.project)
+            self.resource.status = ResourceStatus.POSITIONING
+            self.resource.save()
+
+            for i in range(1, 4):
+                library = LibraryFactory(project=self.project)
+                instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=library)
+                collection = CollectionFactory(library=library, project=self.project, resource=self.resource)
+                setattr(self, f"library_{i}", library)
+                setattr(self, f"instructor_{i}", instructor)
+                setattr(self, f"collection_{i}", collection)
+
+    def test_resource_status_change_to_excluded_after_last_library_excludes(self):
+        """
+        Tests that resource is excluded when:
+        - first library positions its collection to rank 1
+        - the following libraries exclude their collections
+        """
+        # Library 1 positions its collection to rank 1
+        response = self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_1.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.response_ok(response)
+        # Library 2 excludes its collection
+        response = self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_2.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.response_ok(response)
+
+        # resource.status is still POSITIONING
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.POSITIONING)
+
+        # Library 3 excludes its collection
+        response = self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_3.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_3,
+        )
+        self.response_ok(response)
+
+        # resource.status should now be EXCLUDED
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
+
+    def test_resource_status_change_to_excluded_after_positioning_2(self):
+        """
+        Tests that resource is excluded when:
+        - first librairies exclude their collections
+        - last librairy positions its collection to rank 1
+        """
+
+        # Library 2 excludes its collection
+        response = self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_2.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.response_ok(response)
+
+        # resource.status is still POSITIONING
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.POSITIONING)
+
+        # Library 3 excludes its collection
+        response = self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_3.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_3,
+        )
+        self.response_ok(response)
+
+        # Library 1 positions its collection to rank 1
+        response = self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_1.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.response_ok(response)
+
+        # resource.status should now be EXCLUDED
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
+
+
 class ArbitrationNotificationTest(TestCase):
     def setUp(self):
         super().setUp()
