@@ -214,8 +214,13 @@ class MoveToInstructionMixin:
                 notify_instructors_of_instruction_turn(resource, library_to_instruct, self.context["request"])
 
 
-class PositionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, serializers.ModelSerializer):
-    position = serializers.IntegerField(min_value=1, max_value=4, help_text=_("Position (rank) between 1 and 4"))
+class BaseCollectionPositioningSerializer(
+    MoveToInstructionMixin, ResourceInstructionMixin, serializers.ModelSerializer
+):
+    """
+    Base class for positioning and exclusion of collections.
+    """
+
     arbitration = serializers.ChoiceField(Arbitration, read_only=True, source="resource.arbitration")
     status = serializers.ChoiceField(ResourceStatus, read_only=True, source="resource.status")
     should_instruct = serializers.SerializerMethodField()
@@ -223,6 +228,74 @@ class PositionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, seria
 
     class Meta:
         model = Collection
+        fields = []  # set in child classes
+
+    def handle_excluded_status(self, collections: QuerySet[Collection], resource: Resource) -> None:
+        """
+        Set resource status to EXCLUDED if one library is positioned at rank 1 and all others are excluded.
+        """
+        if (
+            sum(c.position == 1 for c in collections) == 1
+            and sum(c.position == 0 for c in collections) == len(collections) - 1
+        ):
+            resource.status = ResourceStatus.EXCLUDED
+            resource.save(update_fields=["status"])
+
+    def calculate_arbitration(
+        self,
+        collections: QuerySet[Collection],
+        resource: Resource,
+        current_collection: Collection = None,
+        current_position: int = None,
+    ) -> None:
+        """
+         Calculates and saves the arbitration based on the positions of the collections.
+        - ONE: If several libraries have chosen rank 1
+        - ZERO: If no library has chosen rank 1 and all have positioned themselves or excluded themselves
+        - NONE: In other cases
+        """
+        # Check if another collection has already rank 1
+        is_other_first = False
+        if current_collection and current_position == 1:
+            is_other_first = collections.filter(position=1).exclude(pk=current_collection.pk).exists()
+
+        arbitration = Arbitration.NONE
+
+        if current_position == 1 and is_other_first:
+            arbitration = Arbitration.ONE
+        else:
+            positions = list(collections.values_list("position", flat=True))
+            if 1 not in positions and all(c.position is not None or c.exclusion_reason for c in collections):
+                arbitration = Arbitration.ZERO
+
+        resource.arbitration = arbitration
+        resource.save(update_fields=["arbitration"])
+
+    def handle_arbitration_notification(self, resource: Resource, arbitration: Arbitration) -> None:
+        """
+        Sends notifications and logs if arbitration is needed.
+        """
+        if arbitration in [Arbitration.ONE, Arbitration.ZERO]:
+            notify_instructors_of_arbitration(resource, self.context["request"])
+            ActionLog.log(
+                f"Resource in Arbitration {Arbitration(resource.arbitration).name}",
+                actor=self.context["request"].user,
+                obj=resource,
+                request=self.context["request"],
+            )
+
+    def finalize_positioning(self, collections: QuerySet[Collection], resource: Resource) -> None:
+        """
+        Finalizes positioning: manages EXCLUDED status and transition to instruction.
+        """
+        self.handle_excluded_status(collections, resource)
+        self.move_to_instruction_if_possible(collections, resource)
+
+
+class PositionSerializer(BaseCollectionPositioningSerializer):
+    position = serializers.IntegerField(min_value=1, max_value=4, help_text=_("Position (rank) between 1 and 4"))
+
+    class Meta(BaseCollectionPositioningSerializer.Meta):
         fields = ["position", "arbitration", "status", "should_instruct", "should_position"]
 
     def save(self, **kwargs):
@@ -234,65 +307,29 @@ class PositionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, seria
 
         resource = collection.resource
         collections = resource.collections.all()
-        is_other_first = collections.filter(position=1).exclude(pk=collection.pk).exists()
 
-        arbitration: Arbitration = Arbitration.NONE
+        self.calculate_arbitration(collections, resource, collection, position)
+        self.handle_arbitration_notification(resource, resource.arbitration)
 
-        if position == 1 and is_other_first:
-            arbitration = Arbitration.ONE
-        elif (
-            (positions := list(collections.values_list("position", flat=True)))
-            and 1 not in positions
-            and all(c.position is not None or c.exclusion_reason for c in collections)
-        ):
-            arbitration = Arbitration.ZERO
-
-        resource.arbitration = arbitration
-        resource.save(update_fields=["arbitration"])
-
-        if resource.arbitration in [Arbitration.ONE, Arbitration.ZERO]:
-            notify_instructors_of_arbitration(resource, self.context["request"])
-            ActionLog.log(
-                f"Resource in Arbitration {Arbitration(resource.arbitration).name}",
-                actor=self.context["request"].user,
-                obj=resource,
-                request=self.context["request"],
-            )
-
-        # if at least one other collection hasn't been positioned yet, notify other instructors of positioning'
         if any(c.position is None for c in collections):
             notify_other_instructors_of_positioning(
                 resource=resource, request=self.context["request"], positioned_collection=collection
             )
 
-        # if every library has positioned, one library has chosen rank 1 and all others exclusion
-        # the resource status is set to EXCLUDED and should never be instructed
-        if (
-            sum(c.position == 1 for c in collections) == 1
-            and sum(bool(c.position == 0) for c in collections) == len(collections) - 1
-        ):
-            resource.status = ResourceStatus.EXCLUDED
-            resource.save(update_fields=["status"])
-
-        self.move_to_instruction_if_possible(collections, resource)
+        self.finalize_positioning(collections, resource)
 
         return collection
 
 
-class ExclusionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, serializers.ModelSerializer):
+class ExclusionSerializer(BaseCollectionPositioningSerializer):
     exclusion_reason = serializers.CharField(
         max_length=255,
         required=True,
         allow_blank=False,
         help_text=_("Reason for excluding the collection from deduplication"),
     )
-    arbitration = serializers.ChoiceField(Arbitration, read_only=True, source="resource.arbitration")
-    status = serializers.ChoiceField(ResourceStatus, read_only=True, source="resource.status")
-    should_instruct = serializers.SerializerMethodField()
-    should_position = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Collection
+    class Meta(BaseCollectionPositioningSerializer.Meta):
         fields = ["exclusion_reason", "arbitration", "status", "should_instruct", "should_position"]
 
     def validate_exclusion_reason(self, value):
@@ -310,32 +347,9 @@ class ExclusionSerializer(MoveToInstructionMixin, ResourceInstructionMixin, seri
         resource = instance.resource
         collections = resource.collections.all()
 
-        if (
-            (positions := list(collections.values_list("position", flat=True)))
-            and 1 not in positions
-            and all(c.position is not None or c.exclusion_reason for c in collections)
-        ):
-            arbitration = Arbitration.ZERO
-        else:
-            arbitration = Arbitration.NONE
-
-        resource.arbitration = arbitration
-        resource.save(update_fields=["arbitration"])
-
-        if resource.arbitration == Arbitration.ZERO:
-            notify_instructors_of_arbitration(resource, self.context["request"])
-
-        # if every library has positioned, one library has chosen rank 1 and all others exclusion
-        # the resource status is set to EXCLUDED and should never be instructed
-
-        if (
-            sum(c.position == 1 for c in collections) == 1
-            and sum(bool(c.position == 0) for c in collections) == len(collections) - 1
-        ):
-            resource.status = ResourceStatus.EXCLUDED
-            resource.save(update_fields=["status"])
-
-        self.move_to_instruction_if_possible(collections, resource)
+        self.calculate_arbitration(collections, resource)
+        self.handle_arbitration_notification(resource, resource.arbitration)
+        self.finalize_positioning(collections, resource)
 
         return instance
 
