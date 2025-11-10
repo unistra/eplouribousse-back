@@ -11,7 +11,6 @@ from epl.apps.project.filters.project import ProjectFilter
 from epl.apps.project.models import Project, ProjectStatus, Role, UserRole
 from epl.apps.project.permissions.project import ProjectAlertSettingsPermissions, ProjectPermissions
 from epl.apps.project.serializers.common import StatusListSerializer
-from epl.apps.project.serializers.dashboard import ProjectDashboardSerializer
 from epl.apps.project.serializers.project import (
     AssignRoleSerializer,
     ChangeStatusSerializer,
@@ -408,21 +407,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @extend_schema(
-        tags=["project", "dashboard"],
-        summary=_("Get project dashboard data"),
-        description=_("Retrieve statistics for a project dashboard."),
-        responses={
-            status.HTTP_200_OK: ProjectDashboardSerializer,
-        },
-    )  # todo: check permissions
-    @action(detail=True, methods=["get"], url_path="dashboard")
-    def dashboard(self, request, pk=None):
-        """Get dashboard data for a specific project."""
-        project = self.get_object()
-        serializer = ProjectDashboardSerializer(project)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
