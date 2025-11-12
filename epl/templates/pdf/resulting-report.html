@@ -71,10 +71,10 @@
             padding: .15cm;
         }
         tr.owned {
-            background-color: #09f188;
+            background-color: rgba(136, 143, 194, 0.50);
         }
         tr.remedied {
-            background-color: #14b2d4;
+            background-color: rgba(118, 175, 143, 0.50);
         }
     </style>
 </head>
@@ -94,7 +94,7 @@
         <dt>{% translate "Call number" %}</dt>
         <dd>{{ collection.call_number }}</dd>
     </dl>
-    <p>{% translate "Lines that apply to your library are highlighted" %}</p>
+    <p>{% translate "Lines that apply to the selected collection are highlighted" %}</p>
     <dl>
         <dt>{% translate "Main collection" %}</dt>
         <dd>{{ main_collection.call_number }}</dd>
@@ -145,7 +145,7 @@
                 <td>{{ segment.collection.library.name }}</td>
                 <td>{{ segment.collection.position }} | {{ segment.collection.call_number }}</td>
                 <td>{{ segment.content }}</td>
-                <td>{{ segment.segment_type }}</td>
+                <td>{{ segment.get_segment_type_display }}</td>
                 <td>{{ segment.improvable_element }}</td>
                 <td>{{ segment.exception }}</td>
                 <td>{{ segment.improved_segment.collection.library.name }}</td>
