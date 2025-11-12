@@ -128,10 +128,10 @@
             <th scope="col">{% translate "Order" %}</th>
             <th scope="col">{% translate "Library" %}</th>
             <th scope="col">{% translate "Collection" %}</th>
-            <th scope="col">{% translate "Segment" %}</th>
             <th scope="col">{% translate "Bound or Unbound" %}</th>
-            <th scope="col">{% translate "Improvable element" %}</th>
+            <th scope="col">{% translate "Segment" %}</th>
             <th scope="col">{% translate "Exception" %}</th>
+            <th scope="col">{% translate "Improvable element" %}</th>
             <th scope="col">{% translate "Remediated library" %}</th>
         </tr>
         </thead>
@@ -144,10 +144,10 @@
                 <td>{{ segment.order }}</td>
                 <td>{{ segment.collection.library.name }}</td>
                 <td>{{ segment.collection.position }} | {{ segment.collection.call_number }}</td>
-                <td>{{ segment.content }}</td>
                 <td>{{ segment.get_segment_type_display }}</td>
-                <td>{{ segment.improvable_element }}</td>
+                <td>{{ segment.content }}</td>
                 <td>{{ segment.exception }}</td>
+                <td>{{ segment.improvable_segment }}</td>
                 <td>{{ segment.improved_segment.collection.library.name }}</td>
             </tr>
         {% endfor %}
