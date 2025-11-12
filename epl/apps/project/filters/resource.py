@@ -131,7 +131,10 @@ class ResourceFilter(filters.BaseFilterBackend):
         combined_q = Q()
         for s in statuses:
             if s == ResourceStatus.POSITIONING:
-                combined_q |= Q(status=s) | Q(has_segments=False)
+                combined_q |= Q(status=s, collections__library=library) | Q(
+                    has_segments=False,
+                    collections__library=library,
+                )
             elif s == ResourceStatus.INSTRUCTION_BOUND:
                 combined_q |= Q(
                     status=s,
