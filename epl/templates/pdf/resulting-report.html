@@ -148,7 +148,11 @@
                 <td>{{ segment.content }}</td>
                 <td>{{ segment.exception }}</td>
                 <td>{{ segment.improvable_segment }}</td>
-                <td>{{ segment.improved_segment.collection.library.name }}</td>
+                <td>
+                    {% if segment.improved_segment %}
+                    {{ segment.improved_segment.collection.library.name }} | {% translate "Line" %} {{ segment.improved_segment.order }}
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
         </tbody>

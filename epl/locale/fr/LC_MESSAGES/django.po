@@ -1829,6 +1829,10 @@ msgstr "Éléments améliorables"
 msgid "Remediated library"
 msgstr "Bibliothèque remédiée"
 
+#: epl/templates/pdf/resulting-report.html:153
+msgid "Line"
+msgstr "Ligne"
+
 #: epl/validators.py:61
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
