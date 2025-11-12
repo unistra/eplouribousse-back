@@ -16,16 +16,17 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from epl.apps.project.models import ActionLog
+from epl.apps.user.filters import UserRoleFilter
 from epl.apps.user.models import User
 from epl.apps.user.serializers import (
     CreateAccountFromTokenSerializer,
     EmailSerializer,
     InviteTokenSerializer,
+    NestedUserSerializer,
     PasswordChangeSerializer,
     PasswordResetSerializer,
     TokenObtainSerializer,
     UserAlertSettingsSerializer,
-    UserListSerializer,
     UserSerializer,
 )
 from epl.libs.filters import ExcludeFilter
@@ -243,7 +244,7 @@ def user_profile(request):
             )
         ],
         responses={
-            status.HTTP_200_OK: UserListSerializer(many=True),
+            status.HTTP_200_OK: NestedUserSerializer(many=True),
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
     )
@@ -254,10 +255,10 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
 
     queryset = User.objects.active()
-    serializer_class = UserListSerializer
+    serializer_class = NestedUserSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ExcludeFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, ExcludeFilter, UserRoleFilter]
     search_fields = ["first_name", "last_name", "email", "username"]
     ordering_fields = ["first_name", "last_name", "email"]
 

@@ -236,18 +236,6 @@ class NestedUserSerializer(serializers.ModelSerializer):
         return str(user)
 
 
-class UserListSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-        ]
-
-
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     project_id = serializers.CharField(required=False, allow_blank=True)
