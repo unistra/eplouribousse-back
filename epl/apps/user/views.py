@@ -22,11 +22,11 @@ from epl.apps.user.serializers import (
     CreateAccountFromTokenSerializer,
     EmailSerializer,
     InviteTokenSerializer,
+    NestedUserSerializer,
     PasswordChangeSerializer,
     PasswordResetSerializer,
     TokenObtainSerializer,
     UserAlertSettingsSerializer,
-    UserListSerializer,
     UserSerializer,
 )
 from epl.libs.filters import ExcludeFilter
@@ -244,7 +244,7 @@ def user_profile(request):
             )
         ],
         responses={
-            status.HTTP_200_OK: UserListSerializer(many=True),
+            status.HTTP_200_OK: NestedUserSerializer(many=True),
             status.HTTP_401_UNAUTHORIZED: UnauthorizedSerializer,
         },
     )
@@ -255,7 +255,7 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
 
     queryset = User.objects.active()
-    serializer_class = UserListSerializer
+    serializer_class = NestedUserSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, ExcludeFilter, UserRoleFilter]

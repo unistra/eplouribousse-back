@@ -13,4 +13,4 @@ class ConsortiumSerializer(ModelSerializer):
 
     class Meta:
         model = Consortium
-        fields = ["id", "name", "settings"]
+        fields = ["id", "name", "settings", "created_at"]
