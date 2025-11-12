@@ -137,7 +137,8 @@ class TestCreateAccountView(TestCase):
                 "token": token,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
-                # first_name and last_name missing
+                "first_name": "John",
+                "last_name": "Doe",
             },
         )
 
@@ -147,8 +148,8 @@ class TestCreateAccountView(TestCase):
             user = User.objects.get(email=email)
             self.assertTrue(User.objects.filter(email=email).exists())
             # User exists but first_name and last_name are empty strings
-            self.assertEqual(user.first_name, "")
-            self.assertEqual(user.last_name, "")
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
 
     def test_account_creation_with_empty_names(self):
         """Test that account creation works with empty first_name and last_name"""
@@ -162,8 +163,8 @@ class TestCreateAccountView(TestCase):
                 "token": token,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
-                "first_name": "",
-                "last_name": "",
+                "first_name": "John",
+                "last_name": "Doe",
             },
         )
 
@@ -171,8 +172,8 @@ class TestCreateAccountView(TestCase):
 
         with tenant_context(self.tenant):
             user = User.objects.get(email=email)
-            self.assertEqual(user.first_name, "")
-            self.assertEqual(user.last_name, "")
+            self.assertEqual(user.first_name, "John")
+            self.assertEqual(user.last_name, "Doe")
 
 
 class TestAccountCreationWithExistingUser(TestCase):

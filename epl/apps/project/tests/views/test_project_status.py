@@ -202,6 +202,8 @@ class TestSubscriptionNotificationForProjectManagers(TestCase):
             "token": token,
             "password": self.invited_user_password,
             "confirm_password": self.invited_user_password,
+            "first_name": "Eplou",
+            "last_name": "Ribousse",
         }
 
         mail.outbox = []
@@ -256,6 +258,8 @@ class TestSubscriptionNotificationForProjectAdmins(TestCase):
             "token": token,
             "password": self.invited_user_password,
             "confirm_password": self.invited_user_password,
+            "first_name": "Eplou",
+            "last_name": "Ribousse",
         }
 
         mail.outbox = []

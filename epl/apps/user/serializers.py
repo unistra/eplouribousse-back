@@ -304,8 +304,8 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
     password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
     confirm_password = serializers.CharField(style={"input_type": "password"}, write_only=True, required=True)
-    first_name = serializers.CharField(required=False, allow_blank=True)
-    last_name = serializers.CharField(required=False, allow_blank=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
 
     def __init__(self, *args, **kwargs):
         self.email = None
