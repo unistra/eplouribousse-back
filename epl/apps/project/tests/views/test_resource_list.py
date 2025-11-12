@@ -276,7 +276,7 @@ class FilterResourceOnStatusTest(TestCase):
         self.response_ok(response)
         self.assertEqual(
             response.data["count"],
-            8,
+            6,
         )
         self.assertListEqual(
             sorted([result["id"] for result in response.data["results"]]),
@@ -284,10 +284,8 @@ class FilterResourceOnStatusTest(TestCase):
                 [
                     str(self.resource_positioning.id),
                     str(self.resource_instruction_bound_for_user.id),
-                    str(self.resource_instruction_bound_for_other_library.id),
                     str(self.resource_control_bound.id),
                     str(self.resource_instruction_unbound_for_user.id),
-                    str(self.resource_instruction_unbound_for_other_library.id),
                     str(self.resource_control_unbound.id),
                     str(self.resource_instruction_bound_without_segments.id),
                 ]
