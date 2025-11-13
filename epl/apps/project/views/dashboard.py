@@ -8,12 +8,15 @@ from epl.apps.project.serializers.dashboard import (
     AchievementsInformationSerializer,
     AnomaliesInformationSerializer,
     ArbitrationInformationSerializer,
+    CollectionOccurrencesChartSerializer,
     ControlsInformationSerializer,
     ExclusionInformationSerializer,
     InitialDataSerializer,
     InstructionCandidatesInformationSerializer,
     InstructionsInformationSerializer,
     PositioningInformationSerializer,
+    RealizedPositioningChartSerializer,
+    ResourcesToInstructChartSerializer,
 )
 
 
@@ -39,6 +42,9 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet):
             "controls-information": ControlsInformationSerializer,
             "anomalies-information": AnomaliesInformationSerializer,
             "achievements-information": AchievementsInformationSerializer,
+            "realized-positioning-per-library": RealizedPositioningChartSerializer,
+            "resources-to-instruct-per-library": ResourcesToInstructChartSerializer,
+            "collection-occurrences-per-library": CollectionOccurrencesChartSerializer,
         }
         return serializer_map.get(board, InitialDataSerializer)
 
@@ -61,6 +67,9 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet):
                     "controls-information",
                     "anomalies-information",
                     "achievements-information",
+                    "realized-positioning-per-library",
+                    "resources-to-instruct-per-library",
+                    "collection-occurrences-per-library",
                 ],
                 default="initial-data",
             )

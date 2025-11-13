@@ -119,12 +119,54 @@ class InstructionCandidatesInformationSerializer(BaseDashboardMixin, serializers
 
     def compute_data(self, project):
         # Resources candidates
+        # La requête doit traduire:
+        #     all(c.position is not None for c in collections)
+        #     and resource.arbitration is Arbitration.NONE
+        #     and resource.status is not ResourceStatus.EXCLUDED
         # Conditions: statut = POSITIONING, arbitrage = NONE, et toutes les collections ont une position.
-        candidate_resources = Resource.objects.filter(
-            project=project,
-            status=ResourceStatus.POSITIONING,
-            arbitration=Arbitration.NONE,
-        ).exclude(collections__position__isnull=True)
+        # candidate_resources = Resource.objects.filter(
+        #     project=project,
+        #     status=ResourceStatus.POSITIONING,
+        #     arbitration=Arbitration.NONE,
+        # ).exclude(collections__position__isnull=True)
+
+        # # Fonctionne:
+        # candidate_resources = (
+        #     Resource.objects.filter(
+        #         project=project,  # Ne pas oublier le contexte du projet
+        #         arbitration=Arbitration.NONE,  # Traduction de la Condition 2
+        #     )
+        #     .exclude(
+        #         status=ResourceStatus.EXCLUDED  # Traduction de la Condition 3
+        #     )
+        #     .exclude(
+        #         collections__position__isnull=True  # Traduction de la Condition 1
+        #     )
+        #     .annotate(
+        #         collection_count=Count("collections")  # S'assurer qu'il y a au moins une collection
+        #     )
+        #     .filter(collection_count__gt=0)
+        #     .distinct()
+        # )
+
+        candidate_resources = (
+            Resource.objects.filter(
+                project=project,  # Ne pas oublier le contexte du projet
+                arbitration=Arbitration.NONE,  # Traduction de la Condition 2
+                status=ResourceStatus.POSITIONING,  # C'est cette ligne qui
+            )
+            # .exclude(
+            #     status=ResourceStatus.EXCLUDED  # faux car inclut les d'autres statuts > positioning hors on parle de candidats à l'instruction ici.
+            # )
+            .exclude(
+                collections__position__isnull=True  # Traduction de la Condition 1
+            )
+            .annotate(
+                collection_count=Count("collections")  # S'assurer qu'il y a au moins une collection
+            )
+            .filter(collection_count__gt=0)
+            .distinct()
+        )
 
         # Compter les collections candidates
         # Enlever les collections dont la position est nulle (exclues)
@@ -257,4 +299,152 @@ class AchievementsInformationSerializer(BaseDashboardMixin, serializers.Serializ
         return {
             "relative_completion": relative,
             "absolute_completion": absolute,
+        }
+
+
+class RealizedPositioningChartSerializer(BaseDashboardMixin, serializers.Serializer):
+    """
+    Prepares data for a bar chart showing positioning progress per library.
+    Formatted for Chart.js (labels and data only).
+
+    Représente le nombre de positionnements réalisés en pourcentage par bibliothèques (hors les ressources écartées par exclusion de collection).
+    Pour chaque libraire, 100% représente le nombre de collections (hors les ressources écartées par exclusion de collection).
+    """
+
+    def compute_data(self, project):
+        # Get all libraries involved in the project
+        libraries = project.libraries.distinct()
+
+        labels = []
+        percentages = []
+
+        for library in libraries:
+            # Denominator: Total collections for this library in this project,
+            # excluding collections that are part of an already excluded resource.
+            total_collections_qs = Collection.objects.filter(project=project, library=library).exclude(
+                resource__status=ResourceStatus.EXCLUDED
+            )
+
+            total_count = total_collections_qs.count()
+
+            if total_count == 0:
+                continue
+
+            # Numerator: Collections that are effectively positioned (position >= 0)
+            # The .exclude() on resource status is technically redundant if a positioned
+            # collection cannot belong to an excluded resource, but it's safer.
+            positioned_count = total_collections_qs.filter(position__gte=0).count()
+
+            percentage = round((positioned_count / total_count) * 100, 2)
+
+            labels.append(library.name)
+            percentages.append(percentage)
+
+        return {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "% de collections positionnées",  # question: en quelle langue gérer cette étiquette ?
+                    "data": percentages,
+                }
+            ],
+        }
+
+
+class ResourcesToInstructChartSerializer(BaseDashboardMixin, serializers.Serializer):
+    """
+    Prepares data for a stacked bar chart showing resources to be instructed
+    (bound vs unbound) per library. Formatted for Chart.js.
+    The count is based on collections, as a proxy for workload per library.
+    """
+
+    def compute_data(self, project):
+        # Get all unique libraries in the project to form the X-axis
+        libraries = project.libraries.distinct().order_by("name")
+        labels = [lib.name for lib in libraries]
+
+        # --- Bound Resources (First Stack) ---
+        # Count collections belonging to 'bound' resources, grouped by library name
+        bound_data = {
+            item["library__name"]: item["count"]
+            for item in Collection.objects.filter(project=project, resource__status=ResourceStatus.INSTRUCTION_BOUND)
+            .values("library__name")
+            .annotate(count=Count("id"))
+        }
+
+        # --- Unbound Resources (Second Stack) ---
+        # Count collections belonging to 'unbound' resources, grouped by library name
+        unbound_data = {
+            item["library__name"]: item["count"]
+            for item in Collection.objects.filter(project=project, resource__status=ResourceStatus.INSTRUCTION_UNBOUND)
+            .values("library__name")
+            .annotate(count=Count("id"))
+        }
+
+        # Prepare the final data structure for Chart.js
+        return {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "dashboard.charts.to_instruct.bound_label",
+                    "data": [bound_data.get(label, 0) for label in labels],
+                },
+                {
+                    "label": "dashboard.charts.to_instruct.unbound_label",
+                    "data": [unbound_data.get(label, 0) for label in labels],
+                },
+            ],
+        }
+
+
+class CollectionOccurrencesChartSerializer(BaseDashboardMixin, serializers.Serializer):
+    """
+    Prepares data for a bar chart showing distribution of resource multiplicities
+    (doublons, triplons, quadruplons, autres) among resources candidates to instruction.
+    """
+
+    def compute_data(self, project):
+        # 1) Select candidate resources (same logic as InstructionCandidatesInformationSerializer)
+        candidate_resources = (
+            Resource.objects.filter(
+                project=project,
+                arbitration=Arbitration.NONE,
+                status=ResourceStatus.POSITIONING,
+            )
+            .exclude(collections__position__isnull=True)
+            .annotate(collection_count=Count("collections"))
+            .filter(collection_count__gt=0)
+            .distinct()
+        )
+
+        # 2) Candidate collections: exclude collections explicitly excluded (position == 0)
+        candidate_collections = Collection.objects.filter(resource__in=candidate_resources).exclude(position=0)
+
+        # 3) Count collections per resource
+        counts = candidate_collections.values("resource").annotate(count=Count("id")).values_list("count", flat=True)
+
+        total_resources = len(counts)
+        if total_resources == 0:
+            return {"labels": [], "datasets": []}
+
+        # 4) Tally multiplicities
+        doubles = sum(1 for c in counts if c == 2)
+        triples = sum(1 for c in counts if c == 3)
+        quadruples = sum(1 for c in counts if c == 4)
+        others = sum(1 for c in counts if c > 4)
+
+        def pct(n):
+            return round((n / total_resources) * 100, 2)
+
+        labels = ["Doublons (2)", "Triplons (3)", "Quadruplons (4)", "Autres (>4)"]
+        data = [pct(doubles), pct(triples), pct(quadruples), pct(others)]
+
+        return {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "dashboard.charts.occurrences.label",
+                    "data": data,
+                }
+            ],
         }
