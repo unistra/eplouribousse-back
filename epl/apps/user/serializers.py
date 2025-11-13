@@ -172,6 +172,7 @@ class UserSerializer(ModelSerializer):
         help_text=_("User settings"),
         validators=[JSONSchemaValidator("user_settings.schema.json")],
     )
+    display_name = serializers.SerializerMethodField(help_text=_("User's display name"))
 
     class Meta:
         model = User
@@ -180,6 +181,7 @@ class UserSerializer(ModelSerializer):
             "username",
             "first_name",
             "last_name",
+            "display_name",
             "email",
             "can_authenticate_locally",
             "is_project_creator",
@@ -190,12 +192,16 @@ class UserSerializer(ModelSerializer):
         read_only_fields = [
             "id",
             "username",
+            "display_name",
             "email",
             "can_authenticate_locally",
             "is_project_creator",
             "is_superuser",
             "projects",
         ]
+
+    def get_display_name(self, user: User) -> str:
+        return str(user)
 
     def get_projects(self, user: User):
         """
@@ -216,7 +222,7 @@ class ProjectUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "roles", "is_superuser"]
+        fields = ["id", "email", "first_name", "last_name", "roles", "is_superuser"]
 
 
 class NestedUserSerializer(serializers.ModelSerializer):
