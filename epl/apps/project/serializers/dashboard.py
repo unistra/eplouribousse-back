@@ -61,7 +61,7 @@ class PositioningInformationSerializer(BaseDashboardMixin, serializers.Serialize
         return {
             "positioned_collections_count": Collection.objects.filter(project=project, position__isnull=False).count(),
             "positioned_collections_without_exclusion_count": Collection.objects.filter(
-                project=project, position=0
+                project=project, position__gt=0
             ).count(),
             "collections_remaining_to_be_positioned_count": Collection.objects.filter(
                 project=project, position__isnull=True
@@ -119,10 +119,10 @@ class InstructionCandidatesInformationSerializer(BaseDashboardMixin, serializers
 
     def compute_data(self, project):
         # Resources candidates
-        # Conditions: statut < EXCLUDED, arbitrage = NONE, et toutes les collections ont une position.
+        # Conditions: statut = POSITIONING, arbitrage = NONE, et toutes les collections ont une position.
         candidate_resources = Resource.objects.filter(
             project=project,
-            status__lt=ResourceStatus.EXCLUDED,
+            status=ResourceStatus.POSITIONING,
             arbitration=Arbitration.NONE,
         ).exclude(collections__position__isnull=True)
 
@@ -213,7 +213,7 @@ class AnomaliesInformationSerializer(BaseDashboardMixin, serializers.Serializer)
 
     def compute_data(self, project):
         anomalies_in_progress_count = Anomaly.objects.filter(
-            segment__project=project,
+            segment__collection__project=project,
             fixed=False,
         ).count()
 
@@ -227,7 +227,6 @@ class AchievementsInformationSerializer(BaseDashboardMixin, serializers.Serializ
     absolute_completion = serializers.FloatField(read_only=True)
 
     def compute_data(self, project):
-        # comptages
         processed_resources = Resource.objects.filter(
             project=project,
             status=ResourceStatus.EDITION,
