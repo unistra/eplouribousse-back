@@ -30,7 +30,8 @@ class ResourceModel(BaseModel):
     title: Annotated[str, Field(max_length=510, min_length=1)]
     code: Annotated[str, Field(min_length=1, max_length=25)]
     project_id: UUID
-    issn: Annotated[str, Field(max_length=9)] = ""
+    # issn: Annotated[str, Field(max_length=9)] = ""
+    issn: str | None = Field(default="", max_length=9)
     numbering: Annotated[str, Field(alias="Numerotation")] = ""
     publication_history: Annotated[str, Field(alias="PublieEn")] = ""
 
@@ -44,8 +45,9 @@ class ResourceModel(BaseModel):
     @field_validator("issn", mode="before")
     @classmethod
     def validate_issn(cls, value: str) -> str:
-        if value:
-            value = value.strip().upper()
+        if not value:
+            return ""
+        value = value.strip().upper()
         try:
             value = IssnValidator()(value)
         except Exception:
@@ -72,7 +74,7 @@ def handle_import(
         row_number += 1
         ppn = row.pop("PPN").strip()
         titre = row.pop("Titre").strip()
-        issn = row.pop("Issn", "").strip()
+        issn = row.pop("Issn", None).strip()
         numbering = row.pop("Numerotation", "").strip()  # Non disponible dans les fichiers actuels
         publication_history = row.pop("PublieEn", "").strip().split(",", 1)[0]
 
