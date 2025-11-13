@@ -601,4 +601,5 @@ CORS_ALLOW_HEADERS = (
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 DEFAULT_FROM_EMAIL = "ne-pas-repondre@unistra.fr"
-EMAIL_SUPPORT = "support@eplouribousse.fr"
+CONTACT_EMAIL = "support-eplouribousse@unistra.fr"
+EMAIL_SUPPORT = CONTACT_EMAIL

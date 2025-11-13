@@ -3,6 +3,7 @@ from rest_framework_nested.routers import NestedSimpleRouter, SimpleRouter
 
 from epl.apps.project.views.anomaly import AnomalyViewSet
 from epl.apps.project.views.collection import CollectionViewSet
+from epl.apps.project.views.contact import support
 from epl.apps.project.views.library import LibraryViewset
 from epl.apps.project.views.project import ProjectAlertSettingsViewSet, ProjectViewSet
 from epl.apps.project.views.projectlibrary import ProjectLibraryViewSet
@@ -30,5 +31,6 @@ urlpatterns = (
             ProjectAlertSettingsViewSet.as_view({"get": "retrieve", "patch": "partial_update"}),
             name="project-alerts",
         ),
+        path("contact/support/", support, name="contact-support"),
     ]
 )
