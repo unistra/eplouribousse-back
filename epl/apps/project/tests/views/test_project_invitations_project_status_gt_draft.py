@@ -273,6 +273,8 @@ class TestEmailNotificationsForInvitationAndAccountCreation(TestCase):
                 "token": token,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
 
@@ -317,6 +319,8 @@ class TestEmailNotificationsForInvitationAndAccountCreation(TestCase):
                 "token": token,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
 
@@ -370,6 +374,8 @@ class TestEmailNotificationsForInvitationAndAccountCreation(TestCase):
                 "token": token,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
 
@@ -458,6 +464,8 @@ class TestInvitationWorkflowIntegration(TestCase):
                 "token": token,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
 
@@ -544,6 +552,8 @@ class TestLaunchedProjectEmailWithActiveAfter(TestCase):
                     "token": token,
                     "password": "SecurePassword123!",
                     "confirm_password": "SecurePassword123!",
+                    "first_name": "Eplou",
+                    "last_name": "Ribousse",
                 },
             )
 
@@ -597,6 +607,8 @@ class TestLaunchedProjectEmailWithActiveAfter(TestCase):
                     "token": token,
                     "password": "SecurePassword123!",
                     "confirm_password": "SecurePassword123!",
+                    "first_name": "Eplou",
+                    "last_name": "Ribousse",
                 },
             )
 
@@ -650,6 +662,8 @@ class TestLaunchedProjectEmailWithActiveAfter(TestCase):
                     "token": token,
                     "password": "SecurePassword123!",
                     "confirm_password": "SecurePassword123!",
+                    "first_name": "Eplou",
+                    "last_name": "Ribousse",
                 },
             )
 

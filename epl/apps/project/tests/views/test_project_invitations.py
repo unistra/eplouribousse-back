@@ -56,7 +56,13 @@ class TestUserAccountCreationAfterInviteSingleRole(TestCase):
     def test_account_creation_with_invitation_success(self):
         response = self.post(
             reverse("create_account"),
-            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": self.token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
+            },
         )
 
         self.response_created(response)
@@ -75,7 +81,13 @@ class TestUserAccountCreationAfterInviteSingleRole(TestCase):
     def test_password_mismatch(self):
         response = self.post(
             reverse("create_account"),
-            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "DifferentPassword123!"},
+            {
+                "token": self.token,
+                "password": "SecurePassword123!",
+                "confirm_password": "DifferentPassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
+            },
         )
         self.response_bad_request(response)
         self.assertIn("Password and confirm password do not match", str(response.content))
@@ -102,7 +114,13 @@ class TestUserAccountCreationAfterInviteSingleRole(TestCase):
             mock_validate.side_effect = ValidationError("The password is too weak.")
             response = self.post(
                 reverse("create_account"),
-                {"token": self.token, "password": "weak", "confirm_password": "weak"},  # noqa S105
+                {
+                    "token": self.token,
+                    "password": "weak",
+                    "confirm_password": "weak",
+                    "first_name": "Eplou",
+                    "last_name": "Ribousse",
+                },  # noqa S105
             )
         self.response_bad_request(response)
         self.assertIn("The password is too weak", str(response.content))
@@ -122,6 +140,8 @@ class TestUserAccountCreationAfterInviteSingleRole(TestCase):
                 "token": token_with_invalid_project,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
         self.response_bad_request(response)
@@ -142,6 +162,8 @@ class TestUserAccountCreationAfterInviteSingleRole(TestCase):
                 "token": token_with_invalid_assigner,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
         self.response_bad_request(response)
@@ -169,6 +191,8 @@ class TestUserAccountCreationAfterInviteSingleRole(TestCase):
                 "token": token_without_library,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
 
@@ -245,6 +269,8 @@ class TestUserAccountCreationAfterInviteSingleRole(TestCase):
                 "token": token_with_non_invited_email,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
 
@@ -305,7 +331,13 @@ class TestUserAccountCreationAfterInviteMultipleRoles(TestCase):
         """Test creating account when user has multiple roles (INSTRUCTOR + CONTROLLER)."""
         response = self.post(
             reverse("create_account"),
-            {"token": self.token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": self.token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
+            },
         )
 
         self.response_created(response)
@@ -367,6 +399,8 @@ class TestUserAccountCreationAfterInviteMultipleRoles(TestCase):
                 "token": token_with_three_roles,
                 "password": "SecurePassword123!",
                 "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
             },
         )
 
@@ -397,7 +431,13 @@ class TestUserAccountCreationAfterInviteMultipleRoles(TestCase):
 
         response = self.post(
             reverse("create_account"),
-            {"token": empty_token, "password": "SecurePassword123!", "confirm_password": "SecurePassword123!"},
+            {
+                "token": empty_token,
+                "password": "SecurePassword123!",
+                "confirm_password": "SecurePassword123!",
+                "first_name": "Eplou",
+                "last_name": "Ribousse",
+            },
         )
 
         self.response_created(response)
