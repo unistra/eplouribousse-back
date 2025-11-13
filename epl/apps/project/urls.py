@@ -29,6 +29,11 @@ urlpatterns = (
     router.urls
     + projects_router.urls
     + [
+        # path(
+        #     "projects/<uuid:project_pk>/dashboard/",
+        #     ProjectDashboardViewSet.as_view({"get": "list"}),
+        #     name="project-dashboard",
+        # ),
         path(
             "projects/<uuid:pk>/alerts/",
             ProjectAlertSettingsViewSet.as_view({"get": "retrieve", "patch": "partial_update"}),
