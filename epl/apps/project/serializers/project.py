@@ -47,7 +47,18 @@ class ProjectSerializer(AclSerializerMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "status", "is_active", "settings", "created_at", "updated_at", "acl"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "status",
+            "is_private",
+            "is_active",
+            "settings",
+            "created_at",
+            "updated_at",
+            "acl",
+        ]
         read_only_fields = ["id", "is_active", "created_at", "updated_at"]
 
 

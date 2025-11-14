@@ -31,7 +31,8 @@ from epl.schema_serializers import UnauthorizedSerializer
 
 
 @extend_schema_view(
-    create=extend_schema(  # Swagger doesn't let me send the request when under format application/x-www-form-urlencoded ??
+    create=extend_schema(
+        # Swagger doesn't let me send the request when under format application/x-www-form-urlencoded ??
         tags=["project"],
         summary=_("Create a new project"),
         request=CreateProjectSerializer,
@@ -104,7 +105,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, ProjectFilter]
     search_fields = ["name"]
-    ordering_fields = ["name", "is_private", "active_after", "status"]
+    ordering_fields = ["name", "is_private", "active_after", "status", "created_at"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
