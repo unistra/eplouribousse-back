@@ -260,16 +260,21 @@ class BaseCollectionPositioningSerializer(
             is_other_first = collections.filter(position=1).exclude(pk=current_collection.pk).exists()
 
         arbitration = Arbitration.NONE
+        status = resource.status
 
         if current_position == 1 and is_other_first:
             arbitration = Arbitration.ONE
+            status = ResourceStatus.POSITIONING
         else:
             positions = list(collections.values_list("position", flat=True))
             if 1 not in positions and all(c.position is not None or c.exclusion_reason for c in collections):
                 arbitration = Arbitration.ZERO
+                status = ResourceStatus.POSITIONING
 
         resource.arbitration = arbitration
-        resource.save(update_fields=["arbitration"])
+        resource.status = status
+
+        resource.save(update_fields=["arbitration", "status"])
 
     def handle_arbitration_notification(self, resource: Resource, arbitration: Arbitration) -> None:
         """
