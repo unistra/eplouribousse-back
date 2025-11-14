@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core import mail
+from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 
 from epl.apps.project.serializers.contact import SubjectChoices
@@ -31,7 +32,7 @@ class ContactSupportViewTests(TestCase):
         )
         self.assertEqual(
             mail.outbox[0].subject,
-            SubjectChoices.INFO.value,
+            f"{_('Contact form')}: {SubjectChoices.INFO.label}",
         )
         self.assertEqual(mail.outbox[0].from_email, "user@eplouribousse.fr")
 
@@ -52,7 +53,7 @@ class ContactSupportViewTests(TestCase):
         )
         self.assertEqual(
             mail.outbox[0].subject,
-            SubjectChoices.BUG.value,
+            f"{_('Contact form')}: {SubjectChoices.BUG.label}",
         )
         self.assertEqual(
             mail.outbox[0].from_email,
