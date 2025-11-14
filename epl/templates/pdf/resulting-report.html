@@ -97,12 +97,12 @@
     <p>{% translate "Lines that apply to the selected collection are highlighted" %}</p>
     <dl>
         <dt>{% translate "Main collection" %}</dt>
-        <dd>{{ main_collection.call_number }}</dd>
+        <dd>{{ main_collection.library.alias|default:main_collection.library.name }} ({% translate "Position" %}: {{ main_collection.position }} | {% translate "Call number" %}: {{ main_collection.call_number }})</dd>
         <dt>{% translate "Participating collections" %}</dt>
         <dd>
             <ul class="inline-list">
                 {% for col in participating_collections %}
-                <li {% if col.id == collection.id %}class="current"{% endif %}>{{ col.call_number }}</li>
+                <li {% if col.id == collection.id %}class="current"{% endif %}>{{ col.library.alias|default:col.library.name }} ({% translate "Position" %}: {{ col.position }} | {% translate "Call number" %}: {{ col.call_number }})</li>
                 {% endfor %}
             </ul>
         </dd>
@@ -125,7 +125,7 @@
     <table>
         <thead>
         <tr>
-            <th scope="col">{% translate "Order" %}</th>
+            <th scope="col">{% translate "Line" %}</th>
             <th scope="col">{% translate "Library" %}</th>
             <th scope="col">{% translate "Collection" %}</th>
             <th scope="col">{% translate "Bound or Unbound" %}</th>
@@ -138,7 +138,7 @@
         <tbody>
         {% for segment in segments %}
             <tr class="segment
-                    {% if segment.collection.library.id == collection.library.id %}owned{% endif %}
+                    {% if segment.collection.id == collection.id %}owned{% endif %}
                     {% if segment.improved_segment.collection.library.id == collection.library.id %}remedied{% endif %}
                 ">
                 <td>{{ segment.order }}</td>
