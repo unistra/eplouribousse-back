@@ -1,5 +1,6 @@
 from django.core.cache import cache
 from django.db.models import Count
+from django.utils import timezone
 from rest_framework import serializers
 
 from epl.apps.project.models import Anomaly, ResourceStatus
@@ -7,15 +8,25 @@ from epl.apps.project.models.collection import Arbitration, Collection, Resource
 from epl.settings import base as base_settings
 
 
-class BaseDashboardMixin:
+class DirectComputeMixin:
     """
-    Base mixin for project dashboard serializers.
+    Base mixin for dashboard serializers that compute data directly without caching.
+    It calls the compute_data() method to get the data.
+    """
 
-    Provides:
-    - Automatic caching of computed data
-    - Template method pattern for data computation
+    def to_representation(self, instance):
+        project = instance
+        return self.compute_data(project)
 
-    Subclasses must implement compute_data(project) method.
+    def compute_data(self, project):
+        """Compute dashboard data for the given project."""
+        raise NotImplementedError(f"{self.__class__.__name__} must implement compute_data() method")
+
+
+class CacheDashboardMixin(DirectComputeMixin):
+    """
+    Base mixin for project dashboard serializers that provides caching.
+    It inherits from DirectComputeMixin and adds a caching layer.
     """
 
     def to_representation(self, instance):
@@ -26,14 +37,10 @@ class BaseDashboardMixin:
         if cached_data is not None:
             return cached_data
 
-        data = self.compute_data(project)
+        data = super().to_representation(instance)
 
         cache.set(cache_key, data, timeout=base_settings.CACHE_TIMEOUT_DASHBOARD)
         return data
-
-    def compute_data(self, project):
-        """Compute dashboard data for the given project."""
-        raise NotImplementedError(f"{self.__class__.__name__} must implement compute_data() method")
 
     def get_cache_key(self, project):
         """Generate cache key for this serializer section."""
@@ -41,51 +48,83 @@ class BaseDashboardMixin:
         return f"dashboard_{project.id}_{section_name}"
 
 
-class InitialDataSerializer(BaseDashboardMixin, serializers.Serializer):
-    initial_collections_count = serializers.IntegerField(read_only=True)
-    initial_resources_count = serializers.IntegerField(read_only=True)
+class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
+    """
+    Number of initial Collections before positioning
+    Number of initial Resources before positioning
+    """
+
+    initial_collections = serializers.IntegerField(read_only=True)
+    initial_resources = serializers.IntegerField(read_only=True)
 
     def compute_data(self, project):
         return {
-            "initial_collections_count": Collection.objects.filter(project=project).count(),
-            "initial_resources_count": Resource.objects.filter(project=project).count(),
+            "initial_collections": Collection.objects.filter(project=project).count(),
+            "initial_resources": Resource.objects.filter(project=project).count(),
+            "computed_at": timezone.now(),
         }
 
 
-class PositioningInformationSerializer(BaseDashboardMixin, serializers.Serializer):
-    positioned_collections_count = serializers.IntegerField(read_only=True)
-    positioned_collections_without_exclusion_count = serializers.IntegerField(read_only=True)
-    collections_remaining_to_be_positioned_count = serializers.IntegerField(read_only=True)
+class PositioningInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+    positioned_collections = serializers.IntegerField(read_only=True)
+    positioned_collections_without_exclusion = serializers.IntegerField(read_only=True)
+    collections_remaining_to_be_positioned = serializers.IntegerField(read_only=True)
+    """
+    Number of collections positioned (exclusions included)
+    Number of collections positioned (exclusions excluded)
+    Number of collections remaining to be positioned
+    """
 
     def compute_data(self, project):
         return {
-            "positioned_collections_count": Collection.objects.filter(project=project, position__isnull=False).count(),
-            "positioned_collections_without_exclusion_count": Collection.objects.filter(
-                project=project, position__gt=0
-            ).count(),
-            "collections_remaining_to_be_positioned_count": Collection.objects.filter(
+            "positioned_collections": Collection.objects.filter(project=project, position__isnull=False).count(),
+            "positioned_collections_without_exclusion": Collection.objects.filter(project=project, position__gt=0)
+            .exclude(resource__status=ResourceStatus.EXCLUDED)
+            .count(),
+            "collections_remaining_to_be_positioned": Collection.objects.filter(
                 project=project, position__isnull=True
             ).count(),
+            "computed_at": timezone.now(),
         }
 
 
-class ExclusionInformationSerializer(BaseDashboardMixin, serializers.Serializer):
-    excluded_collections_count = serializers.IntegerField(read_only=True)
-    excluded_resources_count = serializers.IntegerField(read_only=True)
+class ExclusionInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+    """
+    Excluded collections (by exclusion of collections or resources)
+    Excluded resources
+    """
+
+    excluded_collections = serializers.IntegerField(read_only=True)
+    excluded_resources = serializers.IntegerField(read_only=True)
 
     def compute_data(self, project):
         return {
-            "excluded_collections_count": Collection.objects.filter(project=project, position=0).count(),
-            "excluded_resources_count": Resource.objects.filter(
-                project=project, status=ResourceStatus.EXCLUDED
+            "excluded_collections": Collection.objects.filter(
+                project=project,
+                position=0,
+            )
+            .exclude(
+                resource__status=ResourceStatus.EXCLUDED
+            )  # todo: vérifier s'il faut exclure de l'exclusion les collections d'une ressource non participante (i.e. exclue)
+            .count(),
+            "excluded_resources": Resource.objects.filter(
+                project=project,
+                status=ResourceStatus.EXCLUDED,
             ).count(),
+            "computed_at": timezone.now(),
         }
 
 
-class ArbitrationInformationSerializer(BaseDashboardMixin, serializers.Serializer):
-    collections_in_arbitration_0_count = serializers.IntegerField(read_only=True)
-    collections_in_arbitration_1_count = serializers.IntegerField(read_only=True)
-    resources_with_arbitration_count = serializers.IntegerField(read_only=True)
+class ArbitrationInformationSerializer(DirectComputeMixin, serializers.Serializer):
+    """
+    Number of Collections in arbitration type 0
+    Number of Collections in arbitration type 1
+    Number of Resources affected by any arbitration type
+    """
+
+    collections_in_arbitration_0 = serializers.IntegerField(read_only=True)
+    collections_in_arbitration_1 = serializers.IntegerField(read_only=True)
+    resources_with_arbitration = serializers.IntegerField(read_only=True)
 
     def compute_data(self, project):
         return {
@@ -101,94 +140,58 @@ class ArbitrationInformationSerializer(BaseDashboardMixin, serializers.Serialize
         }
 
 
-class InstructionCandidatesInformationSerializer(BaseDashboardMixin, serializers.Serializer):
-    collections_candidates_for_instruction_count = serializers.IntegerField(read_only=True)
-    resources_candidates_for_instruction_count = serializers.IntegerField(read_only=True)
+class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+    """
+    Information on candidates for instruction
+    - Number of collections eligible for instruction
+    - Number of resources eligible for instruction
+      - of which Number of duplicates, triplicates, etc.
+    """
 
-    duplicates_in_ressource_count = serializers.IntegerField(read_only=True)
+    collections_candidates_for_instruction = serializers.IntegerField(read_only=True)
+    resources_candidates_for_instruction = serializers.IntegerField(read_only=True)
+
+    duplicates_in_ressource = serializers.IntegerField(read_only=True)
     duplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
 
-    triplicates_in_ressource_count = serializers.IntegerField(read_only=True)
+    triplicates_in_ressource = serializers.IntegerField(read_only=True)
     triplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
 
-    quadruplicates_in_ressource_count = serializers.IntegerField(read_only=True)
+    quadruplicates_in_ressource = serializers.IntegerField(read_only=True)
     quadruplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
 
-    other_higher_multiplicates_in_ressource_count = serializers.IntegerField(read_only=True)
+    other_higher_multiplicates_in_ressource = serializers.IntegerField(read_only=True)
     other_higher_multiplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
 
     def compute_data(self, project):
-        # Resources candidates
-        # La requête doit traduire:
-        #     all(c.position is not None for c in collections)
-        #     and resource.arbitration is Arbitration.NONE
-        #     and resource.status is not ResourceStatus.EXCLUDED
-        # Conditions: statut = POSITIONING, arbitrage = NONE, et toutes les collections ont une position.
-        # candidate_resources = Resource.objects.filter(
-        #     project=project,
-        #     status=ResourceStatus.POSITIONING,
-        #     arbitration=Arbitration.NONE,
-        # ).exclude(collections__position__isnull=True)
+        resources_with_segmented_collections = Resource.objects.filter(
+            project=project, collections__segments__isnull=False
+        ).values_list("id", flat=True)
 
-        # # Fonctionne:
-        # candidate_resources = (
-        #     Resource.objects.filter(
-        #         project=project,  # Ne pas oublier le contexte du projet
-        #         arbitration=Arbitration.NONE,  # Traduction de la Condition 2
-        #     )
-        #     .exclude(
-        #         status=ResourceStatus.EXCLUDED  # Traduction de la Condition 3
-        #     )
-        #     .exclude(
-        #         collections__position__isnull=True  # Traduction de la Condition 1
-        #     )
-        #     .annotate(
-        #         collection_count=Count("collections")  # S'assurer qu'il y a au moins une collection
-        #     )
-        #     .filter(collection_count__gt=0)
-        #     .distinct()
-        # )
-
-        candidate_resources = (
-            Resource.objects.filter(
-                project=project,  # Ne pas oublier le contexte du projet
-                arbitration=Arbitration.NONE,  # Traduction de la Condition 2
-                status=ResourceStatus.POSITIONING,  # C'est cette ligne qui
-            )
-            # .exclude(
-            #     status=ResourceStatus.EXCLUDED  # faux car inclut les d'autres statuts > positioning hors on parle de candidats à l'instruction ici.
-            # )
-            .exclude(
-                collections__position__isnull=True  # Traduction de la Condition 1
-            )
-            .annotate(
-                collection_count=Count("collections")  # S'assurer qu'il y a au moins une collection
-            )
-            .filter(collection_count__gt=0)
-            .distinct()
+        candidate_resources = Resource.objects.filter(
+            project=project,
+            status=ResourceStatus.INSTRUCTION_BOUND,
+        ).exclude(
+            id__in=resources_with_segmented_collections  # exclude resources with segmented collections
         )
 
-        # Compter les collections candidates
-        # Enlever les collections dont la position est nulle (exclues)
         candidate_collections = Collection.objects.filter(resource__in=candidate_resources).exclude(position=0)
 
-        # 3. Grouper les collections candidates par le 'code' de leur ressource et compter les occurrences.
+        # Group candidate collections by their resource 'code' and count occurrences.
         code_qs = (
             candidate_collections.values("resource__code")
-            # transformer la requête en groupes clé/valeur basés sur le champ resource__code:
-            # exemple: [{"resource__code": "ABC123", "count": 3}, {"resource__code": "XYZ000", "count": 2}]
+            # transform the query into a group by resource__code field with a count of each group:
+            # e.g.: [{"resource__code": "ABC123", "count": 3}, {"resource__code": "XYZ000", "count": 2}]
             .annotate(count=Count("id"))
             .filter(count__gt=1)
         )
 
-        # 4. Calculer le nombre total de collections pour chaque niveau de multiplicité.
-        duplicates_count = code_qs.filter(count=2).count()
-        triplicates_count = code_qs.filter(count=3).count()
-        quadruplicates_count = code_qs.filter(count=4).count()
-        other_higher_multiplicates_count = code_qs.filter(count__gt=4).count()
+        duplicates = code_qs.filter(count=2).count()
+        triplicates = code_qs.filter(count=3).count()
+        quadruplicates = code_qs.filter(count=4).count()
+        other_higher_multiplicates = code_qs.filter(count__gt=4).count()
 
-        total_resources_count = candidate_resources.count()
-        collections_count = candidate_collections.count()
+        candidate_resources = candidate_resources.count()
 
         def calculate_ratio(count, total):
             if total == 0:
@@ -196,44 +199,52 @@ class InstructionCandidatesInformationSerializer(BaseDashboardMixin, serializers
             return round((count / total) * 100, 1)
 
         return {
-            "collections_candidates_for_instruction_count": collections_count,
-            "resources_candidates_for_instruction_count": total_resources_count,
-            "duplicates_in_ressource_count": duplicates_count,
-            "duplicates_in_ressource_ratio": calculate_ratio(duplicates_count, total_resources_count),
-            "triplicates_in_ressource_count": triplicates_count,
-            "triplicates_in_ressource_ratio": calculate_ratio(triplicates_count, total_resources_count),
-            "quadruplicates_in_ressource_count": quadruplicates_count,
-            "quadruplicates_in_ressource_ratio": calculate_ratio(quadruplicates_count, total_resources_count),
-            "other_higher_multiplicates_in_ressource_count": other_higher_multiplicates_count,
+            "collections_candidates_for_instruction": candidate_collections.count(),
+            "resources_candidates_for_instruction": candidate_resources,
+            "duplicates_in_ressource": duplicates,
+            "duplicates_in_ressource_ratio": calculate_ratio(duplicates, candidate_resources),
+            "triplicates_in_ressource": triplicates,
+            "triplicates_in_ressource_ratio": calculate_ratio(triplicates, candidate_resources),
+            "quadruplicates_in_ressource": quadruplicates,
+            "quadruplicates_in_ressource_ratio": calculate_ratio(quadruplicates, candidate_resources),
+            "other_higher_multiplicates_in_ressource": other_higher_multiplicates,
             "other_higher_multiplicates_in_ressource_ratio": calculate_ratio(
-                other_higher_multiplicates_count, total_resources_count
+                other_higher_multiplicates, candidate_resources
             ),
+            "computed_at": timezone.now(),
         }
 
 
-class InstructionsInformationSerializer(BaseDashboardMixin, serializers.Serializer):
-    ressources_with_status_instruction_bound_count = serializers.IntegerField(read_only=True)
-    ressources_with_status_instruction_unbound_count = serializers.IntegerField(read_only=True)
-    ressources_with_instruction_completed_count = serializers.IntegerField(read_only=True)
+class InstructionsInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+    """
+    Number of resources for which instruction of related elements is in progress
+    Number of resources for which instruction of unrelated elements is in progress
+    Number of resources fully instructed (control performed)
+    """
+
+    ressources_with_status_instruction_bound = serializers.IntegerField(read_only=True)
+    ressources_with_status_instruction_unbound = serializers.IntegerField(read_only=True)
+    ressources_with_instruction_completed = serializers.IntegerField(read_only=True)
 
     def compute_data(self, project):
         return {
-            "ressources_with_status_instruction_bound_count": Resource.objects.filter(
+            "ressources_with_status_instruction_bound": Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.INSTRUCTION_BOUND,
             ).count(),
-            "ressources_with_status_instruction_unbound_count": Resource.objects.filter(
+            "ressources_with_status_instruction_unbound": Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.INSTRUCTION_UNBOUND,
             ).count(),
-            "ressources_with_instruction_completed_count": Resource.objects.filter(
+            "ressources_with_instruction_completed": Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.EDITION,
             ).count(),
+            "computed_at": timezone.now(),
         }
 
 
-class ControlsInformationSerializer(BaseDashboardMixin, serializers.Serializer):
+class ControlsInformationSerializer(CacheDashboardMixin, serializers.Serializer):
     ressources_with_bound_copies_being_controlled_count = serializers.IntegerField(read_only=True)
     ressources_with_unbound_copies_being_controlled_count = serializers.IntegerField(read_only=True)
 
@@ -250,21 +261,29 @@ class ControlsInformationSerializer(BaseDashboardMixin, serializers.Serializer):
         }
 
 
-class AnomaliesInformationSerializer(BaseDashboardMixin, serializers.Serializer):
-    anomalies_in_progress_count = serializers.IntegerField(read_only=True)
+class AnomaliesInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+    anomalies_in_progress = serializers.IntegerField(read_only=True)
 
     def compute_data(self, project):
-        anomalies_in_progress_count = Anomaly.objects.filter(
-            segment__collection__project=project,
+        anomalies_in_progress = Anomaly.objects.filter(
+            resource__project=project,
             fixed=False,
         ).count()
 
         return {
-            "anomalies_in_progress_count": anomalies_in_progress_count,
+            "anomalies_in_progress": anomalies_in_progress,
+            "computed_at": timezone.now(),
         }
 
 
-class AchievementsInformationSerializer(BaseDashboardMixin, serializers.Serializer):
+class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+    """
+    Relative achievement (resources processed/number of resources eligible for instruction)
+     - processed resources = all resources eligible for instruction AND that have passed the final control
+    Absolute achievement (resources no longer to be processed/number of initial resources before positioning)
+    - resources no longer to be processed = processed resources + resources discarded by collection exclusion
+    """
+
     relative_completion = serializers.FloatField(read_only=True)
     absolute_completion = serializers.FloatField(read_only=True)
 
@@ -274,41 +293,47 @@ class AchievementsInformationSerializer(BaseDashboardMixin, serializers.Serializ
             status=ResourceStatus.EDITION,
         ).count()
 
-        candidate_qs = Resource.objects.filter(
-            project=project,
-            status__lt=ResourceStatus.EXCLUDED,
-            arbitration=Arbitration.NONE,
-        ).exclude(collections__position__isnull=True)
+        eligible_resources_for_instruction = (
+            Resource.objects.filter(
+                project=project,
+            )
+            .exclude(
+                status=ResourceStatus.EXCLUDED,
+            )
+            .count()
+        )
 
-        excluded_resources_count = Resource.objects.filter(
+        excluded_resources = Resource.objects.filter(
             project=project,
             status=ResourceStatus.EXCLUDED,
         ).count()
 
-        resources_no_longer_to_be_processed = processed_resources + excluded_resources_count
-        initial_resources_count = Resource.objects.filter(project=project).count()
+        resources_no_longer_to_be_processed = processed_resources + excluded_resources
+        initial_resources = Resource.objects.filter(project=project).count()
 
-        candidate_count = candidate_qs.count()
-        relative = round((processed_resources / candidate_count) * 100, 2) if candidate_count > 0 else 0.0
-        absolute = (
-            round((resources_no_longer_to_be_processed / initial_resources_count) * 100, 2)
-            if initial_resources_count > 0
+        relative_completion = (
+            round((processed_resources / eligible_resources_for_instruction) * 100, 2)
+            if eligible_resources_for_instruction > 0
             else 0.0
+        )
+        absolute_completion = (
+            round((resources_no_longer_to_be_processed / initial_resources) * 100, 2) if initial_resources > 0 else 0.0
         )
 
         return {
-            "relative_completion": relative,
-            "absolute_completion": absolute,
+            "relative_completion": relative_completion,
+            "absolute_completion": absolute_completion,
+            "computed_at": timezone.now(),
         }
 
 
-class RealizedPositioningChartSerializer(BaseDashboardMixin, serializers.Serializer):
+class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serializer):
     """
     Prepares data for a bar chart showing positioning progress per library.
     Formatted for Chart.js (labels and data only).
 
-    Représente le nombre de positionnements réalisés en pourcentage par bibliothèques (hors les ressources écartées par exclusion de collection).
-    Pour chaque libraire, 100% représente le nombre de collections (hors les ressources écartées par exclusion de collection).
+    Represents the number of positionings carried out as a percentage by library (excluding resources discarded by collection exclusion).
+    For each library, 100% represents the number of collections (excluding resources discarded by collection exclusion).
     """
 
     def compute_data(self, project):
@@ -316,42 +341,45 @@ class RealizedPositioningChartSerializer(BaseDashboardMixin, serializers.Seriali
         libraries = project.libraries.distinct()
 
         labels = []
-        percentages = []
+        realized_positionings_by_libraries_percentage = []
 
         for library in libraries:
             # Denominator: Total collections for this library in this project,
             # excluding collections that are part of an already excluded resource.
-            total_collections_qs = Collection.objects.filter(project=project, library=library).exclude(
+            collections_in_library = Collection.objects.filter(project=project, library=library).exclude(
                 resource__status=ResourceStatus.EXCLUDED
             )
 
-            total_count = total_collections_qs.count()
-
-            if total_count == 0:
+            if collections_in_library.count == 0:
                 continue
 
             # Numerator: Collections that are effectively positioned (position >= 0)
             # The .exclude() on resource status is technically redundant if a positioned
             # collection cannot belong to an excluded resource, but it's safer.
-            positioned_count = total_collections_qs.filter(position__gte=0).count()
+            positioned_collections_in_library = (
+                collections_in_library.filter(position__gte=0).exclude(resource__status=ResourceStatus.EXCLUDED).count()
+            )
 
-            percentage = round((positioned_count / total_count) * 100, 2)
+            realized_positionings_by_library_percentage = round(
+                (positioned_collections_in_library / collections_in_library.count()) * 100, 2
+            )
 
             labels.append(library.name)
-            percentages.append(percentage)
+            realized_positionings_by_libraries_percentage.append(realized_positionings_by_library_percentage)
 
         return {
             "labels": labels,
             "datasets": [
                 {
                     "label": "% de collections positionnées",  # question: en quelle langue gérer cette étiquette ?
-                    "data": percentages,
+                    "data": realized_positionings_by_libraries_percentage,
                 }
             ],
+            "computed_at": timezone.now(),
         }
 
 
-class ResourcesToInstructChartSerializer(BaseDashboardMixin, serializers.Serializer):
+class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serializer):
     """
     Prepares data for a stacked bar chart showing resources to be instructed
     (bound vs unbound) per library. Formatted for Chart.js.
@@ -359,7 +387,7 @@ class ResourcesToInstructChartSerializer(BaseDashboardMixin, serializers.Seriali
     """
 
     def compute_data(self, project):
-        # Get all unique libraries in the project to form the X-axis
+        # X-axis
         libraries = project.libraries.distinct().order_by("name")
         labels = [lib.name for lib in libraries]
 
@@ -394,57 +422,72 @@ class ResourcesToInstructChartSerializer(BaseDashboardMixin, serializers.Seriali
                     "data": [unbound_data.get(label, 0) for label in labels],
                 },
             ],
+            "computed_at": timezone.now(),
         }
 
 
-class CollectionOccurrencesChartSerializer(BaseDashboardMixin, serializers.Serializer):
+class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Serializer):
     """
-    Prepares data for a bar chart showing distribution of resource multiplicities
-    (doublons, triplons, quadruplons, autres) among resources candidates to instruction.
+    Prepares data for a bar chart showing the percentage distribution of resource
+    multiplicities (doubles, triples, etc.) among instruction candidates.
     """
 
     def compute_data(self, project):
-        # 1) Select candidate resources (same logic as InstructionCandidatesInformationSerializer)
-        candidate_resources = (
-            Resource.objects.filter(
-                project=project,
-                arbitration=Arbitration.NONE,
-                status=ResourceStatus.POSITIONING,
-            )
-            .exclude(collections__position__isnull=True)
-            .annotate(collection_count=Count("collections"))
-            .filter(collection_count__gt=0)
-            .distinct()
-        )
+        # get candidates ressources
+        resources_with_segmented_collections = Resource.objects.filter(
+            project=project, collections__segments__isnull=False
+        ).values_list("id", flat=True)
 
-        # 2) Candidate collections: exclude collections explicitly excluded (position == 0)
-        candidate_collections = Collection.objects.filter(resource__in=candidate_resources).exclude(position=0)
+        candidate_resources = Resource.objects.filter(
+            project=project,
+            status=ResourceStatus.INSTRUCTION_BOUND,
+        ).exclude(id__in=resources_with_segmented_collections)
 
-        # 3) Count collections per resource
-        counts = candidate_collections.values("resource").annotate(count=Count("id")).values_list("count", flat=True)
-
-        total_resources = len(counts)
-        if total_resources == 0:
+        total_candidate_resources = candidate_resources.count()
+        if total_candidate_resources == 0:
             return {"labels": [], "datasets": []}
 
-        # 4) Tally multiplicities
-        doubles = sum(1 for c in counts if c == 2)
-        triples = sum(1 for c in counts if c == 3)
-        quadruples = sum(1 for c in counts if c == 4)
-        others = sum(1 for c in counts if c > 4)
+        # get candidate collections
+        candidate_collections = Collection.objects.filter(resource__in=candidate_resources).exclude(position=0)
 
-        def pct(n):
-            return round((n / total_resources) * 100, 2)
+        # group by resource code and count occurrences
+        code_qs = (
+            candidate_collections.values("resource__code")
+            .annotate(count=Count("id"))
+            .filter(count__gt=1)  # On ne s'intéresse qu'aux multiplicités (>= 2)
+        )
 
-        labels = ["Doublons (2)", "Triplons (3)", "Quadruplons (4)", "Autres (>4)"]
-        data = [pct(doubles), pct(triples), pct(quadruples), pct(others)]
+        # count occurrences
+        doubles = code_qs.filter(count=2).count()
+        triples = code_qs.filter(count=3).count()
+        quadruples = code_qs.filter(count=4).count()
+        others = code_qs.filter(count__gt=4).count()
+
+        def to_percent(value, total):
+            if total == 0:
+                return 0.0
+            return round((value / total) * 100, 2)
+
+        labels = [
+            "dashboard.charts.occurrences.labels.doubles",
+            "dashboard.charts.occurrences.labels.triples",
+            "dashboard.charts.occurrences.labels.quadruples",
+            "dashboard.charts.occurrences.labels.others",
+        ]
+        data = [
+            to_percent(doubles, total_candidate_resources),
+            to_percent(triples, total_candidate_resources),
+            to_percent(quadruples, total_candidate_resources),
+            to_percent(others, total_candidate_resources),
+        ]
 
         return {
             "labels": labels,
             "datasets": [
                 {
-                    "label": "dashboard.charts.occurrences.label",
+                    "label": "dashboard.charts.occurrences.dataset_label",
                     "data": data,
                 }
             ],
+            "computed_at": timezone.now(),
         }
