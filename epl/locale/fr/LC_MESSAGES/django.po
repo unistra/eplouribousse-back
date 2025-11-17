@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-14 11:40+0100\n"
+"POT-Creation-Date: 2025-11-14 15:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -228,11 +228,11 @@ msgstr "Contrôle des éléments non reliés"
 
 #: epl/apps/project/models/choices.py:49
 msgid "Bound"
-msgstr "Relié"
+msgstr "Reliée"
 
 #: epl/apps/project/models/choices.py:50
 msgid "Unbound"
-msgstr "Non relié"
+msgstr "Non reliée"
 
 #: epl/apps/project/models/collection.py:26
 msgid "Arbitration Type 0"
@@ -317,6 +317,8 @@ msgstr "resources"
 
 #: epl/apps/project/models/collection.py:128
 #: epl/templates/pdf/resulting-report.html:94
+#: epl/templates/pdf/resulting-report.html:100
+#: epl/templates/pdf/resulting-report.html:105
 msgid "Call number"
 msgstr "Cote"
 
@@ -341,6 +343,8 @@ msgid "Alias for a duplicate collection in the same library"
 msgstr "Alias pour une collection dupliquée dans la même bibliothèque"
 
 #: epl/apps/project/models/collection.py:139
+#: epl/templates/pdf/resulting-report.html:100
+#: epl/templates/pdf/resulting-report.html:105
 msgid "Position"
 msgstr "Position"
 
@@ -444,6 +448,7 @@ msgid "Is alternative storage site"
 msgstr "Est un lieu de conservation alternatif"
 
 #: epl/apps/project/models/project.py:141
+#: epl/apps/project/tests/models/test_project.py:83
 msgid "Alternative storage site"
 msgstr "Lieu de conservation alternatif"
 
@@ -456,6 +461,7 @@ msgid "Project Creator"
 msgstr "Monteur projet"
 
 #: epl/apps/project/models/project.py:152
+#: epl/apps/project/tests/models/test_user_role.py:40
 msgid "Project Administrator"
 msgstr "Administrateur de projet"
 
@@ -465,6 +471,7 @@ msgid "Project Manager"
 msgstr "Pilote de projet"
 
 #: epl/apps/project/models/project.py:154
+#: epl/apps/project/tests/models/test_project.py:60
 msgid "Instructor"
 msgstr "Instructeur"
 
@@ -488,8 +495,8 @@ msgstr "Rôles utilisateurs du projet"
 msgid "Segment type"
 msgstr "Type de segment"
 
-#: epl/apps/project/models/segment.py:16
-#: epl/templates/pdf/resulting-report.html:131
+#: epl/apps/project/models/segment.py:16 epl/apps/project/models/segment.py:46
+#: epl/templates/pdf/resulting-report.html:132
 msgid "Segment"
 msgstr "Segment"
 
@@ -498,7 +505,7 @@ msgid "Improbable elements"
 msgstr "Éléments improbables"
 
 #: epl/apps/project/models/segment.py:18
-#: epl/templates/pdf/resulting-report.html:134
+#: epl/templates/pdf/resulting-report.html:133
 msgid "Exception"
 msgstr "Exception"
 
@@ -615,11 +622,11 @@ msgstr "Demande d'information"
 
 #: epl/apps/project/serializers/contact.py:12
 msgid "Report a bug"
-msgstr "Signaler un bug"
+msgstr "Rapporter un bug"
 
 #: epl/apps/project/serializers/contact.py:13
 msgid "Make a complaint"
-msgstr "Faire une réclamation"
+msgstr "Déposer une réclamation"
 
 #: epl/apps/project/serializers/contact.py:14
 msgid "Make a suggestion"
@@ -627,15 +634,21 @@ msgstr "Faire une suggestion"
 
 #: epl/apps/project/serializers/contact.py:15
 msgid "Give a review"
-msgstr "Donner son avis"
+msgstr "Donner un avis"
 
 #: epl/apps/project/serializers/contact.py:21
 msgid "Email address of the sender. Required if not authenticated."
-msgstr "Adresse email de l'envoyeur. Requise si non authentifié"
+msgstr "Adresse de courriel de l'expéditeur. Requis si non authentifié."
 
 #: epl/apps/project/serializers/contact.py:28
 msgid "Email is required for unauthenticated users."
-msgstr "L'email est requis pour les utilisateurs non authentifiés"
+msgstr "Courriel requis pour les utilisateurs non authentifiés."
+
+#: epl/apps/project/serializers/contact.py:41
+#: epl/apps/project/tests/views/test_contact_support.py:35
+#: epl/apps/project/tests/views/test_contact_support.py:56
+msgid "Contact form"
+msgstr "Formulaire de contact"
 
 #: epl/apps/project/serializers/project.py:44
 #: epl/apps/project/serializers/project.py:69
@@ -835,6 +848,7 @@ msgstr "En tant que pilote, vous pouvez maintenant lancer ou programmer"
 #: epl/apps/project/tests/views/test_project_status.py:226
 #: epl/apps/project/tests/views/test_project_status.py:301
 #: epl/apps/user/tests/views/test_create_account.py:120
+#: epl/services/user/email.py:103
 msgid "your account creation"
 msgstr "création de votre compte"
 
@@ -849,7 +863,9 @@ msgstr ""
 "En tant qu'administrateur, vous devez, en concertation avec vos co-"
 "administrateurs"
 
+#: epl/apps/project/tests/views/test_resultant_report_available.py:65
 #: epl/apps/project/tests/views/test_resultant_report_available.py:170
+#: epl/services/user/email.py:439
 msgid "resultant"
 msgstr "résultante"
 
@@ -947,7 +963,7 @@ msgstr "Le paramètre project_id est requis"
 
 #: epl/apps/project/views/contact.py:15
 msgid "Submit a support contact request"
-msgstr "Envoyer un message au support"
+msgstr "Demande de contact au support"
 
 #: epl/apps/project/views/library.py:16
 msgid "List all libraries"
@@ -1428,6 +1444,16 @@ msgstr ""
 "La vue n'est pas dans le contexte du sérialiseur ou n'est pas une "
 "GenericApiView"
 
+#: epl/services/user/email.py:26 epl/templates/emails/password_changed.txt:3
+#: epl/tests/services/email/test_user_email.py:26
+msgid "Password Change"
+msgstr "Modification du mot de passe"
+
+#: epl/services/user/email.py:46 epl/templates/emails/password_reset.txt:3
+#: epl/tests/services/email/test_user_email.py:53
+msgid "Password Reset"
+msgstr "Réinitialisation du mot de passe"
+
 #: epl/services/user/email.py:83
 msgid "creating your account (pending)"
 msgstr "création de votre compte (en attente)"
@@ -1446,10 +1472,34 @@ msgstr "Disponibilité du projet {project_name} pour le lancement"
 msgid "now"
 msgstr "maintenant"
 
+#: epl/services/user/email.py:191
+msgid "at"
+msgstr "à"
+
 #: epl/services/user/email.py:200
 #, python-brace-format
 msgid "Launch of the {project_name} project"
 msgstr "Lancement du projet {project_name}"
+
+#: epl/services/user/email.py:227
+msgid "arbitration"
+msgstr "arbitrage"
+
+#: epl/services/user/email.py:262
+msgid "positioning"
+msgstr "positionnement"
+
+#: epl/services/user/email.py:287
+msgid "instruction"
+msgstr "instruction"
+
+#: epl/services/user/email.py:354
+msgid "anomaly"
+msgstr "anomalie"
+
+#: epl/services/user/email.py:401
+msgid "anomaly resolved"
+msgstr "anomalie résolue"
 
 #: epl/templates/403.html:6
 msgid "You are not allowed to see this page"
@@ -1673,10 +1723,6 @@ msgstr ""
 "La collection résultante pour la ressource  %(resource_title)s est à présent "
 "disponible avec le détail des contributions de votre collection :"
 
-#: epl/templates/emails/password_changed.txt:3
-msgid "Password Change"
-msgstr "Modification du mot de passe"
-
 #: epl/templates/emails/password_changed.txt:5
 #: epl/tests/services/email/test_user_email.py:38
 msgid ""
@@ -1714,10 +1760,6 @@ msgid ""
 msgstr ""
 "Pour des raisons de sécurité, nous vous recommandons de changer votre mot de "
 "passe au plus vite"
-
-#: epl/templates/emails/password_reset.txt:3
-msgid "Password Reset"
-msgstr "Réinitialisation du mot de passe"
 
 #: epl/templates/emails/password_reset.txt:5
 #: epl/tests/services/email/test_user_email.py:64
@@ -1814,14 +1856,15 @@ msgid "Unbound control"
 msgstr "Contrôle des non reliés"
 
 #: epl/templates/pdf/resulting-report.html:128
-msgid "Order"
-msgstr "Ordre"
+#: epl/templates/pdf/resulting-report.html:153
+msgid "Line"
+msgstr "Ligne"
 
-#: epl/templates/pdf/resulting-report.html:132
+#: epl/templates/pdf/resulting-report.html:131
 msgid "Bound or Unbound"
-msgstr "Forme reliée ou non"
+msgstr "Forme"
 
-#: epl/templates/pdf/resulting-report.html:133
+#: epl/templates/pdf/resulting-report.html:134
 msgid "Improvable element"
 msgstr "Éléments améliorables"
 
@@ -1832,100 +1875,3 @@ msgstr "Bibliothèque remédiée"
 #: epl/validators.py:61
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
-
-#~ msgid "at"
-#~ msgstr "à"
-
-#~ msgid "arbitration"
-#~ msgstr "arbitrage"
-
-#~ msgid "positioning"
-#~ msgstr "positionnement"
-
-#~ msgid "instruction"
-#~ msgstr "instruction"
-
-#~ msgid "anomaly"
-#~ msgstr "anomalie"
-
-#~ msgid "anomaly resolved"
-#~ msgstr "anomalie résolue"
-
-#~ msgid "Referenced segment belongs to a different collection"
-#~ msgstr "Le segment référencé appartient à une autre collection"
-
-#~ msgid "The repositioning of your collection for the resource"
-#~ msgstr "Le repositionnement de votre collection pour la ressource"
-
-#~ msgid "Invitation"
-#~ msgstr "Invitation"
-
-#~ msgid "To view the details, please follow this link:"
-#~ msgstr "Pour voir les détails, veuillez suivre ce lien :"
-
-#~ msgid ""
-#~ "The library to compare against cannot be the same as the current library"
-#~ msgstr ""
-#~ "La bibliothèque à comparer ne peut pas être la même que la bibliothèque "
-#~ "active."
-
-#~ msgid "You must specify a library to compare against"
-#~ msgstr "Vous devez spécifier une bibliothèque à comparer"
-
-#~ msgid "Collections successfully deleted for library in project"
-#~ msgstr "Collections supprimées avec succès pour la bibliothèque du projet"
-
-#~ msgid "Instructor's comment on the collection positioning"
-#~ msgstr "Commentaire de l'instructeur sur le positionnement de la collection"
-
-#~ msgid "Library ID to which the resource belongs"
-#~ msgstr "ID de la bibliothèque à laquelle appartient la ressource."
-
-#~ msgid "Project ID to which the resource belongs"
-#~ msgstr "ID du projet auquel la ressource appartient"
-
-#~ msgid "Participation in another project"
-#~ msgstr "Participation à un autre projet"
-
-#~ msgid "Incorrect assignment"
-#~ msgstr "Affectation incorrecte"
-
-#~ msgid "Instruction of unbound resources"
-#~ msgstr "Instruction des ressources non reliées"
-
-#~ msgid "Created"
-#~ msgstr "Créé"
-
-#~ msgid "Active"
-#~ msgstr "Actif"
-
-#~ msgid "Missing required fields in the CSV file."
-#~ msgstr "Champs obligatoires manquants dans le fichier CSV."
-
-#~ msgid "Role"
-#~ msgstr "Rôle"
-
-#~ msgid "This password is too common"
-#~ msgstr "Le mot de passe est trop courant"
-
-#~ msgid ""
-#~ "If you do not want to reset your password, you can ignore this message "
-#~ "and your password will not change"
-#~ msgstr ""
-#~ "Si vous ne souhaitez pas réinitialiser votre mot de passe, vous pouvez "
-#~ "ignorer ce message et votre mot de passe ne changera pas"
-
-#~ msgid "Signature has expired"
-#~ msgstr "La signature a expiré"
-
-#~ msgid "Signature does not match"
-#~ msgstr "La signature n'est pas valide"
-
-#~ msgid "User not found"
-#~ msgstr "Utilisateur non trouvé"
-
-#~ msgid "Email is required."
-#~ msgstr "L'email est requis."
-
-#~ msgid "Email sending failed"
-#~ msgstr "L'envoi de l'email a échoué"

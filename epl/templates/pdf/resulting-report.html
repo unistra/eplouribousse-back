@@ -97,12 +97,12 @@
     <p>{% translate "Lines that apply to the selected collection are highlighted" %}</p>
     <dl>
         <dt>{% translate "Main collection" %}</dt>
-        <dd>{{ main_collection.call_number }}</dd>
+        <dd>{{ main_collection.library.alias|default:main_collection.library.name }} ({% translate "Position" %}: {{ main_collection.position }} | {% translate "Call number" %}: {{ main_collection.call_number }})</dd>
         <dt>{% translate "Participating collections" %}</dt>
         <dd>
             <ul class="inline-list">
                 {% for col in participating_collections %}
-                <li {% if col.id == collection.id %}class="current"{% endif %}>{{ col.call_number }}</li>
+                <li {% if col.id == collection.id %}class="current"{% endif %}>{{ col.library.alias|default:col.library.name }} ({% translate "Position" %}: {{ col.position }} | {% translate "Call number" %}: {{ col.call_number }})</li>
                 {% endfor %}
             </ul>
         </dd>
@@ -125,30 +125,34 @@
     <table>
         <thead>
         <tr>
-            <th scope="col">{% translate "Order" %}</th>
+            <th scope="col">{% translate "Line" %}</th>
             <th scope="col">{% translate "Library" %}</th>
             <th scope="col">{% translate "Collection" %}</th>
-            <th scope="col">{% translate "Segment" %}</th>
             <th scope="col">{% translate "Bound or Unbound" %}</th>
-            <th scope="col">{% translate "Improvable element" %}</th>
+            <th scope="col">{% translate "Segment" %}</th>
             <th scope="col">{% translate "Exception" %}</th>
+            <th scope="col">{% translate "Improvable element" %}</th>
             <th scope="col">{% translate "Remediated library" %}</th>
         </tr>
         </thead>
         <tbody>
         {% for segment in segments %}
             <tr class="segment
-                    {% if segment.collection.library.id == collection.library.id %}owned{% endif %}
-                    {% if segment.improved_segment.collection.library.id == collection.library.id %}remedied{% endif %}
+                    {% if segment.collection.id == collection.id %}owned{% endif %}
+                    {% if segment.improved_segment.collection.id == collection.id %}remedied{% endif %}
                 ">
                 <td>{{ segment.order }}</td>
                 <td>{{ segment.collection.library.name }}</td>
-                <td>{{ segment.collection.position }} | {{ segment.collection.call_number }}</td>
-                <td>{{ segment.content }}</td>
+                <td>Pos. {{ segment.collection.position }} | {{ segment.collection.call_number }}</td>
                 <td>{{ segment.get_segment_type_display }}</td>
-                <td>{{ segment.improvable_element }}</td>
+                <td>{{ segment.content }}</td>
                 <td>{{ segment.exception }}</td>
-                <td>{{ segment.improved_segment.collection.library.name }}</td>
+                <td>{{ segment.improvable_elements }}</td>
+                <td>
+                    {% if segment.improved_segment %}
+                    {{ segment.improved_segment.collection.library.name }} | {% translate "Line" %} {{ segment.improved_segment.order }}
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
         </tbody>
