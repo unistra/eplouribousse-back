@@ -1862,7 +1862,7 @@ msgstr "Ligne"
 
 #: epl/templates/pdf/resulting-report.html:131
 msgid "Bound or Unbound"
-msgstr "Forme reliée ou non"
+msgstr "Forme"
 
 #: epl/templates/pdf/resulting-report.html:134
 msgid "Improvable element"
