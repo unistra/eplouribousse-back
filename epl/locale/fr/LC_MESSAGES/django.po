@@ -649,6 +649,160 @@ msgstr "Courriel requis pour les utilisateurs non authentifiés."
 msgid "Contact form: {subject_label}"
 msgstr "Formulaire de contact : {subject_label}"
 
+#: epl/apps/project/serializers/contact.py:41
+#: epl/apps/project/tests/views/test_contact_support.py:35
+#: epl/apps/project/tests/views/test_contact_support.py:56
+msgid "Contact form"
+msgstr "Formulaire de contact"
+
+#: epl/apps/project/serializers/dashboard.py:63
+msgid "Initial Datas"
+msgstr "Données initiales"
+
+#: epl/apps/project/serializers/dashboard.py:64
+msgid "Initial collections number before positioning"
+msgstr "Nombre de Collections initiales avant positionnement"
+
+#: epl/apps/project/serializers/dashboard.py:65
+msgid "Initial resources number before positioning"
+msgstr "Nombre de Ressources initiales avant positionnement"
+
+#: epl/apps/project/serializers/dashboard.py:66
+#: epl/apps/project/serializers/dashboard.py:90
+#: epl/apps/project/serializers/dashboard.py:118
+#: epl/apps/project/serializers/dashboard.py:145
+#: epl/apps/project/serializers/dashboard.py:214
+#: epl/apps/project/serializers/dashboard.py:244
+#: epl/apps/project/serializers/dashboard.py:278
+#: epl/apps/project/serializers/dashboard.py:330
+
+msgid "Computed at"
+msgstr "Calculé le"
+
+#: epl/apps/project/serializers/dashboard.py:82
+msgid "Positioning Information"
+msgstr "Information sur le positionnement"
+
+#: epl/apps/project/serializers/dashboard.py:83
+msgid "Number of Collections positioned (exclusions included)"
+msgstr "Nombre de Collections positionnées (exclusions incluses)"
+
+#: epl/apps/project/serializers/dashboard.py:84
+msgid "Number of Collections positioned (excluding exclusions)"
+msgstr "Nombre de Collections positionnées (hors exclusions)"
+
+#: epl/apps/project/serializers/dashboard.py:87
+msgid "Number of Collections remaining to be positioned"
+msgstr "Nombre de Collections restant à positionner"
+
+#: epl/apps/project/serializers/dashboard.py:105
+msgid "Exclusion Information"
+msgstr "Information sur les exclusions"
+
+#: epl/apps/project/serializers/dashboard.py:106
+msgid "Number of excluded collections"
+msgstr "Nombre de Collections exclues"
+
+#: epl/apps/project/serializers/dashboard.py:114
+msgid "Number of resources discarded due to collection exclusion"
+msgstr "Nombre de Ressources écartées par exclusion de collection"
+
+#: epl/apps/project/serializers/dashboard.py:135
+msgid "Arbitration Information"
+msgstr "Information sur les arbitrages"
+
+#: epl/apps/project/serializers/dashboard.py:136
+msgid "Number of Collections in type 0 arbitration"
+msgstr "Nombre de Collections en arbitrage de type 0"
+
+#: epl/apps/project/serializers/dashboard.py:139
+msgid "Number of Collections in type 1 arbitration"
+msgstr "Nombre de Collections en arbitrage de type 1"
+
+#: epl/apps/project/serializers/dashboard.py:142
+msgid "Number of Resources affected by any arbitration"
+msgstr "Nombre de Ressources concernées par un arbitrage quelconque"
+
+#: epl/apps/project/serializers/dashboard.py:207
+msgid "Information on candidates for instruction"
+msgstr "Information sur les candidats à l’instruction"
+
+#: epl/apps/project/serializers/dashboard.py:208
+msgid "Number of collections eligible for instruction"
+msgstr "Nombre de Collections candidates à l’instruction"
+
+#: epl/apps/project/serializers/dashboard.py:209
+msgid "Number of resources eligible for instruction"
+msgstr "Nombre de Ressources candidates à l’instruction"
+
+#: epl/apps/project/serializers/dashboard.py:210
+msgid "- of which Number of duplicates"
+msgstr "- dont Nombre de doublons"
+
+#: epl/apps/project/serializers/dashboard.py:211
+msgid "- of which Number of triplicates"
+msgstr "- dont Nombre de triplons"
+
+#: epl/apps/project/serializers/dashboard.py:212
+msgid "- of which Number of quadruplicates"
+msgstr "- dont Nombre de quadruplons"
+
+#: epl/apps/project/serializers/dashboard.py:213
+msgid "- of which Other higher multiples"
+msgstr "- dont Autres multiplons supérieurs"
+
+#: epl/apps/project/serializers/dashboard.py:231
+msgid "Information about instructions"
+msgstr "Information sur les instructions"
+
+#: epl/apps/project/serializers/dashboard.py:232
+msgid ""
+"Number of resources for which instruction of bound elements is in progress"
+msgstr ""
+"Nombre de Ressources dont l'instruction des éléments reliés est en cours"
+
+#: epl/apps/project/serializers/dashboard.py:236
+msgid ""
+"Number of resources for which instruction of unbound elements is in progress"
+msgstr ""
+"Nombre de Ressources dont l'instruction des éléments non reliés est en cours"
+
+#: epl/apps/project/serializers/dashboard.py:240
+msgid "Number of resources fully instructed (control performed)"
+msgstr "Nombre de Ressources complètement instruites (contrôle effectué)"
+
+#: epl/apps/project/serializers/dashboard.py:254
+msgid "Information about controls"
+msgstr "Information sur les contrôles"
+
+#: epl/apps/project/serializers/dashboard.py:255
+msgid "Number of resources for which bound elements are being controlled"
+msgstr "Nombre de Ressources dont le contrôle des éléments reliés est en cours"
+
+#: epl/apps/project/serializers/dashboard.py:259
+msgid "Number of resources for which unbound elements are being controlled"
+msgstr "Nombre de Ressources dont le contrôle des éléments non reliés est en cours"
+
+#: epl/apps/project/serializers/dashboard.py:276
+msgid "Information about anomalies"
+msgstr "Information sur les anomalies"
+
+#: epl/apps/project/serializers/dashboard.py:277
+msgid "Number of anomalies in progress"
+msgstr "Nombre d’anomalie en cours"
+
+#: epl/apps/project/serializers/dashboard.py:327
+msgid "Achievements"
+msgstr "Réalisations"
+
+#: epl/apps/project/serializers/dashboard.py:328
+msgid "Réalisation relative"
+msgstr "Supprimer une collection"
+
+#: epl/apps/project/serializers/dashboard.py:329
+msgid "Absolute completion"
+msgstr "Réalisation absolue"
+
 #: epl/apps/project/serializers/project.py:44
 #: epl/apps/project/serializers/project.py:69
 #: epl/apps/project/serializers/project.py:232
@@ -1878,3 +2032,82 @@ msgstr "Bibliothèque remédiée"
 #: epl/validators.py:61
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
+
+#~ msgid "Referenced segment belongs to a different collection"
+#~ msgstr "Le segment référencé appartient à une autre collection"
+
+#~ msgid "The repositioning of your collection for the resource"
+#~ msgstr "Le repositionnement de votre collection pour la ressource"
+
+#~ msgid "Invitation"
+#~ msgstr "Invitation"
+
+#~ msgid "To view the details, please follow this link:"
+#~ msgstr "Pour voir les détails, veuillez suivre ce lien :"
+
+#~ msgid ""
+#~ "The library to compare against cannot be the same as the current library"
+#~ msgstr ""
+#~ "La bibliothèque à comparer ne peut pas être la même que la bibliothèque "
+#~ "active."
+
+#~ msgid "You must specify a library to compare against"
+#~ msgstr "Vous devez spécifier une bibliothèque à comparer"
+
+#~ msgid "Collections successfully deleted for library in project"
+#~ msgstr "Collections supprimées avec succès pour la bibliothèque du projet"
+
+#~ msgid "Instructor's comment on the collection positioning"
+#~ msgstr "Commentaire de l'instructeur sur le positionnement de la collection"
+
+#~ msgid "Library ID to which the resource belongs"
+#~ msgstr "ID de la bibliothèque à laquelle appartient la ressource."
+
+#~ msgid "Project ID to which the resource belongs"
+#~ msgstr "ID du projet auquel la ressource appartient"
+
+#~ msgid "Participation in another project"
+#~ msgstr "Participation à un autre projet"
+
+#~ msgid "Incorrect assignment"
+#~ msgstr "Affectation incorrecte"
+
+#~ msgid "Instruction of unbound resources"
+#~ msgstr "Instruction des ressources non reliées"
+
+#~ msgid "Created"
+#~ msgstr "Créé"
+
+#~ msgid "Active"
+#~ msgstr "Actif"
+
+#~ msgid "Missing required fields in the CSV file."
+#~ msgstr "Champs obligatoires manquants dans le fichier CSV."
+
+#~ msgid "Role"
+#~ msgstr "Rôle"
+
+#~ msgid "This password is too common"
+#~ msgstr "Le mot de passe est trop courant"
+
+#~ msgid ""
+#~ "If you do not want to reset your password, you can ignore this message "
+#~ "and your password will not change"
+#~ msgstr ""
+#~ "Si vous ne souhaitez pas réinitialiser votre mot de passe, vous pouvez "
+#~ "ignorer ce message et votre mot de passe ne changera pas"
+
+#~ msgid "Signature has expired"
+#~ msgstr "La signature a expiré"
+
+#~ msgid "Signature does not match"
+#~ msgstr "La signature n'est pas valide"
+
+#~ msgid "User not found"
+#~ msgstr "Utilisateur non trouvé"
+
+#~ msgid "Email is required."
+#~ msgstr "L'email est requis."
+
+#~ msgid "Email sending failed"
+#~ msgstr "L'envoi de l'email a échoué"

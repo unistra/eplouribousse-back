@@ -1,6 +1,7 @@
 from django.core.cache import cache
 from django.db.models import Count
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from epl.apps.project.models import Anomaly, ResourceStatus
@@ -59,9 +60,10 @@ class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
 
     def compute_data(self, project):
         return {
-            "initial_collections": Collection.objects.filter(project=project).count(),
-            "initial_resources": Resource.objects.filter(project=project).count(),
-            "computed_at": timezone.now(),
+            "title": _("Initial Datas"),
+            _("Initial collections number before positioning"): Collection.objects.filter(project=project).count(),
+            _("Initial resources number before positioning"): Resource.objects.filter(project=project).count(),
+            _("Computed at"): timezone.now(),
         }
 
 
@@ -77,14 +79,19 @@ class PositioningInformationSerializer(CacheDashboardMixin, serializers.Serializ
 
     def compute_data(self, project):
         return {
-            "positioned_collections": Collection.objects.filter(project=project, position__isnull=False).count(),
-            "positioned_collections_without_exclusion": Collection.objects.filter(project=project, position__gt=0)
+            "title": _("Positioning Information"),
+            _("Number of Collections positioned (exclusions included)"): Collection.objects.filter(
+                project=project, position__isnull=False
+            ).count(),
+            _("Number of Collections positioned (excluding exclusions)"): Collection.objects.filter(
+                project=project, position__gt=0
+            )
             .exclude(resource__status=ResourceStatus.EXCLUDED)
             .count(),
-            "collections_remaining_to_be_positioned": Collection.objects.filter(
+            _("Number of Collections remaining to be positioned"): Collection.objects.filter(
                 project=project, position__isnull=True
             ).count(),
-            "computed_at": timezone.now(),
+            _("Computed at"): timezone.now(),
         }
 
 
@@ -99,7 +106,8 @@ class ExclusionInformationSerializer(CacheDashboardMixin, serializers.Serializer
 
     def compute_data(self, project):
         return {
-            "excluded_collections": Collection.objects.filter(
+            "title": _("Exclusion Information"),
+            _("Number of excluded collections"): Collection.objects.filter(
                 project=project,
                 position=0,
             )
@@ -107,11 +115,11 @@ class ExclusionInformationSerializer(CacheDashboardMixin, serializers.Serializer
                 resource__status=ResourceStatus.EXCLUDED
             )  # todo: vérifier s'il faut exclure de l'exclusion les collections d'une ressource non participante (i.e. exclue)
             .count(),
-            "excluded_resources": Resource.objects.filter(
+            _("Number of resources discarded due to collection exclusion"): Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.EXCLUDED,
             ).count(),
-            "computed_at": timezone.now(),
+            _("Computed at"): timezone.now(),
         }
 
 
@@ -128,15 +136,17 @@ class ArbitrationInformationSerializer(DirectComputeMixin, serializers.Serialize
 
     def compute_data(self, project):
         return {
-            "collections_in_arbitration_0_count": Collection.objects.filter(
+            "title": _("Arbitration Information"),
+            _("Number of Collections in type 0 arbitration"): Collection.objects.filter(
                 project=project, resource__arbitration=Arbitration.ZERO
             ).count(),
-            "collections_in_arbitration_1_count": Collection.objects.filter(
+            _("Number of Collections in type 1 arbitration"): Collection.objects.filter(
                 project=project, resource__arbitration=Arbitration.ONE
             ).count(),
-            "resources_with_arbitration_count": Resource.objects.filter(
+            _("Number of Resources affected by any arbitration"): Resource.objects.filter(
                 project=project, arbitration__in=[Arbitration.ZERO, Arbitration.ONE]
             ).count(),
+            _("Computed at"): timezone.now(),
         }
 
 
@@ -199,19 +209,22 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
             return round((count / total) * 100, 1)
 
         return {
-            "collections_candidates_for_instruction": candidate_collections.count(),
-            "resources_candidates_for_instruction": candidate_resources,
-            "duplicates_in_ressource": duplicates,
-            "duplicates_in_ressource_ratio": calculate_ratio(duplicates, candidate_resources),
-            "triplicates_in_ressource": triplicates,
-            "triplicates_in_ressource_ratio": calculate_ratio(triplicates, candidate_resources),
-            "quadruplicates_in_ressource": quadruplicates,
-            "quadruplicates_in_ressource_ratio": calculate_ratio(quadruplicates, candidate_resources),
-            "other_higher_multiplicates_in_ressource": other_higher_multiplicates,
-            "other_higher_multiplicates_in_ressource_ratio": calculate_ratio(
-                other_higher_multiplicates, candidate_resources
-            ),
-            "computed_at": timezone.now(),
+            "title": _("Information on candidates for instruction"),
+            _("Number of collections eligible for instruction"): candidate_collections.count(),
+            _("Number of resources eligible for instruction"): candidate_resources,
+            _(
+                "- of which Number of duplicates"
+            ): f"{duplicates} ({calculate_ratio(duplicates, candidate_resources)} %)",
+            _(
+                "- of which Number of triplicates"
+            ): f"{triplicates} ({calculate_ratio(triplicates, candidate_resources)} %)",
+            _(
+                "- of which Number of quadruplicates"
+            ): f"{quadruplicates} ({calculate_ratio(quadruplicates, candidate_resources)} %)",
+            _(
+                "- of which Other higher multiples"
+            ): f"{other_higher_multiplicates} ({calculate_ratio(other_higher_multiplicates, candidate_resources)} %)",
+            _("Computed at"): timezone.now(),
         }
 
 
@@ -228,19 +241,20 @@ class InstructionsInformationSerializer(CacheDashboardMixin, serializers.Seriali
 
     def compute_data(self, project):
         return {
-            "ressources_with_status_instruction_bound": Resource.objects.filter(
+            "title": _("Information about instructions"),
+            _("Number of resources for which instruction of bound elements is in progress"): Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.INSTRUCTION_BOUND,
             ).count(),
-            "ressources_with_status_instruction_unbound": Resource.objects.filter(
+            _("Number of resources for which instruction of unbound elements is in progress"): Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.INSTRUCTION_UNBOUND,
             ).count(),
-            "ressources_with_instruction_completed": Resource.objects.filter(
+            _("Number of resources fully instructed (control performed)"): Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.EDITION,
             ).count(),
-            "computed_at": timezone.now(),
+            _("Computed at"): timezone.now(),
         }
 
 
@@ -250,11 +264,12 @@ class ControlsInformationSerializer(CacheDashboardMixin, serializers.Serializer)
 
     def compute_data(self, project):
         return {
-            "ressources_with_bound_copies_being_controlled_count": Resource.objects.filter(
+            "title": _("Information about controls"),
+            _("Number of resources for which bound elements are being controlled"): Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.CONTROL_BOUND,
             ).count(),
-            "ressources_with_unbound_copies_being_controlled_count": Resource.objects.filter(
+            _("Number of resources for which unbound elements are being controlled"): Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.CONTROL_UNBOUND,
             ).count(),
@@ -271,8 +286,9 @@ class AnomaliesInformationSerializer(CacheDashboardMixin, serializers.Serializer
         ).count()
 
         return {
-            "anomalies_in_progress": anomalies_in_progress,
-            "computed_at": timezone.now(),
+            "title": _("Information about anomalies"),
+            _("Number of anomalies in progress"): anomalies_in_progress,
+            _("Computed at"): timezone.now(),
         }
 
 
@@ -321,9 +337,10 @@ class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Seriali
         )
 
         return {
-            "relative_completion": relative_completion,
-            "absolute_completion": absolute_completion,
-            "computed_at": timezone.now(),
+            "title": _("Achievements"),
+            _("Relative completion"): relative_completion,
+            _("Absolute completion"): absolute_completion,
+            _("Computed at"): timezone.now(),
         }
 
 
