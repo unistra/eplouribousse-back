@@ -796,8 +796,8 @@ msgid "Achievements"
 msgstr "Réalisations"
 
 #: epl/apps/project/serializers/dashboard.py:328
-msgid "Réalisation relative"
-msgstr "Supprimer une collection"
+msgid "Relative completion"
+msgstr "Réalisation relative"
 
 #: epl/apps/project/serializers/dashboard.py:329
 msgid "Absolute completion"

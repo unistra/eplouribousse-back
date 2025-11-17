@@ -63,7 +63,7 @@ class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
             "title": _("Initial Datas"),
             _("Initial collections number before positioning"): Collection.objects.filter(project=project).count(),
             _("Initial resources number before positioning"): Resource.objects.filter(project=project).count(),
-            _("Computed at"): timezone.now(),
+            "computed_at": timezone.now(),
         }
 
 
@@ -91,7 +91,7 @@ class PositioningInformationSerializer(CacheDashboardMixin, serializers.Serializ
             _("Number of Collections remaining to be positioned"): Collection.objects.filter(
                 project=project, position__isnull=True
             ).count(),
-            _("Computed at"): timezone.now(),
+            "computed_at": timezone.now(),
         }
 
 
@@ -119,7 +119,7 @@ class ExclusionInformationSerializer(CacheDashboardMixin, serializers.Serializer
                 project=project,
                 status=ResourceStatus.EXCLUDED,
             ).count(),
-            _("Computed at"): timezone.now(),
+            "computed_at": timezone.now(),
         }
 
 
@@ -146,7 +146,7 @@ class ArbitrationInformationSerializer(DirectComputeMixin, serializers.Serialize
             _("Number of Resources affected by any arbitration"): Resource.objects.filter(
                 project=project, arbitration__in=[Arbitration.ZERO, Arbitration.ONE]
             ).count(),
-            _("Computed at"): timezone.now(),
+            "computed_at": timezone.now(),
         }
 
 
@@ -224,7 +224,7 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
             _(
                 "- of which Other higher multiples"
             ): f"{other_higher_multiplicates} ({calculate_ratio(other_higher_multiplicates, candidate_resources)} %)",
-            _("Computed at"): timezone.now(),
+            "computed_at": timezone.now(),
         }
 
 
@@ -254,7 +254,7 @@ class InstructionsInformationSerializer(CacheDashboardMixin, serializers.Seriali
                 project=project,
                 status=ResourceStatus.EDITION,
             ).count(),
-            _("Computed at"): timezone.now(),
+            "computed_at": timezone.now(),
         }
 
 
@@ -273,6 +273,7 @@ class ControlsInformationSerializer(CacheDashboardMixin, serializers.Serializer)
                 project=project,
                 status=ResourceStatus.CONTROL_UNBOUND,
             ).count(),
+            "computed_at": timezone.now(),
         }
 
 
@@ -288,7 +289,7 @@ class AnomaliesInformationSerializer(CacheDashboardMixin, serializers.Serializer
         return {
             "title": _("Information about anomalies"),
             _("Number of anomalies in progress"): anomalies_in_progress,
-            _("Computed at"): timezone.now(),
+            "computed_at": timezone.now(),
         }
 
 
@@ -338,9 +339,9 @@ class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Seriali
 
         return {
             "title": _("Achievements"),
-            _("Relative completion"): relative_completion,
-            _("Absolute completion"): absolute_completion,
-            _("Computed at"): timezone.now(),
+            _("Relative completion"): f"{relative_completion} %",
+            _("Absolute completion"): f"{absolute_completion} %",
+            "computed_at": timezone.now(),
         }
 
 
