@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-14 15:18+0100\n"
+"POT-Creation-Date: 2025-11-18 11:24+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -353,7 +353,7 @@ msgid "Positioning rank of a collection"
 msgstr "Positionnement du rang d'une collection"
 
 #: epl/apps/project/models/collection.py:145
-#: epl/apps/project/serializers/collection.py:329
+#: epl/apps/project/serializers/collection.py:334
 msgid "Reason for excluding the collection from deduplication"
 msgstr "Raison de l'exclusion de la collection de la déduplication"
 
@@ -572,38 +572,38 @@ msgstr "Le projet avec l'ID %(id)s n'existe pas."
 msgid "An alternative storage site can't receive a collection"
 msgstr "Un lieu de conservation alternatif ne peut pas recevoir de collection"
 
-#: epl/apps/project/serializers/collection.py:296
+#: epl/apps/project/serializers/collection.py:301
 msgid "Position (rank) between 1 and 4"
 msgstr "Position (rang) entre 1 et 4"
 
-#: epl/apps/project/serializers/collection.py:339
+#: epl/apps/project/serializers/collection.py:344
 msgid "Invalid exclusion reason."
 msgstr "Motif d'exclusion non valide."
 
-#: epl/apps/project/serializers/collection.py:364
-#: epl/apps/project/serializers/collection.py:396
+#: epl/apps/project/serializers/collection.py:369
+#: epl/apps/project/serializers/collection.py:401
 #: epl/apps/project/views/collection.py:286
 #: epl/apps/project/views/collection.py:295
 msgid "Positioning comment"
 msgstr "Message de positionnement"
 
-#: epl/apps/project/serializers/collection.py:405
+#: epl/apps/project/serializers/collection.py:410
 #: epl/apps/project/serializers/resource.py:72
 #: epl/apps/project/serializers/segment.py:63
 msgid "Number of fixed anomalies"
 msgstr "Nombre d'anomalies corrigées"
 
-#: epl/apps/project/serializers/collection.py:406
+#: epl/apps/project/serializers/collection.py:411
 #: epl/apps/project/serializers/resource.py:73
 #: epl/apps/project/serializers/segment.py:64
 msgid "Number of unfixed anomalies"
 msgstr "Nombre d'anomalies non corrigées"
 
-#: epl/apps/project/serializers/collection.py:434
+#: epl/apps/project/serializers/collection.py:439
 msgid "Resource is not in an instruction phase"
 msgstr "La ressource n'est pas en phase d'instruction"
 
-#: epl/apps/project/serializers/collection.py:451
+#: epl/apps/project/serializers/collection.py:456
 msgid "Invalid turn data"
 msgstr "Données de tour non valides"
 
@@ -645,10 +645,9 @@ msgid "Email is required for unauthenticated users."
 msgstr "Courriel requis pour les utilisateurs non authentifiés."
 
 #: epl/apps/project/serializers/contact.py:41
-#: epl/apps/project/tests/views/test_contact_support.py:35
-#: epl/apps/project/tests/views/test_contact_support.py:56
-msgid "Contact form"
-msgstr "Formulaire de contact"
+#, python-brace-format
+msgid "Contact form: {subject_label}"
+msgstr "Formulaire de contact : {subject_label}"
 
 #: epl/apps/project/serializers/project.py:44
 #: epl/apps/project/serializers/project.py:69
@@ -832,6 +831,11 @@ msgstr "Collections supprimées avec succès pour cette bibliothèque"
 #: epl/apps/project/views/collection.py:181
 msgid "No collections found for this library in this project"
 msgstr "Aucune collection trouvée pour cette bibliothèque dans ce projet"
+
+#: epl/apps/project/tests/views/test_contact_support.py:35
+#: epl/apps/project/tests/views/test_contact_support.py:56
+msgid "Contact form"
+msgstr "Formulaire de contact"
 
 #: epl/apps/project/tests/views/test_project_status.py:127
 msgid "creating"
