@@ -386,10 +386,11 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
             realized_positionings_by_libraries_percentage.append(realized_positionings_by_library_percentage)
 
         return {
+            "title": _("% of realized positioning progress by library"),
             "labels": labels,
             "datasets": [
                 {
-                    "label": "% de collections positionnées",  # question: en quelle langue gérer cette étiquette ?
+                    "label": _("% of collections positioned"),
                     "data": realized_positionings_by_libraries_percentage,
                 }
             ],
@@ -427,16 +428,16 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
             .annotate(count=Count("id"))
         }
 
-        # Prepare the final data structure for Chart.js
         return {
+            "title": _("Number of resources to be instructed"),
             "labels": labels,
             "datasets": [
                 {
-                    "label": "dashboard.charts.to_instruct.bound_label",
+                    "label": _("bound"),
                     "data": [bound_data.get(label, 0) for label in labels],
                 },
                 {
-                    "label": "dashboard.charts.to_instruct.unbound_label",
+                    "label": _("unbound"),
                     "data": [unbound_data.get(label, 0) for label in labels],
                 },
             ],
@@ -487,10 +488,10 @@ class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Seri
             return round((value / total) * 100, 2)
 
         labels = [
-            "dashboard.charts.occurrences.labels.doubles",
-            "dashboard.charts.occurrences.labels.triples",
-            "dashboard.charts.occurrences.labels.quadruples",
-            "dashboard.charts.occurrences.labels.others",
+            _("duplicates"),
+            _("triplicates"),
+            _("quadruplicates"),
+            _("more"),
         ]
         data = [
             to_percent(doubles, total_candidate_resources),
@@ -500,10 +501,11 @@ class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Seri
         ]
 
         return {
+            "title": _("Distribution of the number of occurrences in the collections eligible for the instruction"),
             "labels": labels,
             "datasets": [
                 {
-                    "label": "dashboard.charts.occurrences.dataset_label",
+                    "label": _("Distribution of occurrence types"),
                     "data": data,
                 }
             ],
