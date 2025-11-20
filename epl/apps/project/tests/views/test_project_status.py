@@ -129,7 +129,7 @@ class TestUpdateProjectStatusToReviewTest(TestCase):
 
         self.assertIn(self.project.name, notification_email.subject)
         self.assertIn(
-            "As an administrator, you must, in consultation with your co-administrators", notification_email.body
+            "As the administrator of this project, you must, in consultation with any co-", notification_email.body
         )
 
 
@@ -279,7 +279,7 @@ class TestSubscriptionNotificationForProjectAdmins(TestCase):
         # 2 emails are sent: account confirmation and invitation to review the project.
         self.assertEqual(len(mail.outbox), 2)
         bodies = [email.body for email in mail.outbox]
-        project_review_body_part = str(_("As an administrator, you must, in consultation with your co-administrators"))
+        project_review_body_part = "As the administrator of this project, you must, in consultation with any co-"
         self.assertTrue(any(project_review_body_part in b for b in bodies))
 
     def test_admin_not_invited_to_review_if_project_status_is_ready(self):
