@@ -1,5 +1,5 @@
 from django.core.cache import cache
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -402,31 +402,35 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
     """
     Prepares data for a stacked bar chart showing resources to be instructed
     (bound vs unbound) per library. Formatted for Chart.js.
-    The count is based on collections, as a proxy for workload per library.
+    The count is based on resources filtered with the same constraints as ResourceFilter.
     """
 
     def compute_data(self, project):
-        # X-axis
         libraries = project.libraries.distinct().order_by("name")
         labels = [lib.name for lib in libraries]
 
-        # --- Bound Resources (First Stack) ---
-        # Count collections belonging to 'bound' resources, grouped by library name
-        bound_data = {
-            item["library__name"]: item["count"]
-            for item in Collection.objects.filter(project=project, resource__status=ResourceStatus.INSTRUCTION_BOUND)
-            .values("library__name")
-            .annotate(count=Count("id"))
-        }
+        base_queryset = Resource.objects.filter(project=project)
 
-        # --- Unbound Resources (Second Stack) ---
-        # Count collections belonging to 'unbound' resources, grouped by library name
-        unbound_data = {
-            item["library__name"]: item["count"]
-            for item in Collection.objects.filter(project=project, resource__status=ResourceStatus.INSTRUCTION_UNBOUND)
-            .values("library__name")
-            .annotate(count=Count("id"))
-        }
+        bound_counts = {}
+        unbound_counts = {}
+        for library in libraries:
+            lib_name = library.name
+            lib_id_str = str(library.id)
+
+            bound_q = Q(
+                status=ResourceStatus.INSTRUCTION_BOUND,
+                collections__library=library,
+                instruction_turns__bound_copies__turns__0__library=lib_id_str,
+                arbitration=Arbitration.NONE,
+            )
+            unbound_q = Q(
+                status=ResourceStatus.INSTRUCTION_UNBOUND,
+                collections__library=library,
+                instruction_turns__unbound_copies__turns__0__library=lib_id_str,
+            )
+
+            bound_counts[lib_name] = base_queryset.filter(bound_q).distinct().count()
+            unbound_counts[lib_name] = base_queryset.filter(unbound_q).distinct().count()
 
         return {
             "title": _("Number of resources to be instructed"),
@@ -434,11 +438,11 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
             "datasets": [
                 {
                     "label": _("bound"),
-                    "data": [bound_data.get(label, 0) for label in labels],
+                    "data": [bound_counts.get(label, 0) for label in labels],
                 },
                 {
                     "label": _("unbound"),
-                    "data": [unbound_data.get(label, 0) for label in labels],
+                    "data": [unbound_counts.get(label, 0) for label in labels],
                 },
             ],
             "computed_at": timezone.now(),
