@@ -223,12 +223,14 @@ class ResourceFilter(filters.BaseFilterBackend):
                 "name": self.status_param,
                 "required": True,
                 "in": "query",
-                "description": str(self.status_param_description),
+                "description": str(self.status_param_description)
+                + "<br/>"
+                + "<br/>".join([f"{_val}: {_label}" for _val, _label in ResourceStatus.choices]),
                 "schema": {
                     "type": "array",
                     "items": {
                         "type": "integer",
-                        "enum": [_[0] for _ in ResourceStatus.choices],
+                        "enum": [_r[0] for _r in ResourceStatus.choices],
                     },
                 },
             },
@@ -252,7 +254,7 @@ class ResourceFilter(filters.BaseFilterBackend):
                 "description": str(self.positioning_filter_description),
                 "schema": {
                     "type": "integer",
-                    "enum": [_[0] for _ in PositioningFilter.choices],
+                    "enum": [_p[0] for _p in PositioningFilter.choices],
                     "description": _("'10' for Positioning only, '20' for Instruction not start"),
                 },
             },
