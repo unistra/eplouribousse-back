@@ -228,7 +228,7 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
         }
 
 
-class InstructionsInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+class InstructionsInformationSerializer(DirectComputeMixin, serializers.Serializer):
     """
     Number of resources for which instruction of related elements is in progress
     Number of resources for which instruction of unrelated elements is in progress
@@ -258,7 +258,7 @@ class InstructionsInformationSerializer(CacheDashboardMixin, serializers.Seriali
         }
 
 
-class ControlsInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+class ControlsInformationSerializer(DirectComputeMixin, serializers.Serializer):
     ressources_with_bound_copies_being_controlled_count = serializers.IntegerField(read_only=True)
     ressources_with_unbound_copies_being_controlled_count = serializers.IntegerField(read_only=True)
 
@@ -277,7 +277,7 @@ class ControlsInformationSerializer(CacheDashboardMixin, serializers.Serializer)
         }
 
 
-class AnomaliesInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+class AnomaliesInformationSerializer(DirectComputeMixin, serializers.Serializer):
     anomalies_in_progress = serializers.IntegerField(read_only=True)
 
     def compute_data(self, project):
