@@ -67,7 +67,7 @@ class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
         }
 
 
-class PositioningInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+class PositioningInformationSerializer(DirectComputeMixin, serializers.Serializer):
     positioned_collections = serializers.IntegerField(read_only=True)
     positioned_collections_without_exclusion = serializers.IntegerField(read_only=True)
     collections_remaining_to_be_positioned = serializers.IntegerField(read_only=True)
@@ -95,7 +95,7 @@ class PositioningInformationSerializer(CacheDashboardMixin, serializers.Serializ
         }
 
 
-class ExclusionInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+class ExclusionInformationSerializer(DirectComputeMixin, serializers.Serializer):
     """
     Excluded collections (by exclusion of collections or resources)
     Excluded resources

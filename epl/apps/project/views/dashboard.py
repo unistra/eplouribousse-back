@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from epl.apps.project.models import Project
@@ -46,7 +47,9 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet):
             "resources-to-instruct-per-library": ResourcesToInstructChartSerializer,
             "collection-occurrences-per-library": CollectionOccurrencesChartSerializer,
         }
-        return serializer_map.get(board, InitialDataSerializer)
+        if board in serializer_map:
+            return serializer_map[board]
+        raise NotFound(detail=f"Board '{board}' not found")
 
     @extend_schema(
         tags=["project", "dashboard"],

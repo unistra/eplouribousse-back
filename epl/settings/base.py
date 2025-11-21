@@ -621,4 +621,4 @@ CACHES = {
     },
 }
 
-CACHE_TIMEOUT_DASHBOARD = 0 # todo: restore dashboard caching
+CACHE_TIMEOUT_DASHBOARD = 60
