@@ -772,7 +772,7 @@ msgstr "Information sur les anomalies"
 
 #: epl/apps/project/serializers/dashboard.py:291
 msgid "Number of anomalies in progress"
-msgstr "Nombre d’anomalie en cours"
+msgstr "Nombre d’anomalies en cours"
 
 #: epl/apps/project/serializers/dashboard.py:341
 msgid "Achievements"
