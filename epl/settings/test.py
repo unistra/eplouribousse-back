@@ -70,3 +70,14 @@ SECRET_KEY = "{{ secret_key }}"
 ######################
 
 CAS_SERVER_URL = "https://cas-dev.unistra.fr/cas/"
+
+
+#########
+# Cache #
+#########
+
+REDIS_HOST = "{{ redis_host }}"
+REDIS_DB = "{{ redis_db }}"
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+CACHES["default"]["LOCATION"] = REDIS_URL
+CACHES["default"]["VERSION"] = "{{ cache_version }}"

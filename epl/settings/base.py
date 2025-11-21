@@ -604,3 +604,21 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 DEFAULT_FROM_EMAIL = "ne-pas-repondre@unistra.fr"
 CONTACT_EMAIL = "support-eplouribousse@unistra.fr"
 EMAIL_SUPPORT = CONTACT_EMAIL
+
+#########
+# Cache #
+#########
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+REDIS_DB = "10"
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+        "KEY_PREFIX": "epl",
+    },
+}
+
+CACHE_TIMEOUT_DASHBOARD = 60 * 60 # 1h

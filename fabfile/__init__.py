@@ -4,9 +4,11 @@ from os.path import join
 
 import pydiploy
 from fabric.api import env, execute, roles, task
+import datetime
 
 from . import sentry
 from .migrate import deploy_backend as custom_deploy_backend
+
 
 # edit config here !
 
@@ -62,6 +64,9 @@ env.sentry_application_name = "eplouribousse-back"
 # env.nginx_start_confirmation = True # if True when nginx is not started
 # needs confirmation to start it.
 
+#cache version
+env.cache_version = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
 
 @task
 def dev():
@@ -105,6 +110,7 @@ def test():
     env.socket_port = "8022"
     env.socket_host = "127.0.0.1"
     env.map_settings = {
+        "cache_version": 'CACHES["default"]["VERSION"]',
         "default_db_host": 'DATABASES["default"]["HOST"]',
         "default_db_user": 'DATABASES["default"]["USER"]',
         "default_db_password": 'DATABASES["default"]["PASSWORD"]',
@@ -134,6 +140,7 @@ def preprod():
     env.goal = "preprod"
     env.socket_port = "8059"
     env.map_settings = {
+        "cache_version": 'CACHES["default"]["VERSION"]',
         "default_db_host": 'DATABASES["default"]["HOST"]',
         "default_db_user": 'DATABASES["default"]["USER"]',
         "default_db_password": 'DATABASES["default"]["PASSWORD"]',
@@ -163,6 +170,7 @@ def prod():
     env.goal = "prod"
     env.socket_port = ""
     env.map_settings = {
+        "cache_version": 'CACHES["default"]["VERSION"]',
         "default_db_host": 'DATABASES["default"]["HOST"]',
         "default_db_user": 'DATABASES["default"]["USER"]',
         "default_db_password": 'DATABASES["default"]["PASSWORD"]',
