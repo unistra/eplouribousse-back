@@ -97,7 +97,6 @@ def test():
         "lb": ["django-test2.di.unistra.fr"],
     }
     # env.user = 'root'  # user for ssh
-    env.cache_version =
     env.backends = ["127.0.0.1"]
     env.server_name = "eplouribousse-api-test.app.unistra.fr"
     env.short_server_name = "eplouribousse-api-test"
