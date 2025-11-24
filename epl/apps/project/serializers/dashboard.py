@@ -382,7 +382,7 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
             )
             percentage = round((positioned_collections_in_library / denom) * 100, 2)
 
-            labels.append(library.name)
+            labels.append(library.alias)
             realized_positionings_by_libraries_percentage.append(percentage)
 
         result = {
@@ -410,14 +410,14 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
 
     def compute_data(self, project):
         libraries = project.libraries.distinct().order_by("name")
-        labels = [lib.name for lib in libraries]
+        labels = [lib.alias for lib in libraries]
 
         base_queryset = Resource.objects.filter(project=project)
 
         bound_counts = {}
         unbound_counts = {}
         for library in libraries:
-            lib_name = library.name
+            lib_alias = library.alias
             lib_id_str = str(library.id)
 
             bound_q = Q(
@@ -432,8 +432,8 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
                 instruction_turns__unbound_copies__turns__0__library=lib_id_str,
             )
 
-            bound_counts[lib_name] = base_queryset.filter(bound_q).distinct().count()
-            unbound_counts[lib_name] = base_queryset.filter(unbound_q).distinct().count()
+            bound_counts[lib_alias] = base_queryset.filter(bound_q).distinct().count()
+            unbound_counts[lib_alias] = base_queryset.filter(unbound_q).distinct().count()
 
         return {
             "title": _("Number of resources to be instructed"),
