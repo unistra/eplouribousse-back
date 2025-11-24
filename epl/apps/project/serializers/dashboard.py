@@ -379,7 +379,8 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
             )
 
             realized_positionings_by_library_percentage = round(
-                (positioned_collections_in_library / collections_in_library.count()) * 100, 2
+                (positioned_collections_in_library / collections_in_library.count()) * 100,
+                2 if collections_in_library.count() > 0 else 0.0,
             )
 
             labels.append(library.name)
