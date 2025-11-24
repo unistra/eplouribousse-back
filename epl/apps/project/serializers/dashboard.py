@@ -360,6 +360,7 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
 
         labels = []
         realized_positionings_by_libraries_percentage = []
+        errors = []
 
         for library in libraries:
             # Denominator: Total collections for this library in this project,
@@ -368,7 +369,9 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
                 resource__status=ResourceStatus.EXCLUDED
             )
 
-            if collections_in_library.count == 0:
+            denom = collections_in_library.count()
+            if denom == 0:
+                errors.append(_("No collection in library '%(library_name)s'") % {"library_name": library.name})
                 continue
 
             # Numerator: Collections that are effectively positioned (position >= 0)
@@ -377,16 +380,12 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
             positioned_collections_in_library = (
                 collections_in_library.filter(position__gte=0).exclude(resource__status=ResourceStatus.EXCLUDED).count()
             )
-
-            realized_positionings_by_library_percentage = round(
-                (positioned_collections_in_library / collections_in_library.count()) * 100,
-                2 if collections_in_library.count() > 0 else 0.0,
-            )
+            percentage = round((positioned_collections_in_library / denom) * 100, 2)
 
             labels.append(library.name)
-            realized_positionings_by_libraries_percentage.append(realized_positionings_by_library_percentage)
+            realized_positionings_by_libraries_percentage.append(percentage)
 
-        return {
+        result = {
             "title": _("% of realized positioning progress by library"),
             "labels": labels,
             "datasets": [
@@ -397,6 +396,9 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
             ],
             "computed_at": timezone.now(),
         }
+        if errors:
+            result["errors"] = errors
+        return result
 
 
 class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serializer):
@@ -468,18 +470,12 @@ class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Seri
         ).exclude(id__in=resources_with_segmented_collections)
 
         total_candidate_resources = candidate_resources.count()
-        if total_candidate_resources == 0:
-            return {"labels": [], "datasets": []}
 
         # get candidate collections
         candidate_collections = Collection.objects.filter(resource__in=candidate_resources).exclude(position=0)
 
         # group by resource code and count occurrences
-        code_qs = (
-            candidate_collections.values("resource__code")
-            .annotate(count=Count("id"))
-            .filter(count__gt=1)  # On ne s'intéresse qu'aux multiplicités (>= 2)
-        )
+        code_qs = candidate_collections.values("resource__code").annotate(count=Count("id")).filter(count__gt=1)
 
         # count occurrences
         doubles = code_qs.filter(count=2).count()
