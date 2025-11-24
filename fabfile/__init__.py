@@ -116,6 +116,9 @@ def test():
         "default_db_password": 'DATABASES["default"]["PASSWORD"]',
         "default_db_name": 'DATABASES["default"]["NAME"]',
         "secret_key": "SECRET_KEY",
+        "redis_host": "REDIS_HOST",
+        "redis_db": "REDIS_DB",
+        "redis_port": "REDIS_PORT",
     }
     execute(build_env)
 
@@ -146,6 +149,9 @@ def preprod():
         "default_db_password": 'DATABASES["default"]["PASSWORD"]',
         "default_db_name": 'DATABASES["default"]["NAME"]',
         "secret_key": "SECRET_KEY",
+        "redis_host": "REDIS_HOST",
+        "redis_db": "REDIS_DB",
+        "redis_port": "REDIS_PORT",
     }
     execute(build_env)
 
@@ -176,6 +182,9 @@ def prod():
         "default_db_password": 'DATABASES["default"]["PASSWORD"]',
         "default_db_name": 'DATABASES["default"]["NAME"]',
         "secret_key": "SECRET_KEY",
+        "redis_host": "REDIS_HOST",
+        "redis_db": "REDIS_DB",
+        "redis_port": "REDIS_PORT",
     }
     execute(build_env)
 
