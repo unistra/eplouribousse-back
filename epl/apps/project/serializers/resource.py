@@ -137,6 +137,12 @@ class ValidateControlSerializer(serializers.ModelSerializer):
                 self.instance.validations["control_unbound"] = now().isoformat()
                 self.instance.status = ResourceStatus.EDITION
                 notify_resultant_report_available(self.instance, self.context["request"])
+                ActionLog.log(
+                    f"{ResourceStatus(ResourceStatus.CONTROL_UNBOUND).name} validated: resource moved to EDITION",
+                    actor=self.context["request"].user,
+                    obj=self.instance,
+                    request=self.context.get("request"),
+                )
 
             self.instance.save(update_fields=["status", "validations"])
 
