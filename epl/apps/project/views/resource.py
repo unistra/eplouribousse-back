@@ -284,7 +284,7 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
             "segments": resource.segments.order_by("order").all(),
             "language_code": language_code,
         }
-        filename = f"resultant-report-{resource.code}-{collection.library.code}.pdf"
+        filename = f"resultant-report-{resource.code}-{collection.library.code}-{collection.id}.pdf"
         with translation.override(language_code):
             if request.query_params.get("preview") == "true":
                 from django.shortcuts import render
