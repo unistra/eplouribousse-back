@@ -404,6 +404,12 @@ class AssignRoleSerializer(serializers.Serializer):
                         project_users=[user.email],
                         is_starting_now=is_starting_now,
                     )
+                ActionLog.log(
+                    message=f"Role <{self.validated_data['role']}> assigned to user <{user.username}>",
+                    actor=request.user,
+                    obj=project,
+                    request=request,
+                )
 
             return user_role
 
@@ -416,6 +422,13 @@ class AssignRoleSerializer(serializers.Serializer):
             ).delete()
             if not result[0]:
                 raise serializers.ValidationError(_("Role not found for this user in the project."))
+            user = User.objects.get(id=self.validated_data["user_id"])
+            ActionLog.log(
+                message=f"Role <{self.validated_data['role']}> removed from user <{user.username}>",
+                actor=self.context["request"].user,
+                obj=self.context["project"],
+                request=self.context["request"],
+            )
         return None
 
     def to_representation(self, instance):
