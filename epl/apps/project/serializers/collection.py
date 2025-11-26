@@ -3,7 +3,7 @@ import io
 import logging
 from collections import Counter
 
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field, inline_serializer
@@ -11,7 +11,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from sentry_sdk import set_tag
 
-from epl.apps.project.models import ActionLog, Collection, Library, Project, Resource, ResourceStatus
+from epl.apps.project.models import ActionLog, Collection, Library, Project, Resource, ResourceStatus, Segment
+from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.models.collection import Arbitration, TurnType
 from epl.apps.project.models.comment import Comment
 from epl.apps.project.permissions.collection import CollectionPermission
@@ -31,6 +32,8 @@ REQUIRED_FIELDS = (
     "Titre",
     "PPN",
 )
+
+CONTENT_NIL = "~~Néant~~"
 
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -432,13 +435,15 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
         library_id = collection.library_id
 
         if resource.status == ResourceStatus.INSTRUCTION_BOUND:
-            cycle = "bound_copies"
+            cycle = SegmentType.BOUND
+            cycle_key = f"{cycle.value}_copies"
         elif resource.status == ResourceStatus.INSTRUCTION_UNBOUND:
-            cycle = "unbound_copies"
+            cycle = SegmentType.UNBOUND
+            cycle_key = f"{cycle.value}_copies"
         else:
             raise serializers.ValidationError(_("Resource is not in an instruction phase"))
 
-        turns = resource.instruction_turns.get(cycle, [])
+        turns = resource.instruction_turns.get(cycle_key, [])
         try:
             turn = turns["turns"].pop(0)
         except (IndexError, AttributeError):
@@ -458,29 +463,54 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
         if str(turn.get("library", "")) != str(library_id) or turn["collection"] != str(collection.id):
             raise PermissionDenied()
 
-        # All seems OK
-        if len(turns["turns"]):
-            # There is a next turn
-            resource.instruction_turns[cycle] = turns.copy()
-            resource.save(update_fields=["instruction_turns"])
+        with transaction.atomic():
+            # If no segment(s) have been added during the instruction turn, we add an empty segment
+            if not Segment.objects.filter(collection=collection, segment_type=cycle).exists():
+                # Nil segments are added at the top of the segments list
+                order = (
+                    Segment.objects.filter(
+                        collection__resource=collection.resource,
+                        content=CONTENT_NIL,
+                    ).aggregate(models.Max("order"))["order__max"]
+                    or 0
+                )
+                # Move up all segments to make space for the nil segment
+                Segment.objects.filter(
+                    collection__resource=collection.resource,
+                    order__gt=order,
+                ).update(order=models.F("order") + 1)
+                # We insert the nil segment at the end of the nil segments
+                Segment.objects.create(
+                    segment_type=cycle,
+                    collection=collection,
+                    content=CONTENT_NIL,
+                    order=order + 1,
+                    created_by=self.context["request"].user,
+                )
 
-            next_library_id = turns["turns"][0]["library"]
-            next_library = Library.objects.get(pk=next_library_id)
-            notify_instructors_of_instruction_turn(resource, next_library, self.context["request"])
+            # All seems OK
+            if len(turns["turns"]):
+                # There is a next turn
+                resource.instruction_turns[cycle_key] = turns.copy()
+                resource.save(update_fields=["instruction_turns"])
 
-        else:
-            # No next turn, move to control
-            resource.status = (
-                ResourceStatus.CONTROL_BOUND if cycle == "bound_copies" else ResourceStatus.CONTROL_UNBOUND
-            )
-            resource.instruction_turns[cycle]["turns"] = []
-            resource.save(update_fields=["instruction_turns", "status"])
-            notify_controllers_of_control(resource, self.context["request"], cycle)
-            ActionLog.log(
-                f"Resource status moved to {ResourceStatus(resource.status).name}",
-                actor=self.context["request"].user,
-                obj=resource,
-                request=self.context["request"],
-            )
+                next_library_id = turns["turns"][0]["library"]
+                next_library = Library.objects.get(pk=next_library_id)
+                notify_instructors_of_instruction_turn(resource, next_library, self.context["request"])
+
+            else:
+                # No next turn, move to control
+                resource.status = (
+                    ResourceStatus.CONTROL_BOUND if cycle_key == "bound_copies" else ResourceStatus.CONTROL_UNBOUND
+                )
+                resource.instruction_turns[cycle_key]["turns"] = []
+                resource.save(update_fields=["instruction_turns", "status"])
+                notify_controllers_of_control(resource, self.context["request"], cycle.label)
+                ActionLog.log(
+                    f"Resource status moved to {ResourceStatus(resource.status).name}",
+                    actor=self.context["request"].user,
+                    obj=resource,
+                    request=self.context["request"],
+                )
 
         return collection
