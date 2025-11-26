@@ -5,6 +5,8 @@ from epl.apps.project.models import Resource
 from epl.apps.project.models.choices import SegmentType
 from epl.models import UUIDPrimaryKeyField
 
+CONTENT_NIHIL = "~~Nihil~~"
+
 
 class Segment(models.Model):
     id = UUIDPrimaryKeyField()
@@ -46,6 +48,11 @@ class Segment(models.Model):
         return f"{self.collection.project} - {_('Segment')} n°{self.order}: {self.content}"
 
     @classmethod
-    def get_last_order(cls, resource: Resource):
+    def get_last_order(cls, resource: Resource) -> int:
         max_order = resource.segments.aggregate(models.Max("order"))["order__max"] or 0
         return max_order + 1
+
+    @classmethod
+    def get_highest_nihil_segment_order(cls, resource: Resource) -> int:
+        max_nihil_order = resource.segments.filter(content=CONTENT_NIHIL).aggregate(models.Max("order"))["order__max"]
+        return max_nihil_order or 0

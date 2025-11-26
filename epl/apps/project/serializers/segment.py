@@ -8,6 +8,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from epl.apps.project.models import ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
+from epl.apps.project.models.segment import CONTENT_NIHIL
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 
@@ -79,9 +80,13 @@ class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
         with transaction.atomic():
             if after_segment_id:
                 try:
-                    after_segment = Segment.objects.get(id=after_segment_id)
+                    after_segment: Segment = Segment.objects.get(id=after_segment_id)
+                    new_order: int = after_segment.order + 1
+                    # new order must be >= highest Nihil segment order
+                    highest_nil_order: int = Segment.get_highest_nihil_segment_order(resource)
 
-                    new_order = after_segment.order + 1
+                    if new_order <= highest_nil_order:
+                        raise ValidationError(_("Segment cannot be placed before or among Nihil segments"))
 
                     Segment.objects.filter(collection__resource=resource, order__gte=new_order).update(
                         order=F("order") + 1
@@ -133,8 +138,14 @@ class SegmentOrderSerializer(serializers.Serializer):
         resource = segment.collection.resource
         current_order = segment.order
 
+        if segment.content == CONTENT_NIHIL:
+            raise ValidationError(_("Nihil segments cannot be moved"))
+
         if current_order <= 1:
             raise ValidationError(_("Segment is already at the top of the collection"))
+
+        if current_order <= Segment.get_highest_nihil_segment_order(resource) + 1:
+            raise ValidationError(_("Segment cannot be moved above Nihil segments"))
 
         try:
             previous_segment = Segment.objects.get(collection__resource=resource, order=current_order - 1)
@@ -151,6 +162,9 @@ class SegmentOrderSerializer(serializers.Serializer):
     def move_down(self, segment):
         resource = segment.collection.resource
         current_order = segment.order
+
+        if segment.content == CONTENT_NIHIL:
+            raise ValidationError(_("Nihil segments cannot be moved"))
 
         try:
             next_segment = Segment.objects.get(collection__resource=resource, order=current_order + 1)

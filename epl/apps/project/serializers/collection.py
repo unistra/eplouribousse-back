@@ -15,6 +15,7 @@ from epl.apps.project.models import ActionLog, Collection, Library, Project, Res
 from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.models.collection import Arbitration, TurnType
 from epl.apps.project.models.comment import Comment
+from epl.apps.project.models.segment import CONTENT_NIHIL
 from epl.apps.project.permissions.collection import CollectionPermission
 from epl.apps.project.serializers.mixins import ResourceInstructionMixin
 from epl.libs.csv_import import handle_import
@@ -32,8 +33,6 @@ REQUIRED_FIELDS = (
     "Titre",
     "PPN",
 )
-
-CONTENT_NIL = "~~Néant~~"
 
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -466,24 +465,24 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             # If no segment(s) have been added during the instruction turn, we add an empty segment
             if not Segment.objects.filter(collection=collection, segment_type=cycle).exists():
-                # Nil segments are added at the top of the segments list
+                # Nihil segments are added at the top of the segments list
                 order = (
                     Segment.objects.filter(
                         collection__resource=collection.resource,
-                        content=CONTENT_NIL,
+                        content=CONTENT_NIHIL,
                     ).aggregate(models.Max("order"))["order__max"]
                     or 0
                 )
-                # Move up all segments to make space for the nil segment
+                # Move up all segments to make space for the Nihil segment
                 Segment.objects.filter(
                     collection__resource=collection.resource,
                     order__gt=order,
                 ).update(order=models.F("order") + 1)
-                # We insert the nil segment at the end of the nil segments
+                # We insert the Nihil segment at the end of the Nihil segments
                 Segment.objects.create(
                     segment_type=cycle,
                     collection=collection,
-                    content=CONTENT_NIL,
+                    content=CONTENT_NIHIL,
                     order=order + 1,
                     created_by=self.context["request"].user,
                 )
