@@ -174,17 +174,22 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
     other_higher_multiplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
 
     def compute_data(self, project):
-        resources_with_segmented_collections = Resource.objects.filter(
-            project=project, collections__segments__isnull=False
-        ).values_list("id", flat=True)
+        """
+        Canditate resources for instruction :
+        - have all their collections positioned (position = 0, 1, 2, 3 or 4)
+        - is not in arbitration status
+        - is not excluded (not ResourceStatus.EXCLUDED)
+        i.e. resource.Status >= ResourceStatus.INSTRUCTION_BOUND
+
+        Candidate collections for instruction :
+        - belongs to a candidate resource for instruction
+        - are not excluded
+        """
 
         candidate_resources = Resource.objects.filter(
             project=project,
-            status=ResourceStatus.INSTRUCTION_BOUND,
-        ).exclude(
-            id__in=resources_with_segmented_collections  # exclude resources with segmented collections
+            status__gte=ResourceStatus.INSTRUCTION_BOUND,
         )
-
         candidate_collections = Collection.objects.filter(resource__in=candidate_resources).exclude(position=0)
 
         # Group candidate collections by their resource 'code' and count occurrences.
@@ -209,7 +214,7 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
             return round((count / total) * 100, 1)
 
         return {
-            "title": _("Information on candidates for instruction"),
+            "title": _("Information on candidates for instruction (upcoming, in progress, or completed)"),
             _("Number of collections eligible for instruction"): candidate_collections.count(),
             _("Number of resources eligible for instruction"): candidate_resources,
             _(
@@ -241,7 +246,7 @@ class InstructionsInformationSerializer(DirectComputeMixin, serializers.Serializ
 
     def compute_data(self, project):
         return {
-            "title": _("Information about instructions"),
+            "title": _("Information about ongoing instructions"),
             _("Number of resources for which instruction of bound elements is in progress"): Resource.objects.filter(
                 project=project,
                 status=ResourceStatus.INSTRUCTION_BOUND,
@@ -460,14 +465,10 @@ class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Seri
 
     def compute_data(self, project):
         # get candidates ressources
-        resources_with_segmented_collections = Resource.objects.filter(
-            project=project, collections__segments__isnull=False
-        ).values_list("id", flat=True)
-
         candidate_resources = Resource.objects.filter(
             project=project,
-            status=ResourceStatus.INSTRUCTION_BOUND,
-        ).exclude(id__in=resources_with_segmented_collections)
+            status__gte=ResourceStatus.INSTRUCTION_BOUND,
+        )
 
         total_candidate_resources = candidate_resources.count()
 
@@ -502,7 +503,7 @@ class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Seri
         ]
 
         return {
-            "title": _("Distribution of the number of occurrences in the collections eligible for the instruction"),
+            "title": _("Distribution of the number of occurrences in the collections candidate for the instruction"),
             "labels": labels,
             "datasets": [
                 {
