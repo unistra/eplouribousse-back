@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-19 14:42+0100\n"
+"POT-Creation-Date: 2025-11-26 10:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,7 +90,7 @@ msgstr "Projet non trouvé"
 msgid "Invalid arbitration param, must be '0', '1' or 'all'"
 msgstr "Paramètre d'arbitrage non valide, doit être '0' ou '1' ou 'all'"
 
-#: epl/apps/project/filters/resource.py:244
+#: epl/apps/project/filters/resource.py:246
 msgid ""
 "'0' for arbitration type 0, '1' for arbitration type 1, 'all' for all "
 "arbitration types"
@@ -98,7 +98,7 @@ msgstr ""
 "'0' pour le type d'arbitrage 0, '1' pour le type d'arbitrage 1, 'all' pour "
 "tous les types d'arbitrage"
 
-#: epl/apps/project/filters/resource.py:256
+#: epl/apps/project/filters/resource.py:258
 msgid "'10' for Positioning only, '20' for Instruction not start"
 msgstr ""
 "'10' pour positionnement uniquement, '20' pour instruction non démarrée"
@@ -786,6 +786,11 @@ msgstr "Réalisation relative"
 msgid "Absolute completion"
 msgstr "Réalisation absolue"
 
+#: epl/apps/project/serializers/dashboard.py:374
+#, python-format
+msgid "No collection in library '%(library_name)s'"
+msgstr "Aucune collection dans la bibliothèque '%(library_name)s'"
+
 #: epl/apps/project/serializers/dashboard.py:389
 #, python-format
 msgid "% of realized positioning progress by library"
@@ -796,35 +801,35 @@ msgstr "% de l'avancement du positionnement réalisé par bibliothèque"
 msgid "% of collections positioned"
 msgstr "% de collections positionnées"
 
-#: epl/apps/project/serializers/dashboard.py:432
+#: epl/apps/project/serializers/dashboard.py:439
 msgid "Number of resources to be instructed"
 msgstr "Nombre de ressources à instruire"
 
-#: epl/apps/project/serializers/dashboard.py:436
+#: epl/apps/project/serializers/dashboard.py:443
 msgid "bound"
 msgstr "relié"
 
-#: epl/apps/project/serializers/dashboard.py:440
+#: epl/apps/project/serializers/dashboard.py:447
 msgid "unbound"
 msgstr "non relié"
 
-#: epl/apps/project/serializers/dashboard.py:491
+#: epl/apps/project/serializers/dashboard.py:492
 msgid "duplicates"
 msgstr "doublons"
 
-#: epl/apps/project/serializers/dashboard.py:492
+#: epl/apps/project/serializers/dashboard.py:493
 msgid "triplicates"
 msgstr "triplons"
 
-#: epl/apps/project/serializers/dashboard.py:493
+#: epl/apps/project/serializers/dashboard.py:494
 msgid "quadruplicates"
 msgstr "quadruplons"
 
-#: epl/apps/project/serializers/dashboard.py:494
+#: epl/apps/project/serializers/dashboard.py:495
 msgid "more"
 msgstr "plus"
 
-#: epl/apps/project/serializers/dashboard.py:504
+#: epl/apps/project/serializers/dashboard.py:505
 msgid ""
 "Distribution of the number of occurrences in the collections eligible for "
 "the instruction"
@@ -832,7 +837,7 @@ msgstr ""
 "Répartition du nombre d'occurrences dans les collections éligibles à "
 "l'instruction"
 
-#: epl/apps/project/serializers/dashboard.py:508
+#: epl/apps/project/serializers/dashboard.py:509
 msgid "Distribution of occurrence types"
 msgstr "Répartition des types d'occurrences"
 
@@ -1046,13 +1051,6 @@ msgstr "création de votre compte"
 #: epl/apps/project/tests/views/test_project_status.py:227
 msgid "is now ready for launch"
 msgstr "est désormais disponible pour le lancement"
-
-#: epl/apps/project/tests/views/test_project_status.py:282
-msgid ""
-"As an administrator, you must, in consultation with your co-administrators"
-msgstr ""
-"En tant qu'administrateur, vous devez, en concertation avec vos co-"
-"administrateurs"
 
 #: epl/apps/project/tests/views/test_resultant_report_available.py:65
 #: epl/apps/project/tests/views/test_resultant_report_available.py:170
@@ -1684,6 +1682,10 @@ msgstr "positionnement"
 msgid "instruction"
 msgstr "instruction"
 
+#: epl/services/user/email.py:316
+msgid "control"
+msgstr "contrôle"
+
 #: epl/services/user/email.py:354
 msgid "anomaly"
 msgstr "anomalie"
@@ -1715,7 +1717,7 @@ msgstr "Pour mémoire, votre identifiant est : "
 #: epl/templates/emails/confirm_account_creation.txt:7
 #: epl/templates/emails/notify_anomalies.txt:11
 #: epl/templates/emails/notify_anomaly_resolved.txt:11
-#: epl/templates/emails/notify_control.txt:4
+#: epl/templates/emails/notify_control.txt:13
 #: epl/templates/emails/notify_instruction_turn.txt:5
 #: epl/templates/emails/notify_positioning.txt:6
 #: epl/templates/emails/notify_resultant_report_available.txt:7
@@ -1728,6 +1730,7 @@ msgid "The project %(project_name)s is now available."
 msgstr "Le projet %(project_name)s est à présent disponible."
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:4
+#, python-format
 msgid ""
 "As the administrator of this project, you must, in consultation with any co-"
 "administrators and project pilots, check and, if necessary, modify the "
@@ -1735,9 +1738,10 @@ msgid ""
 "If you believe this message is the result of an error, please contact the "
 "project creator %(project_creator_email)s"
 msgstr ""
-"En tant qu'administrateur de ce projet vous devez, en concertation avec vos éventuels co-"
-"administrateurs et les pilotes de  ce projet, en vérifier et éventuellement modifier "
-"les réglages et les paramètres avant la mise en service effective.\n"
+"En tant qu'administrateur de ce projet vous devez, en concertation avec vos "
+"éventuels co-administrateurs et les pilotes de  ce projet, en vérifier et "
+"éventuellement modifier les réglages et les paramètres avant la mise en "
+"service effective.\n"
 "Si vous pensez que ce message fait suite à une erreur, veuillez contacter le "
 "monteur du projet %(project_creator_email)s"
 
@@ -1877,13 +1881,22 @@ msgstr ""
 "Le repositionnement de votre collection pour la ressource "
 "\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 1."
 
-#: epl/templates/emails/notify_control.txt:2
+#: epl/templates/emails/notify_control.txt:3
 #, python-format
 msgid ""
-"The time has come for the end-of-cycle check of the %(cycle)s elements for "
-"the \"%(resource_title)s\" resource: %(project_url)s."
+"The time has come for the end-of-cycle check of the bound elements for the "
+"\"%(resource_title)s\" resource: %(project_url)s."
 msgstr ""
-"Le moment est venu du contrôle de fin de cycle des éléments %(cycle)s pour "
+"Le moment est venu du contrôle de fin de cycle des éléments réliés pour la "
+"resource \"%(resource_title)s\" : %(project_url)s."
+
+#: epl/templates/emails/notify_control.txt:7
+#, python-format
+msgid ""
+"The time has come for the end-of-cycle check of the unbound elements for the "
+"\"%(resource_title)s\" resource: %(project_url)s."
+msgstr ""
+"Le moment est venu du contrôle de fin de cycle des éléments non reliés pour "
 "la resource \"%(resource_title)s\" : %(project_url)s."
 
 #: epl/templates/emails/notify_instruction_turn.txt:3
@@ -2048,7 +2061,7 @@ msgstr "Contrôle des non reliés"
 #: epl/templates/pdf/resulting-report.html:128
 #: epl/templates/pdf/resulting-report.html:153
 msgid "Line"
-msgstr ""
+msgstr "Ligne"
 
 #: epl/templates/pdf/resulting-report.html:131
 msgid "Bound or Unbound"
@@ -2065,6 +2078,12 @@ msgstr "Bibliothèque remédiée"
 #: epl/validators.py:61
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
+
+#~ msgid ""
+#~ "As an administrator, you must, in consultation with your co-administrators"
+#~ msgstr ""
+#~ "En tant qu'administrateur, vous devez, en concertation avec vos co-"
+#~ "administrateurs"
 
 #~ msgid "Computed at"
 #~ msgstr "Calculé le"

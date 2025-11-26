@@ -313,7 +313,7 @@ def send_control_notification_email(
     project = resource.project
     tenant = request.tenant
     project_url = f"{front_domain}/project/{project.id}"
-    subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | control"
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('control')}"
 
     email_content = render_to_string(
         "emails/notify_control.txt",
