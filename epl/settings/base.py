@@ -622,3 +622,12 @@ CACHES = {
 }
 
 CACHE_TIMEOUT_DASHBOARD = 60 * 60 # 1h
+
+CONTACT_FORM_RATELIMIT = "2/h"
+
+RATELIMIT_BACKEND = "redis"
+RATELIMIT_REDIS = {
+    "host": REDIS_HOST,
+    "port": REDIS_PORT,
+    "db": REDIS_DB,
+}

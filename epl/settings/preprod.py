@@ -73,3 +73,9 @@ REDIS_PORT = "{{ redis_port }}"
 REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 CACHES["default"]["LOCATION"] = REDIS_URL
 CACHES["default"]["VERSION"] = "{{ cache_version }}"
+
+RATELIMIT_REDIS = {
+    "host": REDIS_HOST,
+    "port": REDIS_PORT,
+    "db": REDIS_DB,
+}

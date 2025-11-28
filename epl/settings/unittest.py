@@ -1,6 +1,5 @@
 from datetime import timedelta
 from os import environ
-from pathlib import Path
 
 from .base import *
 
@@ -78,3 +77,6 @@ LANGUAGE_CODE = "en-US"
 # Cache #
 #########
 CACHES["default"]["BACKEND"] = "django.core.cache.backends.dummy.DummyCache"
+
+RATELIMIT_BACKEND = "memory"
+CONTACT_FORM_RATELIMIT = "1000000/s"

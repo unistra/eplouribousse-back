@@ -913,6 +913,30 @@ files = [
 python-ipware = ">=2.0.3"
 
 [[package]]
+name = "django-smart-ratelimit"
+version = "0.8.11"
+description = "A flexible and efficient rate limiting library for Django applications"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "django_smart_ratelimit-0.8.11-py3-none-any.whl", hash = "sha256:5be0de0dc7b68e2e7883ac39d0005b9de97f33eed8fd6016b95a19974f57fe13"},
+    {file = "django_smart_ratelimit-0.8.11.tar.gz", hash = "sha256:439d97df959b6e9cc2afbc983ddbe5f8e6b24707298dc66f6bf93dc9c5f93fa2"},
+]
+
+[package.dependencies]
+django = ">=3.2"
+hiredis = {version = ">=2.0", optional = true, markers = "extra == \"redis\""}
+redis = ">=4.0"
+
+[package.extras]
+all = ["hiredis (>=2.0)", "pyjwt (>=2.0)", "pymongo (>=4.0)"]
+dev = ["bandit (>=1.7)", "black (>=22.0)", "build (>=0.8)", "bump2version (>=1.0)", "django-stubs (>=4.0)", "flake8 (>=5.0)", "flake8-docstrings (>=1.7)", "isort (>=5.0)", "mypy (>=1.0)", "pre-commit (>=2.20)", "pyjwt (>=2.0)", "pytest (>=7.0)", "pytest-cov (>=4.0)", "pytest-django (>=4.5)", "safety (>=2.0)", "twine (>=4.0)", "types-redis (>=4.0)"]
+jwt = ["pyjwt (>=2.0)"]
+mongodb = ["pymongo (>=4.0)"]
+redis = ["hiredis (>=2.0)", "redis (>=4.0)"]
+
+[[package]]
 name = "django-tenants"
 version = "3.9.0"
 description = "Tenant support for Django using PostgreSQL schemas."
@@ -3529,4 +3553,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "6a23ee1b09c500b23e9b3e2cca800867b6d38c6f4ff49befd108532d89dcf72b"
+content-hash = "d8ae63f2bd4a7bdbdf138ff3ea0b6467d918b218089c6a84d4190e6d1954beca"
