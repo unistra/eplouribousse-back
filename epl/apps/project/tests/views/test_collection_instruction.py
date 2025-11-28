@@ -4,10 +4,12 @@ from parameterized import parameterized
 
 from epl.apps.project.models import ResourceStatus, Role
 from epl.apps.project.models.choices import AlertType
+from epl.apps.project.models.segment import CONTENT_NIHIL
 from epl.apps.project.tests.factories.collection import CollectionFactory
 from epl.apps.project.tests.factories.library import LibraryFactory
 from epl.apps.project.tests.factories.project import ProjectFactory
 from epl.apps.project.tests.factories.resource import ResourceFactory
+from epl.apps.project.tests.factories.segment import SegmentFactory
 from epl.apps.project.tests.factories.user import UserWithRoleFactory
 from epl.tests import TestCase
 
@@ -177,6 +179,65 @@ class FinishInstructionTurnTest(TestCase):
                 },
             },
         )
+
+    def test_finish_turn_without_creating_segments_adds_nihil_segment(self):
+        self.resource.status = ResourceStatus.INSTRUCTION_BOUND
+        self.resource.instruction_turns = {
+            "bound_copies": {
+                "turns": [
+                    {
+                        "library": str(self.library.id),
+                        "collection": str(self.collection.id),
+                    }
+                ]
+            },
+            "unbound_copies": {"turns": []},
+        }
+        self.resource.save()
+        initial_segment_count = self.collection.segments.count()
+        response = self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection.id}),
+            user=self.instructor,
+        )
+        self.response_ok(response)
+        self.collection.refresh_from_db()
+        final_segment_count = self.collection.segments.count()
+        self.assertEqual(final_segment_count, initial_segment_count + 1)
+        nihil_segment = self.collection.segments.get(order=final_segment_count)
+        self.assertEqual(nihil_segment.content, CONTENT_NIHIL)
+
+    def test_if_segments_exist_nihil_segment_is_inserted_before(self):
+        self.resource.status = ResourceStatus.INSTRUCTION_BOUND
+        self.resource.instruction_turns = {
+            "bound_copies": {
+                "turns": [
+                    {
+                        "library": str(self.library.id),
+                        "collection": str(self.collection.id),
+                    }
+                ]
+            },
+            "unbound_copies": {"turns": []},
+        }
+        self.resource.save()
+        # Create an initial segment
+        other_library = LibraryFactory()
+        self.project.libraries.add(other_library)
+        other_collection = CollectionFactory(resource=self.resource, library=self.library, project=self.project)
+        _segment = SegmentFactory(order=1, collection=other_collection, content="Initial segment")
+
+        response = self.post(
+            reverse("collection-finish-instruction-turn", kwargs={"pk": self.collection.id}),
+            user=self.instructor,
+        )
+        self.response_ok(response)
+        self.collection.refresh_from_db()
+        segments = self.collection.resource.segments.order_by("order")
+        self.assertEqual(segments.count(), 2)
+        self.assertEqual(segments[0].content, CONTENT_NIHIL)
+        self.assertEqual(segments[0].order, 1)
+        self.assertEqual(segments[1].content, "Initial segment")
+        self.assertEqual(segments[1].order, 2)
 
 
 class SendNotificationToInstruct(TestCase):
