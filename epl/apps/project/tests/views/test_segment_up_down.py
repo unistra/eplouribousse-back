@@ -1,9 +1,11 @@
 import uuid
 
+from django.db import models
 from django_tenants.urlresolvers import reverse
 from parameterized import parameterized
 
-from epl.apps.project.models import Role
+from epl.apps.project.models import Role, Segment
+from epl.apps.project.models.segment import CONTENT_NIHIL
 from epl.apps.project.tests.factories.segment import SegmentFactory
 from epl.apps.project.tests.factories.user import UserWithRoleFactory
 from epl.tests import TestCase
@@ -131,3 +133,48 @@ class SegmentUpDownTest(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertIn("No Segment matches the given query", str(response.content))
+
+    def test_move_nihil_segment_up_fails(self):
+        Segment.objects.filter(
+            collection__resource=self.collection.resource,
+        ).update(order=models.F("order") + 1)
+        nihil_segment = SegmentFactory(collection=self.collection, content=CONTENT_NIHIL, order=1)
+
+        response = self.patch(
+            reverse("segment-up", kwargs={"pk": str(nihil_segment.id)}),
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        self.response_bad_request(response)
+        self.assertIn("Nihil segments cannot be moved", str(response.content))
+
+    def test_move_nihil_segment_down_fails(self):
+        Segment.objects.filter(
+            collection__resource=self.collection.resource,
+        ).update(order=models.F("order") + 1)
+        nihil_segment = SegmentFactory(collection=self.collection, content=CONTENT_NIHIL, order=1)
+
+        response = self.patch(
+            reverse("segment-down", kwargs={"pk": str(nihil_segment.id)}),
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        self.response_bad_request(response)
+        self.assertIn("Nihil segments cannot be moved", str(response.content))
+
+    def test_move_segment_above_nihil_fails(self):
+        Segment.objects.filter(
+            collection__resource=self.collection.resource,
+        ).update(order=models.F("order") + 1)
+        _nihil_segment = SegmentFactory(collection=self.collection, content=CONTENT_NIHIL, order=1)
+
+        response = self.patch(
+            reverse("segment-up", kwargs={"pk": str(self.segment1.id)}),
+            content_type="application/json",
+            user=self.instructor,
+        )
+
+        self.response_bad_request(response)
+        self.assertIn("Segment cannot be moved above Nihil segments", str(response.content))
