@@ -14,7 +14,7 @@ class PositioningFilter(IntegerChoices):
     ALL = 0, _("All")
     POSITIONING_ONLY = 10, _("Positioning only")
     INSTRUCTION_NOT_STARTED = 20, _("Instruction not started")
-    # EXCLUDE_RESOURCES = 30, _("Exclude resources") Not yet
+    EXCLUDE_RESOURCES = 15, _("Exclude resources")
 
 
 class ResourceFilter(filters.BaseFilterBackend):
@@ -99,6 +99,8 @@ class ResourceFilter(filters.BaseFilterBackend):
             return queryset.filter(status=ResourceStatus.POSITIONING, arbitration=Arbitration.NONE)
         elif positioning_filter_value == PositioningFilter.INSTRUCTION_NOT_STARTED:
             return queryset.filter(status=ResourceStatus.INSTRUCTION_BOUND, arbitration=Arbitration.NONE)
+        elif positioning_filter_value == PositioningFilter.EXCLUDE_RESOURCES:
+            return queryset.filter(status=ResourceStatus.EXCLUDED, arbitration=Arbitration.NONE)
 
         return queryset
 
