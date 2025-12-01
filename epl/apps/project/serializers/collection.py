@@ -362,6 +362,8 @@ class ExclusionSerializer(BaseCollectionPositioningSerializer):
 
 
 class PositioningCommentSerializer(serializers.ModelSerializer):
+    content = serializers.CharField(allow_blank=True, required=False)
+
     class Meta:
         model = Comment
         fields = ["id", "content", "author", "created_at"]
