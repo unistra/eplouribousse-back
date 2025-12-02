@@ -94,7 +94,6 @@ class ImportSerializer(serializers.Serializer):
         resource_ids_to_replace = {}  # To track resources that were already in the database
 
         collections, resources, codes, errors = handle_import(csv_reader, library.id, project.id, user.id)
-        # resources_in_database = Resource.objects.filter(project_id=project.id).only("id", "code")
         existing_resources = {
             _res.code: _res.id for _res in Resource.objects.filter(project_id=project.id).only("id", "code")
         }
