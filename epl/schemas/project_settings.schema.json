@@ -1,0 +1,27 @@
+{
+  "$id": "https://eplouribousse.fr/schemas/project_settings.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Project Settings",
+  "description": "Settings for a project, including exclusion reasons and alert settings. Alert settings are stored in a sub schema (project_alert_settings.schema.json) to make the serialization of the alert datas easier.",
+  "type": "object",
+  "properties": {
+    "exclusion_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "alerts": {
+      "$ref": "project_alert_settings.schema.json"
+    },
+    "default_language": {
+      "type": "string",
+      "enum": [
+        "en",
+        "fr"
+      ],
+      "description": "The default language for the project, represented as a BCP 47 language tag (e.g., 'en', 'fr', 'es')."
+    }
+  },
+  "additionalProperties": false
+}

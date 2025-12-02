@@ -1,5 +1,5 @@
+from datetime import timedelta
 from os import environ
-from pathlib import Path
 
 from .base import *
 
@@ -15,13 +15,13 @@ DEBUG = True
 ##########################
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': environ.get('DEFAULT_DB_TEST_NAME', 'epl'),
-        'USER': environ.get('DEFAULT_DB_TEST_USER', 'epl'),
-        'PASSWORD': environ.get('DEFAULT_DB_TEST_PASSWORD', 'epl'),
-        'HOST': environ.get('DEFAULT_DB_TEST_HOST', 'postgres'),
-        'PORT': environ.get('DEFAULT_DB_TEST_PORT', ''),
+    "default": {
+        "ENGINE": "django_tenants.postgresql_backend",
+        "NAME": environ.get("DEFAULT_DB_TEST_NAME", "epl"),
+        "USER": environ.get("DEFAULT_DB_TEST_USER", "epl"),
+        "PASSWORD": environ.get("DEFAULT_DB_TEST_PASSWORD", "epl"),
+        "HOST": environ.get("DEFAULT_DB_TEST_HOST", "localhost"),
+        "PORT": environ.get("DEFAULT_DB_TEST_PORT", ""),
     }
 }
 
@@ -29,19 +29,54 @@ DATABASES = {
 # Allowed hosts & Security #
 ############################
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 #####################
 # Log configuration #
 #####################
 
-LOGGING['handlers']['file']['filename'] = environ.get(
-    'LOG_DIR',
-    Path('/tmp').resolve(strict=True) / f'test_{SITE_NAME}.log',
+LOGGING["handlers"]["file"]["filename"] = environ.get(
+    "LOG_DIR",
+    Path("/tmp").resolve(strict=True) / f"test_{SITE_NAME}.log",
 )
-LOGGING['handlers']['file']['level'] = 'DEBUG'
+LOGGING["handlers"]["file"]["level"] = "DEBUG"
 
-for logger in LOGGING['loggers']:
-    LOGGING['loggers'][logger]['level'] = 'DEBUG'
+for logger in LOGGING["loggers"]:
+    LOGGING["loggers"][logger]["level"] = "DEBUG"
 
-TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+TEST_RUNNER = "django.test.runner.DiscoverRunner"
+
+SIMPLE_JWT.update(
+    {
+        "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
+        "ALGORITHM": "HS256",
+        "SIGNING_KEY": SECRET_KEY,
+        "VERIFYING_KEY": SECRET_KEY,
+    }
+)
+
+
+REST_FRAMEWORK.update(
+    {
+        "DEFAULT_AUTHENTICATION_CLASSES": [
+            "rest_framework_simplejwt.authentication.JWTAuthentication",
+        ],
+    }
+)
+
+
+#########################
+# General configuration #
+#########################
+
+# Language code for this installation. All choices can be found here:
+# http://www.i18nguy.com/unicode/language-identifiers.html
+LANGUAGE_CODE = "en-US"
+
+#########
+# Cache #
+#########
+CACHES["default"]["BACKEND"] = "django.core.cache.backends.dummy.DummyCache"
+
+RATELIMIT_BACKEND = "memory"
+CONTACT_FORM_RATELIMIT = "1000000/s"

@@ -1,0 +1,14 @@
+{% load i18n %}
+{% if cycle == "bound" %}
+{% blocktrans trimmed with resource_title=resource_title project_url=project_url %}
+The time has come for the end-of-cycle check of the bound elements for the "{{ resource_title }}" resource: {{ project_url }}.
+{% endblocktrans %}
+{% else %}
+{% blocktrans trimmed with resource_title=resource_title project_url=project_url %}
+The time has come for the end-of-cycle check of the unbound elements for the "{{ resource_title }}" resource: {{ project_url }}.
+{% endblocktrans %}
+{% endif %}
+
+---
+{% trans "This is an automated message, please do not reply." %}
+Eplouribousse - {% now "Y" %}

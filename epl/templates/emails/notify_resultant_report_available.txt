@@ -1,0 +1,8 @@
+{% load i18n %}
+
+{% blocktrans %}The resulting collection for the resource {{ resource_title }} is now available with details of your collection's contributions :{% endblocktrans %}
+{{ project_url }}
+
+---
+{% trans "This is an automated message, please do not reply." %}
+Eplouribousse - {% now "Y" %}

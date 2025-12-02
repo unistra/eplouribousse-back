@@ -2,9 +2,11 @@ import os
 
 from setuptools import find_packages, setup
 
-with open("README.rst") as readme:
+with open("README.md") as readme:
     long_description = readme.read()
 
+
+VERSION = "1.0.0"
 
 def recursive_requirements(requirement_file, libs, links, path=""):
     if not requirement_file.startswith(path):
@@ -29,7 +31,7 @@ recursive_requirements("requirements.txt", libraries, dependency_links)
 
 setup(
     name="epl",
-    version="0.1.0",
+    version=VERSION,
     packages=find_packages(),
     install_requires=libraries,
     dependency_links=dependency_links,

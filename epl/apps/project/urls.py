@@ -1,0 +1,44 @@
+from django.urls import path
+from rest_framework_nested.routers import NestedSimpleRouter, SimpleRouter
+
+from epl.apps.project.views.anomaly import AnomalyViewSet
+from epl.apps.project.views.collection import CollectionViewSet
+from epl.apps.project.views.dashboard import ProjectDashboardViewSet
+from epl.apps.project.views.contact import support
+from epl.apps.project.views.library import LibraryViewset
+from epl.apps.project.views.project import ProjectAlertSettingsViewSet, ProjectViewSet
+from epl.apps.project.views.projectlibrary import ProjectLibraryViewSet
+from epl.apps.project.views.resource import ResourceViewSet
+from epl.apps.project.views.segment import SegmentViewSet
+
+router = SimpleRouter()
+router.register(r"projects", ProjectViewSet, basename="project")
+router.register(r"libraries", LibraryViewset, basename="library")
+router.register(r"collections", CollectionViewSet, basename="collection")
+router.register(r"resources", ResourceViewSet, basename="resource")
+router.register(r"segments", SegmentViewSet, basename="segment")
+router.register(r"anomalies", AnomalyViewSet, basename="anomaly")
+
+
+projects_router = NestedSimpleRouter(router, r"projects", lookup="project")
+projects_router.register(r"libraries", ProjectLibraryViewSet, basename="projects-library")
+projects_router.register(r"dashboard", ProjectDashboardViewSet, basename="project-dashboard")
+
+
+urlpatterns = (
+    router.urls
+    + projects_router.urls
+    + [
+        # path(
+        #     "projects/<uuid:project_pk>/dashboard/",
+        #     ProjectDashboardViewSet.as_view({"get": "list"}),
+        #     name="project-dashboard",
+        # ),
+        path(
+            "projects/<uuid:pk>/alerts/",
+            ProjectAlertSettingsViewSet.as_view({"get": "retrieve", "patch": "partial_update"}),
+            name="project-alerts",
+        ),
+        path("contact/support/", support, name="contact-support"),
+    ]
+)

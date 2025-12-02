@@ -1,0 +1,14 @@
+{% load i18n %}
+
+{% blocktranslate %}The project {{ project_name }} has been launched by {{ launcher_name }} ;{% endblocktranslate %}
+{% if is_starting_now %}
+{% blocktranslate %}it is possible to start working on it from now : {{ project_url }}.{% endblocktranslate %}
+{% else %}
+{% blocktranslate %}it is possible to start working on it from {{ project_active_date }} : {{ project_url }}.{% endblocktranslate %}
+{% endif %}
+{% blocktranslate %}If you think this message was sent by error, please contact: {{ launcher_name }}{% endblocktranslate %}
+
+---
+
+{% trans "This is an automated message, please do not reply" %}.
+Eplouribousse - {% now "Y" %}
