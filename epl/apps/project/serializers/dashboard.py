@@ -40,6 +40,10 @@ class CacheDashboardMixin(DirectComputeMixin):
 
         data = super().to_representation(instance)
 
+        # add computed_at field when caching
+        if isinstance(data, dict):
+            data["computed_at"] = timezone.now()
+
         cache.set(cache_key, data, timeout=base_settings.CACHE_TIMEOUT_DASHBOARD)
         return data
 
@@ -91,7 +95,6 @@ class PositioningInformationSerializer(DirectComputeMixin, serializers.Serialize
             _("Number of Collections remaining to be positioned"): Collection.objects.filter(
                 project=project, position__isnull=True
             ).count(),
-            "computed_at": timezone.now(),
         }
 
 
@@ -119,7 +122,6 @@ class ExclusionInformationSerializer(DirectComputeMixin, serializers.Serializer)
                 project=project,
                 status=ResourceStatus.EXCLUDED,
             ).count(),
-            "computed_at": timezone.now(),
         }
 
 
@@ -146,7 +148,6 @@ class ArbitrationInformationSerializer(DirectComputeMixin, serializers.Serialize
             _("Number of Resources affected by any arbitration"): Resource.objects.filter(
                 project=project, arbitration__in=[Arbitration.ZERO, Arbitration.ONE]
             ).count(),
-            "computed_at": timezone.now(),
         }
 
 
@@ -229,7 +230,6 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
             _(
                 "- of which Other higher multiples"
             ): f"{other_higher_multiplicates} ({calculate_ratio(other_higher_multiplicates, candidate_resources)} %)",
-            "computed_at": timezone.now(),
         }
 
 
@@ -259,7 +259,6 @@ class InstructionsInformationSerializer(DirectComputeMixin, serializers.Serializ
                 project=project,
                 status=ResourceStatus.EDITION,
             ).count(),
-            "computed_at": timezone.now(),
         }
 
 
@@ -278,7 +277,6 @@ class ControlsInformationSerializer(DirectComputeMixin, serializers.Serializer):
                 project=project,
                 status=ResourceStatus.CONTROL_UNBOUND,
             ).count(),
-            "computed_at": timezone.now(),
         }
 
 
@@ -294,7 +292,6 @@ class AnomaliesInformationSerializer(DirectComputeMixin, serializers.Serializer)
         return {
             "title": _("Information about anomalies"),
             _("Number of anomalies in progress"): anomalies_in_progress,
-            "computed_at": timezone.now(),
         }
 
 
@@ -346,7 +343,6 @@ class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Seriali
             "title": _("Achievements"),
             _("Relative completion"): f"{relative_completion} %",
             _("Absolute completion"): f"{absolute_completion} %",
-            "computed_at": timezone.now(),
         }
 
 
@@ -399,7 +395,6 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
                     "data": realized_positionings_by_libraries_percentage,
                 }
             ],
-            "computed_at": timezone.now(),
         }
         if errors:
             result["errors"] = errors
@@ -453,7 +448,6 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
                     "data": [unbound_counts.get(label, 0) for label in labels],
                 },
             ],
-            "computed_at": timezone.now(),
         }
 
 
@@ -511,5 +505,4 @@ class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Seri
                     "data": data,
                 }
             ],
-            "computed_at": timezone.now(),
         }
