@@ -513,8 +513,8 @@ def notify_resultant_report_available(resource: Resource, request) -> None:
             project=project,
             role=Role.INSTRUCTOR,
             library__collections__resource=resource,
+            library__collections__position__gt=0,
         )
-        .exclude(library__collections__position=0)
         .select_related("user", "library")
         .distinct()
     )
