@@ -262,31 +262,28 @@ class BaseCollectionPositioningSerializer(
         current_position: int = None,
     ) -> None:
         """
-         Calculates and saves the arbitration based on the positions of the collections.
+        Calculates and saves the arbitration based on the positions of the collections.
         - ONE: If several libraries have chosen rank 1
-        - ZERO: If no library has chosen rank 1 and all have positioned themselves or excluded themselves
+        - ZERO: If no library has chosen rank 1, all have positioned (position >= 0), and at least one collection is not excluded (position 0)
         - NONE: In other cases
         """
-        # Check if another collection has already rank 1
-        is_other_first = False
-        if current_collection and current_position == 1:
-            is_other_first = collections.filter(position=1).exclude(pk=current_collection.pk).exists()
+        num_rank_one = collections.filter(position=1).count()
+        # having positioned means a position is not null (either > 0 or 0 for exclusion)
+        all_have_positioned = not collections.filter(position__isnull=True).exists()
+        at_least_one_didnt_exclude = collections.filter(position__gt=0).exists()
 
         arbitration = Arbitration.NONE
         status = resource.status
 
-        if current_position == 1 and is_other_first:
+        if num_rank_one > 1:
             arbitration = Arbitration.ONE
             status = ResourceStatus.POSITIONING
-        else:
-            positions = list(collections.values_list("position", flat=True))
-            if 1 not in positions and all(c.position is not None or c.exclusion_reason for c in collections):
-                arbitration = Arbitration.ZERO
-                status = ResourceStatus.POSITIONING
+        elif num_rank_one == 0 and all_have_positioned and at_least_one_didnt_exclude:
+            arbitration = Arbitration.ZERO
+            status = ResourceStatus.POSITIONING
 
         resource.arbitration = arbitration
         resource.status = status
-
         resource.save(update_fields=["arbitration", "status"])
 
     def handle_arbitration_notification(self, resource: Resource, arbitration: Arbitration) -> None:
