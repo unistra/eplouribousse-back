@@ -233,14 +233,26 @@ class BaseCollectionPositioningSerializer(
 
     def handle_excluded_status(self, collections: QuerySet[Collection], resource: Resource) -> None:
         """
-        Set resource status to EXCLUDED if one library is positioned at rank 1 and all others are excluded.
+        Set resource status to EXCLUDED if:
+        1. All collections are excluded (position 0).
+        2. One collection is at position 1 and all others are excluded.
         """
-        if (
-            sum(c.position == 1 for c in collections) == 1
-            and sum(c.position == 0 for c in collections) == len(collections) - 1
-        ):
-            resource.status = ResourceStatus.EXCLUDED
-            resource.save(update_fields=["status"])
+        num_collections = len(collections)
+        if not num_collections:
+            return
+
+        num_excluded = sum(1 for c in collections if c.position == 0)
+        num_position_one = sum(1 for c in collections if c.position == 1)
+
+        # Case 1: All collections are excluded
+        all_excluded = num_excluded == num_collections
+        # Case 2: One collection is at rank 1 and all others are excluded
+        one_at_position_one_and_rest_excluded = num_position_one == 1 and num_excluded == num_collections - 1
+
+        if all_excluded or one_at_position_one_and_rest_excluded:
+            if resource.status != ResourceStatus.EXCLUDED:
+                resource.status = ResourceStatus.EXCLUDED
+                resource.save(update_fields=["status"])
 
     def calculate_arbitration(
         self,
@@ -250,31 +262,28 @@ class BaseCollectionPositioningSerializer(
         current_position: int = None,
     ) -> None:
         """
-         Calculates and saves the arbitration based on the positions of the collections.
+        Calculates and saves the arbitration based on the positions of the collections.
         - ONE: If several libraries have chosen rank 1
-        - ZERO: If no library has chosen rank 1 and all have positioned themselves or excluded themselves
+        - ZERO: If no library has chosen rank 1, all have positioned (position >= 0), and at least one collection is not excluded (position 0)
         - NONE: In other cases
         """
-        # Check if another collection has already rank 1
-        is_other_first = False
-        if current_collection and current_position == 1:
-            is_other_first = collections.filter(position=1).exclude(pk=current_collection.pk).exists()
+        num_rank_one = collections.filter(position=1).count()
+        # having positioned means a position is not null (either > 0 or 0 for exclusion)
+        all_have_positioned = not collections.filter(position__isnull=True).exists()
+        at_least_one_didnt_exclude = collections.filter(position__gt=0).exists()
 
         arbitration = Arbitration.NONE
         status = resource.status
 
-        if current_position == 1 and is_other_first:
+        if num_rank_one > 1:
             arbitration = Arbitration.ONE
             status = ResourceStatus.POSITIONING
-        else:
-            positions = list(collections.values_list("position", flat=True))
-            if 1 not in positions and all(c.position is not None or c.exclusion_reason for c in collections):
-                arbitration = Arbitration.ZERO
-                status = ResourceStatus.POSITIONING
+        elif num_rank_one == 0 and all_have_positioned and at_least_one_didnt_exclude:
+            arbitration = Arbitration.ZERO
+            status = ResourceStatus.POSITIONING
 
         resource.arbitration = arbitration
         resource.status = status
-
         resource.save(update_fields=["arbitration", "status"])
 
     def handle_arbitration_notification(self, resource: Resource, arbitration: Arbitration) -> None:

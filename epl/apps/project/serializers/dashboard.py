@@ -78,9 +78,6 @@ class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
 
 
 class PositioningInformationSerializer(DirectComputeMixin, serializers.Serializer):
-    positioned_collections = serializers.IntegerField(read_only=True)
-    positioned_collections_without_exclusion = serializers.IntegerField(read_only=True)
-    collections_remaining_to_be_positioned = serializers.IntegerField(read_only=True)
     """
     Number of collections positioned (exclusions included)
     Number of collections positioned (exclusions excluded)
@@ -92,12 +89,12 @@ class PositioningInformationSerializer(DirectComputeMixin, serializers.Serialize
             "title": _("Positioning Information"),
             "computations": [
                 {
-                    "key": "positioned_collections_included",
+                    "key": "positioned_collections_exclusions_included",
                     "label": _("Number of Collections positioned (exclusions included)"),
                     "value": Collection.objects.filter(project=project, position__isnull=False).count(),
                 },
                 {
-                    "key": "positioned_collections_excluded",
+                    "key": "positioned_collections_exclusions_excluded",
                     "label": _("Number of Collections positioned (excluding exclusions)"),
                     "value": Collection.objects.filter(project=project, position__gt=0)
                     .exclude(resource__status=ResourceStatus.EXCLUDED)
@@ -115,7 +112,7 @@ class PositioningInformationSerializer(DirectComputeMixin, serializers.Serialize
 class ExclusionInformationSerializer(DirectComputeMixin, serializers.Serializer):
     """
     Excluded collections (by exclusion of collections or resources)
-    Excluded resources
+    Excluded resources (by exclusion of collections)
     """
 
     def compute_data(self, project):
@@ -125,8 +122,10 @@ class ExclusionInformationSerializer(DirectComputeMixin, serializers.Serializer)
                 {
                     "key": "excluded_collections",
                     "label": _("Number of excluded collections"),
-                    "value": Collection.objects.filter(project=project, position=0)
-                    .exclude(resource__status=ResourceStatus.EXCLUDED)
+                    "value": Collection.objects.filter(
+                        Q(project=project) & (Q(position=0) | Q(resource__status=ResourceStatus.EXCLUDED))
+                    )
+                    .distinct()
                     .count(),
                 },
                 {
