@@ -13,7 +13,7 @@ class ProjectDestroyTest(TestCase):
         [
             (Role.PROJECT_CREATOR, True, 204),
             (Role.INSTRUCTOR, False, 403),
-            (Role.PROJECT_ADMIN, False, 403),
+            (Role.PROJECT_ADMIN, True, 204),
             (Role.PROJECT_MANAGER, False, 403),
             (Role.CONTROLLER, False, 403),
             (Role.GUEST, False, 403),
