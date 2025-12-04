@@ -233,14 +233,26 @@ class BaseCollectionPositioningSerializer(
 
     def handle_excluded_status(self, collections: QuerySet[Collection], resource: Resource) -> None:
         """
-        Set resource status to EXCLUDED if one library is positioned at rank 1 and all others are excluded.
+        Set resource status to EXCLUDED if:
+        1. All collections are excluded (position 0).
+        2. One collection is at position 1 and all others are excluded.
         """
-        if (
-            sum(c.position == 1 for c in collections) == 1
-            and sum(c.position == 0 for c in collections) == len(collections) - 1
-        ):
-            resource.status = ResourceStatus.EXCLUDED
-            resource.save(update_fields=["status"])
+        num_collections = len(collections)
+        if not num_collections:
+            return
+
+        num_excluded = sum(1 for c in collections if c.position == 0)
+        num_position_one = sum(1 for c in collections if c.position == 1)
+
+        # Case 1: All collections are excluded
+        all_excluded = num_excluded == num_collections
+        # Case 2: One collection is at rank 1 and all others are excluded
+        one_at_position_one_and_rest_excluded = num_position_one == 1 and num_excluded == num_collections - 1
+
+        if all_excluded or one_at_position_one_and_rest_excluded:
+            if resource.status != ResourceStatus.EXCLUDED:
+                resource.status = ResourceStatus.EXCLUDED
+                resource.save(update_fields=["status"])
 
     def calculate_arbitration(
         self,
