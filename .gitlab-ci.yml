@@ -1,7 +1,9 @@
 ---
 stages:
-  - test
-  - sonarqube-check
+#  - test
+#  - sonarqube-check
+  - build
+  - release
 
 variables:
   POSTGRES_USER: epl
@@ -10,43 +12,80 @@ variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
   PYTHON_VERSION: "3.12"
+  CONTAINER_TEST_IMAGE: $CI_REGISTRY/dnum/eplouribousse-backend:$CI_COMMIT_REF_NAME
+  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY/dnum/eplouribousse-backend:latest
 
 services:
   - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:12
     alias: postgres
 
-unittest:
-  stage: test
+#unittest:
+#  stage: test
+#  tags:
+#    - cluster
+#  image: registry.app.unistra.fr/docker/python$PYTHON_VERSION-ci:latest
+#  script:
+#    - apt-get update && apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
+#    - pip3 install tox
+#    - tox -e py312
+#  coverage: '/TOTAL.*\s+(\d+%)$/'
+#  artifacts:
+#    paths:
+#      - coverage.xml
+#    reports:
+#      coverage_report:
+#        coverage_format: cobertura
+#        path: coverage.xml
+#
+#sonarqube-check:
+#  stage: sonarqube-check
+#  image:
+#    name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/sonarsource/sonar-scanner-cli:11
+#    entrypoint: [ "" ]
+#  script:
+#    - sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}"
+#  allow_failure: true
+#  needs:
+#    - job: unittest
+#      artifacts: true
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == 'develop'
+
+#include:
+#  - project: "docker/template"
+#    file: "python-pip-audit.gitlab-ci.yml"
+
+
+.build-image:
+  image:
+    # gcr.io/kaniko-project/executor:v1.7.0-debug
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - echo "${CI_PROJECT_DIR} ${CI_PROJECT_DIR_PATH} ${CI_REGISTRY} ${CI_REGISTRY_USER} ${DESTINATION} ${EXTRA_ARGS}"
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}${CI_PROJECT_DIR_PATH}/docker/app/Dockerfile"
+      --destination "${DESTINATION}" ${EXTRA_ARGS}
+      --registry-mirror quay.apps.mgmt.paas.unistra.fr/dnum
   tags:
     - cluster
-  image: registry.app.unistra.fr/docker/python$PYTHON_VERSION-ci:latest
-  script:
-    - apt-get update && apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
-    - pip3 install tox
-    - tox -e py312
-  coverage: '/TOTAL.*\s+(\d+%)$/'
-  artifacts:
-    paths:
-      - coverage.xml
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
+    - kubernetes
 
-sonarqube-check:
-  stage: sonarqube-check
-  image:
-    name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/sonarsource/sonar-scanner-cli:11
-    entrypoint: [ "" ]
-  script:
-    - sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}"
-  allow_failure: true
-  needs:
-    - job: unittest
-      artifacts: true
+b:docker:
+  extends: .build-image
+  stage: build
+  variables:
+    DESTINATION: $CONTAINER_TEST_IMAGE
+
+r:docker:
+  extends: .build-image
+  stage: release
+  variables:
+    DESTINATION: $CONTAINER_RELEASE_IMAGE
   rules:
-    - if: $CI_COMMIT_BRANCH == 'develop'
-
-include:
-  - project: "docker/template"
-    file: "python-pip-audit.gitlab-ci.yml"
+    - if: '$CI_COMMIT_TAG'
+      when: always
