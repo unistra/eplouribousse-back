@@ -282,7 +282,7 @@ def send_instruction_turn_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    project_url = f"{front_domain}/projects/{project.id}"
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('instruction')}"
 
@@ -312,7 +312,7 @@ def send_control_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    project_url = f"{front_domain}/projects/{project.id}"
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('control')}"
 
     email_content = render_to_string(
@@ -342,7 +342,7 @@ def send_anomaly_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    project_url = f"{front_domain}/projects/{project.id}"
 
     # Get the request user role label in the project and verify authorization
     reporter_role_display = None
@@ -396,7 +396,7 @@ def send_anomaly_resolved_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('anomaly resolved')}"
 
@@ -404,9 +404,10 @@ def send_anomaly_resolved_notification_email(
         "emails/notify_anomaly_resolved.txt",
         {
             "library_code": library_code,
-            "admin_identifier": admin_user.username,
+            "resource_title": resource.title,
+            "admin_user_display_name": str(admin_user),
             "admin_email": admin_user.email,
-            "project_url": project_url,
+            "modal_url": modal_url,
         },
     )
 
@@ -434,7 +435,7 @@ def send_resultant_report_available_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    project_url = f"{front_domain}/projects/{project.id}"
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('resultant')}"
 
