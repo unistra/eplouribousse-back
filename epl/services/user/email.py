@@ -435,7 +435,7 @@ def send_resultant_report_available_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/projects/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('resultant')}"
 
@@ -443,7 +443,7 @@ def send_resultant_report_available_notification_email(
         "emails/notify_resultant_report_available.txt",
         {
             "resource_title": resource.title,
-            "project_url": project_url,
+            "modal_url": modal_url,
         },
     )
 
