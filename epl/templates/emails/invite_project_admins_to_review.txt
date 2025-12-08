@@ -1,6 +1,6 @@
 {% load i18n %}
 
-{% blocktranslate %}The project {{ project_name }} is now available.{% endblocktranslate %}
+{% blocktranslate %}The project `{{ project_name }}` is now available.{% endblocktranslate %}
 {% blocktranslate %}As the administrator of this project, you must, in consultation with any co-administrators and project pilots, check and, if necessary, modify the settings and parameters before the project goes live.
 If you believe this message is the result of an error, please contact the project creator {{ project_creator_email }}{% endblocktranslate %}.
 

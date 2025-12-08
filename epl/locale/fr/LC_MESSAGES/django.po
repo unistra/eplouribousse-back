@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-08 14:31+0100\n"
+"POT-Creation-Date: 2025-12-08 14:48+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1746,9 +1746,8 @@ msgid "This is an automated message, please do not reply."
 msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:3
-#, python-format
-msgid "The project %(project_name)s is now available."
-msgstr "Le projet %(project_name)s est à présent disponible."
+msgid "The project `%(project_name)s` is now available."
+msgstr "Le projet `%(project_name)s` est à présent disponible."
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:4
 #, python-format
@@ -1760,7 +1759,7 @@ msgid ""
 "project creator %(project_creator_email)s"
 msgstr ""
 "En tant qu'administrateur de ce projet vous devez, en concertation avec vos "
-"éventuels co-administrateurs et les pilotes de  ce projet, en vérifier et "
+"éventuels co-administrateurs et les pilotes de ce projet, en vérifier et "
 "éventuellement modifier les réglages et les paramètres avant la mise en "
 "service effective.\n"
 "Si vous pensez que ce message fait suite à une erreur, veuillez contacter le "
@@ -1939,12 +1938,13 @@ msgstr ""
 "pour positionner la vôtre, veuillez vous rendre sur %(project_url)s"
 
 #: epl/templates/emails/notify_resultant_report_available.txt:3
+#, python-format
 msgid ""
 "The resulting collection for the resource '%(resource_title)s' is now "
 "available with details of your collection's contributions :"
 msgstr ""
-"La collection résultante pour la ressource '%(resource_title)s' est à présent "
-"disponible avec le détail des contributions de votre collection :"
+"La collection résultante pour la ressource '%(resource_title)s' est à "
+"présent disponible avec le détail des contributions de votre collection :"
 
 #: epl/templates/emails/password_changed.txt:5
 #: epl/tests/services/email/test_user_email.py:38
