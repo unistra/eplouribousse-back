@@ -308,12 +308,12 @@ def send_control_notification_email(
     email: str,
     request,
     resource,
-    cycle: str,  # "reliés" ou "non-reliés"
+    cycle: str,  # "bound" or "unbound"
 ):
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/projects/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('control')}"
 
     email_content = render_to_string(
@@ -321,7 +321,7 @@ def send_control_notification_email(
         {
             "cycle": cycle,
             "resource_title": resource.title,
-            "project_url": project_url,
+            "modal_url": modal_url,
         },
     )
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-09 15:19+0100\n"
+"POT-Creation-Date: 2025-12-09 15:36+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1896,38 +1896,42 @@ msgstr ""
 "manière circonstanciée et en utilisant l'option 'Répondre à tous'."
 
 #: epl/templates/emails/notify_arbitration_type0.txt:3
+#, python-format
 msgid ""
 "The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 0 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource '%(resource_title)s' "
-"est susceptible de trancher un cas d'arbitrage de type 0:"
+"Le repositionnement de votre collection pour la ressource "
+"'%(resource_title)s' est susceptible de trancher un cas d'arbitrage de type "
+"0:"
 
 #: epl/templates/emails/notify_arbitration_type1.txt:3
+#, python-format
 msgid ""
 "The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 1 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource '%(resource_title)s' "
-"est susceptible de trancher un cas d'arbitrage de type 1:"
+"Le repositionnement de votre collection pour la ressource "
+"'%(resource_title)s' est susceptible de trancher un cas d'arbitrage de type "
+"1:"
 
 #: epl/templates/emails/notify_control.txt:3
 #, python-format
 msgid ""
 "The time has come for the end-of-cycle check of the bound elements for the "
-"\"%(resource_title)s\" resource: %(project_url)s."
+"'%(resource_title)s' resource: %(modal_url)s."
 msgstr ""
 "Le moment est venu du contrôle de fin de cycle des éléments réliés pour la "
-"resource \"%(resource_title)s\" : %(project_url)s."
+"ressource '%(resource_title)s' : %(modal_url)s."
 
 #: epl/templates/emails/notify_control.txt:7
 #, python-format
 msgid ""
 "The time has come for the end-of-cycle check of the unbound elements for the "
-"\"%(resource_title)s\" resource: %(project_url)s."
+"'%(resource_title)s' resource: %(modal_url)s."
 msgstr ""
 "Le moment est venu du contrôle de fin de cycle des éléments non reliés pour "
-"la resource \"%(resource_title)s\" : %(project_url)s."
+"ressource '%(resource_title)s' : %(modal_url)s."
 
 #: epl/templates/emails/notify_instruction_turn.txt:3
 #, python-format
