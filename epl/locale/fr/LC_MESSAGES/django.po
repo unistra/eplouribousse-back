@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-09 09:39+0100\n"
+"POT-Creation-Date: 2025-12-09 15:11+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1932,15 +1932,15 @@ msgstr ""
 "la resource \"%(resource_title)s\" : %(project_url)s."
 
 #: epl/templates/emails/notify_instruction_turn.txt:3
-#, python-format
 msgid ""
 "Your turn has come to instruct the resulting collection for the resource "
-"\"%(resource_title)s\": %(project_url)s"
+"'%(resource_title)s': %(modal_url)s"
 msgstr ""
 "Votre tour est venu d'instruire la collection résultante pour la ressource "
-"\"%(resource_title)s\": %(project_url)s"
+"'%(resource_title)s': %(modal_url)s"
 
 #: epl/templates/emails/notify_positioning.txt:3
+#, python-format
 msgid ""
 "The collection from the library %(positioned_library_code)s has just been "
 "positioned; to position yours, please go to %(modal_url)s"

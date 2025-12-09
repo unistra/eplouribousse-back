@@ -283,7 +283,7 @@ def send_instruction_turn_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/projects/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('instruction')}"
 
@@ -291,7 +291,7 @@ def send_instruction_turn_email(
         "emails/notify_instruction_turn.txt",
         {
             "resource_title": resource.title,
-            "project_url": project_url,
+            "modal_url": modal_url,
         },
     )
 
