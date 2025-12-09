@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-08 14:48+0100\n"
+"POT-Creation-Date: 2025-12-08 15:58+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1736,7 +1736,7 @@ msgid "For the record, your username is:"
 msgstr "Pour mémoire, votre identifiant est : "
 
 #: epl/templates/emails/confirm_account_creation.txt:7
-#: epl/templates/emails/notify_anomalies.txt:11
+#: epl/templates/emails/notify_anomalies.txt:15
 #: epl/templates/emails/notify_anomaly_resolved.txt:12
 #: epl/templates/emails/notify_control.txt:13
 #: epl/templates/emails/notify_instruction_turn.txt:5
@@ -1746,6 +1746,7 @@ msgid "This is an automated message, please do not reply."
 msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:3
+#, python-format
 msgid "The project `%(project_name)s` is now available."
 msgstr "Le projet `%(project_name)s` est à présent disponible."
 
@@ -1836,24 +1837,33 @@ msgstr ""
 msgid "This invitation will expire in 7 days"
 msgstr "Cette invitation va expirer dans 7 jours"
 
-#: epl/templates/emails/notify_anomalies.txt:3
-#, python-format
+#: epl/templates/emails/notify_anomalies.txt:4
 msgid ""
-"One or more anomalies have been reported by %(reporter_role)s "
+"One or more anomalies have been reported by the controller "
 "%(reporter_identifier)s %(reporter_email)s in the instruction of the "
-"resource:"
+"resource: `%(resource_title)s`."
 msgstr ""
-"Une ou plusieurs anomalies ont été signalées par %(reporter_role)s "
+"Une ou plusieurs anomalies ont été signalées par le contrôleur "
 "%(reporter_identifier)s %(reporter_email)s dans l'instruction de la "
-"ressource :"
+"ressource : `%(resource_title)s`"
 
-#: epl/templates/emails/notify_anomalies.txt:6
+#: epl/templates/emails/notify_anomalies.txt:7
+msgid ""
+"One or more anomalies have been reported by the instructor "
+"%(reporter_identifier)s %(reporter_email)s in the instruction of the "
+"resource: `%(resource_title)s`."
+msgstr ""
+"Une ou plusieurs anomalies ont été signalées par l'instructeur "
+"%(reporter_identifier)s %(reporter_email)s dans l'instruction de la "
+"ressource : `%(resource_title)s`."
+
+#: epl/templates/emails/notify_anomalies.txt:10
 msgid ""
 "An intervention from a project administrator is required. They will save the "
 "maximum number of lines and then restart the circulation of the form."
 msgstr ""
 "Une intervention d'un administrateur de projet est requise. Il sauvegardera "
-"le maximum de lignes puis relancera la circulation du formulaire."
+"le maximum de lignes puis relancera la circulation de la fiche."
 
 #: epl/templates/emails/notify_anomaly_resolved.txt:3
 #, python-format

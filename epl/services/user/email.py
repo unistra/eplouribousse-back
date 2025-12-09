@@ -342,7 +342,7 @@ def send_anomaly_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/projects/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     # Get the request user role label in the project and verify authorization
     reporter_role_display = None
@@ -358,9 +358,9 @@ def send_anomaly_notification_email(
         {
             "resource_title": resource.title,
             "reporter_role": reporter_role_display,
-            "reporter_identifier": reporter_user.username,
+            "reporter_identifier": str(reporter_user),
             "reporter_email": reporter_user.email,
-            "project_url": project_url,
+            "modal_url": modal_url,
         },
     )
 
