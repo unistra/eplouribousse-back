@@ -239,6 +239,7 @@ def send_collection_positioned_email(
     email: str,
     request: Request,
     resource: Resource,
+    library_code,
     positioned_collection,
 ) -> None:
     """
@@ -249,17 +250,17 @@ def send_collection_positioned_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/projects/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     email_content = render_to_string(
         "emails/notify_positioning.txt",
         {
-            "library_code": positioned_collection.library.code,
-            "project_url": project_url,
+            "positioned_library_code": positioned_collection.library.code,
+            "modal_url": modal_url,
         },
     )
 
-    subject = f"eplouribousse | {tenant.name} | {project.name} | {positioned_collection.library.code} | {resource.code} | {_('positioning')}"
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('positioning')}"
 
     send_mail(
         subject=subject,

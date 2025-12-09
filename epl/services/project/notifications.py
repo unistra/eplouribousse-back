@@ -265,8 +265,6 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
     if project_alerts.get(AlertType.POSITIONING.value, True) is False:
         return
 
-    acting_user = request.user
-
     unpositioned_library_ids = resource.collections.filter(position__isnull=True).values_list("library_id", flat=True)
 
     instructors_to_notify = (
@@ -280,14 +278,12 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
     )
 
     for instructor_role in instructors_to_notify:
-        if instructor_role.user == acting_user:  # double-check that the user is not already positioned.
-            continue
-
         if should_send_alert(instructor_role.user, project, AlertType.POSITIONING):
             send_collection_positioned_email(
                 email=instructor_role.user.email,
                 request=request,
                 resource=resource,
+                library_code=instructor_role.library.code,
                 positioned_collection=positioned_collection,
             )
 

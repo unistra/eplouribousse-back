@@ -1,6 +1,6 @@
 {% load i18n %}
 
-{% blocktrans %}The collection from the library {{ library_code }} has just been positioned; to position yours, please go to {{ project_url }}{% endblocktrans %}
+{% blocktrans %}The collection from the library {{ positioned_library_code }} has just been positioned; to position yours, please go to {{ modal_url }}{% endblocktrans %}
 
 ---
 {% trans "This is an automated message, please do not reply." %}
