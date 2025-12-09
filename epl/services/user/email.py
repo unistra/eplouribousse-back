@@ -211,16 +211,16 @@ def send_arbitration_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/projects/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
-    # Choisir le template en fonction du type d'arbitrage
+    # Choosing the template according to the arbitration type
     template_name = f"emails/notify_arbitration_type{arbitration_type.value}.txt"
 
     email_content = render_to_string(
         template_name,
         {
             "resource_title": resource.title,
-            "project_url": project_url,
+            "modal_url": modal_url,
         },
     )
 

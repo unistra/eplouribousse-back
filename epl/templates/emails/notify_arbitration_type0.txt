@@ -1,7 +1,7 @@
 {% load i18n %}
 
-{% blocktranslate %}The repositioning of your collection for the resource "{{ resource_title }}" may resolve a type 0 arbitration case:{% endblocktranslate %}
-{{ project_url }}
+{% blocktranslate %}The repositioning of your collection for the resource '{{ resource_title }}' may resolve a type 0 arbitration case:{% endblocktranslate %}
+{{ modal_url }}
 
 ---
 
