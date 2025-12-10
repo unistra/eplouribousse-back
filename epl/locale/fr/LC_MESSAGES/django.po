@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-09 15:36+0100\n"
+"POT-Creation-Date: 2025-12-10 09:05+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1065,7 +1065,7 @@ msgstr "En tant que pilote, vous pouvez maintenant lancer ou programmer"
 #: epl/apps/project/tests/views/test_project_status.py:226
 #: epl/apps/project/tests/views/test_project_status.py:301
 #: epl/apps/user/tests/views/test_create_account.py:120
-#: epl/services/user/email.py:103
+#: epl/services/user/email.py:105
 msgid "your account creation"
 msgstr "création de votre compte"
 
@@ -1075,7 +1075,7 @@ msgstr "est désormais disponible pour le lancement"
 
 #: epl/apps/project/tests/views/test_resultant_report_available.py:65
 #: epl/apps/project/tests/views/test_resultant_report_available.py:170
-#: epl/services/user/email.py:441
+#: epl/services/user/email.py:443
 msgid "resultant"
 msgstr "résultante"
 
@@ -1654,64 +1654,64 @@ msgstr ""
 "La vue n'est pas dans le contexte du sérialiseur ou n'est pas une "
 "GenericApiView"
 
-#: epl/services/user/email.py:26 epl/templates/emails/password_changed.txt:3
+#: epl/services/user/email.py:28 epl/templates/emails/password_changed.txt:3
 #: epl/tests/services/email/test_user_email.py:26
 msgid "Password Change"
 msgstr "Modification du mot de passe"
 
-#: epl/services/user/email.py:46 epl/templates/emails/password_reset.txt:3
+#: epl/services/user/email.py:48 epl/templates/emails/password_reset.txt:3
 #: epl/tests/services/email/test_user_email.py:53
 msgid "Password Reset"
 msgstr "Réinitialisation du mot de passe"
 
-#: epl/services/user/email.py:83
+#: epl/services/user/email.py:85
 msgid "creating your account (pending)"
 msgstr "création de votre compte (en attente)"
 
-#: epl/services/user/email.py:136
+#: epl/services/user/email.py:138
 #, python-brace-format
 msgid "Creation of the {project_name} project"
 msgstr "Création du projet {project_name}"
 
-#: epl/services/user/email.py:168
+#: epl/services/user/email.py:170
 #, python-brace-format
 msgid "Availability of the {project_name} project for launch"
 msgstr "Disponibilité du projet {project_name} pour le lancement"
 
-#: epl/services/user/email.py:189
+#: epl/services/user/email.py:191
 msgid "now"
 msgstr "maintenant"
 
-#: epl/services/user/email.py:191
+#: epl/services/user/email.py:193
 msgid "at"
 msgstr "à"
 
-#: epl/services/user/email.py:200
+#: epl/services/user/email.py:202
 #, python-brace-format
 msgid "Launch of the {project_name} project"
 msgstr "Lancement du projet {project_name}"
 
-#: epl/services/user/email.py:227
+#: epl/services/user/email.py:229
 msgid "arbitration"
 msgstr "arbitrage"
 
-#: epl/services/user/email.py:263
+#: epl/services/user/email.py:265
 msgid "positioning"
 msgstr "positionnement"
 
-#: epl/services/user/email.py:288
+#: epl/services/user/email.py:290
 msgid "instruction"
 msgstr "instruction"
 
-#: epl/services/user/email.py:317
+#: epl/services/user/email.py:319
 msgid "control"
 msgstr "contrôle"
 
-#: epl/services/user/email.py:355
+#: epl/services/user/email.py:357
 msgid "anomaly"
 msgstr "anomalie"
 
-#: epl/services/user/email.py:402
+#: epl/services/user/email.py:404
 msgid "anomaly resolved"
 msgstr "anomalie résolue"
 
@@ -1896,14 +1896,12 @@ msgstr ""
 "manière circonstanciée et en utilisant l'option 'Répondre à tous'."
 
 #: epl/templates/emails/notify_arbitration_type0.txt:3
-#, python-format
 msgid ""
 "The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 0 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource "
-"'%(resource_title)s' est susceptible de trancher un cas d'arbitrage de type "
-"0:"
+"Le repositionnement de votre collection pour la ressource '%(resource_title)s' "
+"est susceptible de trancher un cas d'arbitrage de type 0 :"
 
 #: epl/templates/emails/notify_arbitration_type1.txt:3
 #, python-format
@@ -1911,9 +1909,8 @@ msgid ""
 "The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 1 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource "
-"'%(resource_title)s' est susceptible de trancher un cas d'arbitrage de type "
-"1:"
+"Le repositionnement de votre collection pour la ressource '%(resource_title)s' "
+"est susceptible de trancher un cas d'arbitrage de type 1 :"
 
 #: epl/templates/emails/notify_control.txt:3
 #, python-format
@@ -2113,6 +2110,26 @@ msgstr "Bibliothèque remédiée"
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
 
+#, fuzzy, python-format
+#~| msgid ""
+#~| "The repositioning of your collection for the resource "
+#~| "'%(resource_title)s' may resolve a type 0 arbitration case:"
+#~ msgid ""
+#~ "The repositioning of your collection for the resource "
+#~ "'%(resource_title|safe)s' may resolve a type 1 arbitration case:"
+#~ msgstr ""
+#~ "Le repositionnement de votre collection pour la ressource "
+#~ "'%(resource_title)s' est susceptible de trancher un cas d'arbitrage de "
+#~ "type 0:"
+
+#~ msgid "The repositioning of your collection for the resource"
+#~ msgstr "Le repositionnement de votre collection pour la ressource"
+
+#, fuzzy
+#~| msgid "Number of Collections in type 0 arbitration"
+#~ msgid "may resolve a type 0 arbitration case"
+#~ msgstr "Nombre de Collections en arbitrage de type 0"
+
 #~ msgid ""
 #~ "As an administrator, you must, in consultation with your co-administrators"
 #~ msgstr ""
@@ -2127,9 +2144,6 @@ msgstr "L'ISSN doit comporter 8 caractères"
 
 #~ msgid "Referenced segment belongs to a different collection"
 #~ msgstr "Le segment référencé appartient à une autre collection"
-
-#~ msgid "The repositioning of your collection for the resource"
-#~ msgstr "Le repositionnement de votre collection pour la ressource"
 
 #~ msgid "Invitation"
 #~ msgstr "Invitation"

@@ -1,6 +1,6 @@
 {% load i18n %}
 
-{% blocktrans %}Instructor(s) of the library: {{ library_code }}, your turn has come to instruct: '{{resource_title}}'.{% endblocktrans %}
+{% blocktrans with resource_title=resource_title|safe %}Instructor(s) of the library: {{ library_code }}, your turn has come to instruct: '{{resource_title}}'.{% endblocktrans %}
 
 
 {% blocktrans %}The turn has been assigned to you by the project administrator {{ admin_user_display_name }} {{ admin_email }} after processing one or more anomalies. To see the current situation:{% endblocktrans %}

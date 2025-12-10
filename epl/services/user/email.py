@@ -1,3 +1,5 @@
+from html import unescape
+
 from django.conf import settings
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import signing
@@ -219,7 +221,7 @@ def send_arbitration_notification_email(
     email_content = render_to_string(
         template_name,
         {
-            "resource_title": resource.title,
+            "resource_title": unescape(resource.title),
             "modal_url": modal_url,
         },
     )
@@ -290,7 +292,7 @@ def send_instruction_turn_email(
     email_content = render_to_string(
         "emails/notify_instruction_turn.txt",
         {
-            "resource_title": resource.title,
+            "resource_title": unescape(resource.title),
             "modal_url": modal_url,
         },
     )
@@ -320,7 +322,7 @@ def send_control_notification_email(
         "emails/notify_control.txt",
         {
             "cycle": cycle,
-            "resource_title": resource.title,
+            "resource_title": unescape(resource.title),
             "modal_url": modal_url,
         },
     )
@@ -357,7 +359,7 @@ def send_anomaly_notification_email(
     email_content = render_to_string(
         "emails/notify_anomalies.txt",
         {
-            "resource_title": resource.title,
+            "resource_title": unescape(resource.title),
             "reporter_role": reporter_role_display,
             "reporter_identifier": str(reporter_user),
             "reporter_email": reporter_user.email,
@@ -405,7 +407,7 @@ def send_anomaly_resolved_notification_email(
         "emails/notify_anomaly_resolved.txt",
         {
             "library_code": library_code,
-            "resource_title": resource.title,
+            "resource_title": unescape(resource.title),
             "admin_user_display_name": str(admin_user),
             "admin_email": admin_user.email,
             "modal_url": modal_url,
@@ -443,7 +445,7 @@ def send_resultant_report_available_notification_email(
     email_content = render_to_string(
         "emails/notify_resultant_report_available.txt",
         {
-            "resource_title": resource.title,
+            "resource_title": unescape(resource.title),
             "modal_url": modal_url,
         },
     )
