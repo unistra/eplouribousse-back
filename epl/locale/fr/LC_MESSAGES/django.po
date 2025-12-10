@@ -1947,7 +1947,7 @@ msgid ""
 "positioned; to position yours, please go to %(modal_url)s"
 msgstr ""
 "La collection de la bibliothèque %(positioned_library_code)s vient d'être "
-"positionnée; pour positionner la vôtre rendez-vous en  %(modal_url)s"
+"positionnée; pour positionner la vôtre rendez-vous en %(modal_url)s"
 
 #: epl/templates/emails/notify_resultant_report_available.txt:3
 #, python-format
