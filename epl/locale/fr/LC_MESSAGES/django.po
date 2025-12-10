@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-10 09:05+0100\n"
+"POT-Creation-Date: 2025-12-10 13:39+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1896,6 +1896,7 @@ msgstr ""
 "manière circonstanciée et en utilisant l'option 'Répondre à tous'."
 
 #: epl/templates/emails/notify_arbitration_type0.txt:3
+#, python-format
 msgid ""
 "The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 0 arbitration case:"
