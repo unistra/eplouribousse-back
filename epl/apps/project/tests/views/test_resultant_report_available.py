@@ -70,7 +70,7 @@ class ResultantReportAvailableNotificationTest(TestCase):
 
         # Check body
         self.assertIn(self.resource.title, email.body)
-        self.assertIn(f"/project/{self.project.id}", email.body)
+        self.assertIn(f"/projects/{self.project.id}", email.body)
 
     def test_resultant_report_available_excludes_excluded_collections(self):
         """Test that instructors with excluded collections don't receive notification"""
