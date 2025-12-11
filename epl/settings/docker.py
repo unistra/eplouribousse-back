@@ -20,7 +20,7 @@ DATABASES["default"]["NAME"] = os.environ.get("DATABASE_NAME", "epl")
 ############################
 
 ALLOWED_HOSTS = [
-    "*.eplouribousse.fr",
+    "*",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://cobal-api-test.eplouribousse.fr",
