@@ -59,6 +59,12 @@ LOGGING = {
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
+#####################
+# JWT configuration #
+#####################
+SIMPLE_JWT.update("SIGNING_KEY", os.environ.get("JWT_PRIVATE_KEY"))
+SIMPLE_JWT.update("VERIFYING_KEY", os.environ.get("JWT_PUBLIC_KEY"))
+
 #########################
 # Static files settings #
 #########################
@@ -88,7 +94,7 @@ STATIC_URL = "/assets/"
 ##########
 
 sentry_sdk.init(
-    dsn=os.environ.get("SENTRY_DSN"),
+    dsn=SENTRY_DSN,
     # Set traces_sample_rate to 1.0 to capture 100%
     # of transactions for tracing.
     traces_sample_rate=1.0,
