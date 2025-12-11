@@ -62,8 +62,12 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 #####################
 # JWT configuration #
 #####################
-SIMPLE_JWT.update("SIGNING_KEY", os.environ.get("JWT_PRIVATE_KEY"))
-SIMPLE_JWT.update("VERIFYING_KEY", os.environ.get("JWT_PUBLIC_KEY"))
+SIMPLE_JWT.update(
+    {
+        "SIGNING_KEY": os.environ.get("JWT_PRIVATE_KEY"),
+        "VERIFYING_KEY": os.environ.get("JWT_PUBLIC_KEY"),
+    }
+)
 
 #########################
 # Static files settings #
