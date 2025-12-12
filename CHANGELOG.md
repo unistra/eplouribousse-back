@@ -1,6 +1,6 @@
 # Changelog
 
-## next release
+## 1.0.1 - 12-12-2025
 
 - ✨ Update resource exclusion logic: resources are now also excluded if all their collections are excluded (#122)
 - 📊 Refactor dashboard data, keys are no more lazy translated, computed_at key is only provided when data are cached (#141)
