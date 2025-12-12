@@ -6,7 +6,7 @@ with open("README.md") as readme:
     long_description = readme.read()
 
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 def recursive_requirements(requirement_file, libs, links, path=""):
     if not requirement_file.startswith(path):
