@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from epl.apps.project.filters.project import ProjectFilter
-from epl.apps.project.models import Project, ProjectStatus, Role, UserRole
+from epl.apps.project.models import ActionLog, Project, ProjectStatus, Role, UserRole
 from epl.apps.project.permissions.project import ProjectAlertSettingsPermissions, ProjectPermissions
 from epl.apps.project.serializers.common import StatusListSerializer
 from epl.apps.project.serializers.project import (
@@ -258,6 +258,25 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = InvitationSerializer(data=request.data, context={"project": project, "request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        email = serializer.validated_data.get("email")
+        role = serializer.validated_data.get("role")
+        library_id = serializer.validated_data.get("library_id")
+
+        message_parts = [f"Invited <{email}>", f"for role <{role}>"]
+
+        if library_id:
+            message_parts.append(f"in library <{library_id}>")
+
+        message = " ".join(message_parts)
+
+        ActionLog.log(
+            message=message,
+            actor=request.user,
+            obj=project,
+            request=request,
+        )
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
@@ -277,6 +296,24 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = InvitationSerializer(data=request.query_params, context={"project": project, "request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
+        email = serializer.validated_data.get("email")
+        role = serializer.validated_data.get("role")
+        library_id = serializer.validated_data.get("library_id")
+
+        message_parts = [f"Invitation removed for <{email}>", f"role <{role}>"]
+        if library_id:
+            message_parts.append(f"in library <{library_id}>")
+
+        message = " ".join(message_parts)
+
+        ActionLog.log(
+            message=message,
+            actor=request.user,
+            obj=project,
+            request=request,
+        )
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(

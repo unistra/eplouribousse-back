@@ -1,3 +1,5 @@
+from hashlib import md5
+
 from django.core.cache import cache
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -40,13 +42,19 @@ class CacheDashboardMixin(DirectComputeMixin):
 
         data = super().to_representation(instance)
 
+        # add computed_at field when caching
+        if isinstance(data, dict):
+            data["computed_at"] = timezone.now()
+
         cache.set(cache_key, data, timeout=base_settings.CACHE_TIMEOUT_DASHBOARD)
         return data
 
     def get_cache_key(self, project):
         """Generate cache key for this serializer section."""
         section_name = self.__class__.__name__.replace("Serializer", "").lower()
-        return f"dashboard_{project.id}_{section_name}"
+        tenant_id = self.context.get("request").tenant.id if self.context.get("request") else "no-tenant"
+        key_name: str = f"dashboard_{tenant_id}:{project.id}:{section_name}"
+        return md5(key_name.encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
 class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
@@ -55,22 +63,25 @@ class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
     Number of initial Resources before positioning
     """
 
-    initial_collections = serializers.IntegerField(read_only=True)
-    initial_resources = serializers.IntegerField(read_only=True)
-
     def compute_data(self, project):
         return {
             "title": _("Initial Datas"),
-            _("Initial collections number before positioning"): Collection.objects.filter(project=project).count(),
-            _("Initial resources number before positioning"): Resource.objects.filter(project=project).count(),
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "initial_collections_count",
+                    "label": _("Initial collections number before positioning"),
+                    "value": Collection.objects.filter(project=project).count(),
+                },
+                {
+                    "key": "initial_resources_count",
+                    "label": _("Initial resources number before positioning"),
+                    "value": Resource.objects.filter(project=project).count(),
+                },
+            ],
         }
 
 
 class PositioningInformationSerializer(DirectComputeMixin, serializers.Serializer):
-    positioned_collections = serializers.IntegerField(read_only=True)
-    positioned_collections_without_exclusion = serializers.IntegerField(read_only=True)
-    collections_remaining_to_be_positioned = serializers.IntegerField(read_only=True)
     """
     Number of collections positioned (exclusions included)
     Number of collections positioned (exclusions excluded)
@@ -80,46 +91,53 @@ class PositioningInformationSerializer(DirectComputeMixin, serializers.Serialize
     def compute_data(self, project):
         return {
             "title": _("Positioning Information"),
-            _("Number of Collections positioned (exclusions included)"): Collection.objects.filter(
-                project=project, position__isnull=False
-            ).count(),
-            _("Number of Collections positioned (excluding exclusions)"): Collection.objects.filter(
-                project=project, position__gt=0
-            )
-            .exclude(resource__status=ResourceStatus.EXCLUDED)
-            .count(),
-            _("Number of Collections remaining to be positioned"): Collection.objects.filter(
-                project=project, position__isnull=True
-            ).count(),
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "positioned_collections_exclusions_included",
+                    "label": _("Number of Collections positioned (exclusions included)"),
+                    "value": Collection.objects.filter(project=project, position__isnull=False).count(),
+                },
+                {
+                    "key": "positioned_collections_exclusions_excluded",
+                    "label": _("Number of Collections positioned (excluding exclusions)"),
+                    "value": Collection.objects.filter(project=project, position__gt=0)
+                    .exclude(resource__status=ResourceStatus.EXCLUDED)
+                    .count(),
+                },
+                {
+                    "key": "collections_remaining_to_position",
+                    "label": _("Number of Collections remaining to be positioned"),
+                    "value": Collection.objects.filter(project=project, position__isnull=True).count(),
+                },
+            ],
         }
 
 
 class ExclusionInformationSerializer(DirectComputeMixin, serializers.Serializer):
     """
     Excluded collections (by exclusion of collections or resources)
-    Excluded resources
+    Excluded resources (by exclusion of collections)
     """
-
-    excluded_collections = serializers.IntegerField(read_only=True)
-    excluded_resources = serializers.IntegerField(read_only=True)
 
     def compute_data(self, project):
         return {
             "title": _("Exclusion Information"),
-            _("Number of excluded collections"): Collection.objects.filter(
-                project=project,
-                position=0,
-            )
-            .exclude(
-                resource__status=ResourceStatus.EXCLUDED
-            )  # todo: vérifier s'il faut exclure de l'exclusion les collections d'une ressource non participante (i.e. exclue)
-            .count(),
-            _("Number of resources discarded due to collection exclusion"): Resource.objects.filter(
-                project=project,
-                status=ResourceStatus.EXCLUDED,
-            ).count(),
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "excluded_collections",
+                    "label": _("Number of excluded collections"),
+                    "value": Collection.objects.filter(
+                        Q(project=project) & (Q(position=0) | Q(resource__status=ResourceStatus.EXCLUDED))
+                    )
+                    .distinct()
+                    .count(),
+                },
+                {
+                    "key": "excluded_resources",
+                    "label": _("Number of resources discarded due to collection exclusion"),
+                    "value": Resource.objects.filter(project=project, status=ResourceStatus.EXCLUDED).count(),
+                },
+            ],
         }
 
 
@@ -130,23 +148,28 @@ class ArbitrationInformationSerializer(DirectComputeMixin, serializers.Serialize
     Number of Resources affected by any arbitration type
     """
 
-    collections_in_arbitration_0 = serializers.IntegerField(read_only=True)
-    collections_in_arbitration_1 = serializers.IntegerField(read_only=True)
-    resources_with_arbitration = serializers.IntegerField(read_only=True)
-
     def compute_data(self, project):
         return {
             "title": _("Arbitration Information"),
-            _("Number of Collections in type 0 arbitration"): Collection.objects.filter(
-                project=project, resource__arbitration=Arbitration.ZERO
-            ).count(),
-            _("Number of Collections in type 1 arbitration"): Collection.objects.filter(
-                project=project, resource__arbitration=Arbitration.ONE
-            ).count(),
-            _("Number of Resources affected by any arbitration"): Resource.objects.filter(
-                project=project, arbitration__in=[Arbitration.ZERO, Arbitration.ONE]
-            ).count(),
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "collections_arbitration_type_0",
+                    "label": _("Number of Collections in type 0 arbitration"),
+                    "value": Collection.objects.filter(project=project, resource__arbitration=Arbitration.ZERO).count(),
+                },
+                {
+                    "key": "collections_arbitration_type_1",
+                    "label": _("Number of Collections in type 1 arbitration"),
+                    "value": Collection.objects.filter(project=project, resource__arbitration=Arbitration.ONE).count(),
+                },
+                {
+                    "key": "resources_with_arbitration",
+                    "label": _("Number of Resources affected by any arbitration"),
+                    "value": Resource.objects.filter(
+                        project=project, arbitration__in=[Arbitration.ZERO, Arbitration.ONE]
+                    ).count(),
+                },
+            ],
         }
 
 
@@ -157,21 +180,6 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
     - Number of resources eligible for instruction
       - of which Number of duplicates, triplicates, etc.
     """
-
-    collections_candidates_for_instruction = serializers.IntegerField(read_only=True)
-    resources_candidates_for_instruction = serializers.IntegerField(read_only=True)
-
-    duplicates_in_ressource = serializers.IntegerField(read_only=True)
-    duplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
-
-    triplicates_in_ressource = serializers.IntegerField(read_only=True)
-    triplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
-
-    quadruplicates_in_ressource = serializers.IntegerField(read_only=True)
-    quadruplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
-
-    other_higher_multiplicates_in_ressource = serializers.IntegerField(read_only=True)
-    other_higher_multiplicates_in_ressource_ratio = serializers.FloatField(read_only=True)
 
     def compute_data(self, project):
         """
@@ -185,51 +193,62 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
         - belongs to a candidate resource for instruction
         - are not excluded
         """
-
-        candidate_resources = Resource.objects.filter(
+        candidate_resources_qs = Resource.objects.filter(
             project=project,
             status__gte=ResourceStatus.INSTRUCTION_BOUND,
         )
-        candidate_collections = Collection.objects.filter(resource__in=candidate_resources).exclude(position=0)
+        candidate_collections_qs = Collection.objects.filter(resource__in=candidate_resources_qs).exclude(position=0)
 
-        # Group candidate collections by their resource 'code' and count occurrences.
-        code_qs = (
-            candidate_collections.values("resource__code")
-            # transform the query into a group by resource__code field with a count of each group:
-            # e.g.: [{"resource__code": "ABC123", "count": 3}, {"resource__code": "XYZ000", "count": 2}]
-            .annotate(count=Count("id"))
-            .filter(count__gt=1)
-        )
+        code_qs = candidate_collections_qs.values("resource__code").annotate(count=Count("id")).filter(count__gt=1)
 
         duplicates = code_qs.filter(count=2).count()
         triplicates = code_qs.filter(count=3).count()
         quadruplicates = code_qs.filter(count=4).count()
-        other_higher_multiplicates = code_qs.filter(count__gt=4).count()
+        other_multiples = code_qs.filter(count__gt=4).count()
 
-        candidate_resources = candidate_resources.count()
+        total_candidate_resources = candidate_resources_qs.count()
 
         def calculate_ratio(count, total):
-            if total == 0:
-                return 0.0
-            return round((count / total) * 100, 1)
+            return round((count / total) * 100, 1) if total > 0 else 0.0
 
         return {
             "title": _("Information on candidates for instruction (upcoming, in progress, or completed)"),
-            _("Number of collections eligible for instruction"): candidate_collections.count(),
-            _("Number of resources eligible for instruction"): candidate_resources,
-            _(
-                "- of which Number of duplicates"
-            ): f"{duplicates} ({calculate_ratio(duplicates, candidate_resources)} %)",
-            _(
-                "- of which Number of triplicates"
-            ): f"{triplicates} ({calculate_ratio(triplicates, candidate_resources)} %)",
-            _(
-                "- of which Number of quadruplicates"
-            ): f"{quadruplicates} ({calculate_ratio(quadruplicates, candidate_resources)} %)",
-            _(
-                "- of which Other higher multiples"
-            ): f"{other_higher_multiplicates} ({calculate_ratio(other_higher_multiplicates, candidate_resources)} %)",
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "collections_eligible_for_instruction",
+                    "label": _("Number of collections eligible for instruction"),
+                    "value": candidate_collections_qs.count(),
+                },
+                {
+                    "key": "resources_eligible_for_instruction",
+                    "label": _("Number of resources eligible for instruction"),
+                    "value": total_candidate_resources,
+                },
+                {
+                    "key": "duplicates_count",
+                    "label": _("- of which Number of duplicates"),
+                    "value": duplicates,
+                    "ratio": calculate_ratio(duplicates, total_candidate_resources),
+                },
+                {
+                    "key": "triplicates_count",
+                    "label": _("- of which Number of triplicates"),
+                    "value": triplicates,
+                    "ratio": calculate_ratio(triplicates, total_candidate_resources),
+                },
+                {
+                    "key": "quadruplicates_count",
+                    "label": _("- of which Number of quadruplicates"),
+                    "value": quadruplicates,
+                    "ratio": calculate_ratio(quadruplicates, total_candidate_resources),
+                },
+                {
+                    "key": "other_multiples_count",
+                    "label": _("- of which Other higher multiples"),
+                    "value": other_multiples,
+                    "ratio": calculate_ratio(other_multiples, total_candidate_resources),
+                },
+            ],
         }
 
 
@@ -240,61 +259,61 @@ class InstructionsInformationSerializer(DirectComputeMixin, serializers.Serializ
     Number of resources fully instructed (control performed)
     """
 
-    ressources_with_status_instruction_bound = serializers.IntegerField(read_only=True)
-    ressources_with_status_instruction_unbound = serializers.IntegerField(read_only=True)
-    ressources_with_instruction_completed = serializers.IntegerField(read_only=True)
-
     def compute_data(self, project):
         return {
             "title": _("Information about ongoing instructions"),
-            _("Number of resources for which instruction of bound elements is in progress"): Resource.objects.filter(
-                project=project,
-                status=ResourceStatus.INSTRUCTION_BOUND,
-            ).count(),
-            _("Number of resources for which instruction of unbound elements is in progress"): Resource.objects.filter(
-                project=project,
-                status=ResourceStatus.INSTRUCTION_UNBOUND,
-            ).count(),
-            _("Number of resources fully instructed (control performed)"): Resource.objects.filter(
-                project=project,
-                status=ResourceStatus.EDITION,
-            ).count(),
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "resources_instruction_bound",
+                    "label": _("Number of resources for which instruction of bound elements is in progress"),
+                    "value": Resource.objects.filter(project=project, status=ResourceStatus.INSTRUCTION_BOUND).count(),
+                },
+                {
+                    "key": "resources_instruction_unbound",
+                    "label": _("Number of resources for which instruction of unbound elements is in progress"),
+                    "value": Resource.objects.filter(
+                        project=project, status=ResourceStatus.INSTRUCTION_UNBOUND
+                    ).count(),
+                },
+                {
+                    "key": "resources_instruction_completed",
+                    "label": _("Number of resources fully instructed (control performed)"),
+                    "value": Resource.objects.filter(project=project, status=ResourceStatus.EDITION).count(),
+                },
+            ],
         }
 
 
 class ControlsInformationSerializer(DirectComputeMixin, serializers.Serializer):
-    ressources_with_bound_copies_being_controlled_count = serializers.IntegerField(read_only=True)
-    ressources_with_unbound_copies_being_controlled_count = serializers.IntegerField(read_only=True)
-
     def compute_data(self, project):
         return {
             "title": _("Information about controls"),
-            _("Number of resources for which bound elements are being controlled"): Resource.objects.filter(
-                project=project,
-                status=ResourceStatus.CONTROL_BOUND,
-            ).count(),
-            _("Number of resources for which unbound elements are being controlled"): Resource.objects.filter(
-                project=project,
-                status=ResourceStatus.CONTROL_UNBOUND,
-            ).count(),
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "resources_control_bound",
+                    "label": _("Number of resources for which bound elements are being controlled"),
+                    "value": Resource.objects.filter(project=project, status=ResourceStatus.CONTROL_BOUND).count(),
+                },
+                {
+                    "key": "resources_control_unbound",
+                    "label": _("Number of resources for which unbound elements are being controlled"),
+                    "value": Resource.objects.filter(project=project, status=ResourceStatus.CONTROL_UNBOUND).count(),
+                },
+            ],
         }
 
 
 class AnomaliesInformationSerializer(DirectComputeMixin, serializers.Serializer):
-    anomalies_in_progress = serializers.IntegerField(read_only=True)
-
     def compute_data(self, project):
-        anomalies_in_progress = Anomaly.objects.filter(
-            resource__project=project,
-            fixed=False,
-        ).count()
-
         return {
             "title": _("Information about anomalies"),
-            _("Number of anomalies in progress"): anomalies_in_progress,
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "anomalies_in_progress",
+                    "label": _("Number of anomalies in progress"),
+                    "value": Anomaly.objects.filter(resource__project=project, fixed=False).count(),
+                }
+            ],
         }
 
 
@@ -306,37 +325,16 @@ class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Seriali
     - resources no longer to be processed = processed resources + resources discarded by collection exclusion
     """
 
-    relative_completion = serializers.FloatField(read_only=True)
-    absolute_completion = serializers.FloatField(read_only=True)
-
     def compute_data(self, project):
-        processed_resources = Resource.objects.filter(
-            project=project,
-            status=ResourceStatus.EDITION,
-        ).count()
-
-        eligible_resources_for_instruction = (
-            Resource.objects.filter(
-                project=project,
-            )
-            .exclude(
-                status=ResourceStatus.EXCLUDED,
-            )
-            .count()
-        )
-
-        excluded_resources = Resource.objects.filter(
-            project=project,
-            status=ResourceStatus.EXCLUDED,
-        ).count()
-
-        resources_no_longer_to_be_processed = processed_resources + excluded_resources
+        processed_resources = Resource.objects.filter(project=project, status=ResourceStatus.EDITION).count()
+        eligible_resources = Resource.objects.filter(project=project).exclude(status=ResourceStatus.EXCLUDED).count()
+        excluded_resources = Resource.objects.filter(project=project, status=ResourceStatus.EXCLUDED).count()
         initial_resources = Resource.objects.filter(project=project).count()
 
+        resources_no_longer_to_be_processed = processed_resources + excluded_resources
+
         relative_completion = (
-            round((processed_resources / eligible_resources_for_instruction) * 100, 2)
-            if eligible_resources_for_instruction > 0
-            else 0.0
+            round((processed_resources / eligible_resources) * 100, 2) if eligible_resources > 0 else 0.0
         )
         absolute_completion = (
             round((resources_no_longer_to_be_processed / initial_resources) * 100, 2) if initial_resources > 0 else 0.0
@@ -344,9 +342,20 @@ class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Seriali
 
         return {
             "title": _("Achievements"),
-            _("Relative completion"): f"{relative_completion} %",
-            _("Absolute completion"): f"{absolute_completion} %",
-            "computed_at": timezone.now(),
+            "computations": [
+                {
+                    "key": "relative_completion",
+                    "label": _("Relative completion"),
+                    "value": relative_completion,
+                    "unit": "%",
+                },
+                {
+                    "key": "absolute_completion",
+                    "label": _("Absolute completion"),
+                    "value": absolute_completion,
+                    "unit": "%",
+                },
+            ],
         }
 
 
@@ -399,7 +408,6 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
                     "data": realized_positionings_by_libraries_percentage,
                 }
             ],
-            "computed_at": timezone.now(),
         }
         if errors:
             result["errors"] = errors
@@ -453,7 +461,6 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
                     "data": [unbound_counts.get(label, 0) for label in labels],
                 },
             ],
-            "computed_at": timezone.now(),
         }
 
 
@@ -511,5 +518,4 @@ class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Seri
                     "data": data,
                 }
             ],
-            "computed_at": timezone.now(),
         }

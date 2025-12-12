@@ -4,6 +4,11 @@ from rest_framework.request import Request
 
 def get_front_domain(request: HttpRequest | Request, port: str = None) -> str:
     tenant = request.tenant
-    if port is None and request.scheme == "http":
+
+    if "localhost" in tenant.get_primary_domain().domain:
         port = "5173"
-    return f"{request.scheme}://{tenant.get_primary_domain().front_domain}{':' + port if port else ''}"
+        scheme = "http"
+    else:
+        scheme = "https"
+
+    return f"{scheme}://{tenant.get_primary_domain().front_domain}{':' + port if port else ''}"

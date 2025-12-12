@@ -1,9 +1,10 @@
 {% load i18n %}
 
-{% blocktrans %}Instructor(s) of the library: {{ library_code }}, your turn has come to instruct the resulting collection :{% endblocktrans %}
-{{ project_url }}
+{% blocktrans with resource_title=resource_title|safe %}Instructor(s) of the library: {{ library_code }}, your turn has come to instruct: '{{resource_title}}'.{% endblocktrans %}
 
-{% blocktrans %}The turn has been assigned to you by the project administrator {{ admin_identifier }} {{ admin_email }} after processing one or more anomalies. To see the current situation:{% endblocktrans %} {{ project_url }}
+
+{% blocktrans %}The turn has been assigned to you by the project administrator {{ admin_user_display_name }} {{ admin_email }} after processing one or more anomalies. To see the current situation:{% endblocktrans %}
+{{ modal_url }}
 
 {% trans "Any possible objection must be expressed as soon as possible in a circumstantiated manner and by using the 'Reply to all' option." %}
 

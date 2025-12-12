@@ -244,24 +244,6 @@ class NestedUserSerializer(serializers.ModelSerializer):
 
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
-    project_id = serializers.CharField(required=False, allow_blank=True)
-    library_id = serializers.CharField(required=False, allow_blank=True)
-    role = serializers.ChoiceField(required=False, choices=Role.choices)
-
-    def validate_project_id(self, value):
-        if value and not Project.objects.filter(id=value).exists():
-            raise serializers.ValidationError(_("Project does not exist."))
-        return value
-
-    def validate_library_id(self, value):
-        if value and not Project.objects.filter(libraries__id=value).exists():
-            raise serializers.ValidationError(_("Library does not exist."))
-        return value
-
-    def validate_role(self, value):
-        if value and value not in [choice[0] for choice in Role.choices]:
-            raise serializers.ValidationError(_("Invalid role."))
-        return value
 
     def validate(self, attrs):
         if User.objects.filter(email=attrs["email"]).exists():
@@ -371,6 +353,13 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                         last_name=self.validated_data.get("last_name", ""),
                     )
                     send_account_created_email(user, request)
+
+                    ActionLog.log(
+                        message=f"User account created for <{user.email}> after having been invited.",
+                        actor=user,
+                        obj=user,
+                        request=request,
+                    )
 
                 # If there is a project_id and invitations, we create a userrole instance per role
                 if self.project_id and self.invitations:

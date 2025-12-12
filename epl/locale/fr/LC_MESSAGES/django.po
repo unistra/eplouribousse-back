@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-26 16:15+0100\n"
+"POT-Creation-Date: 2025-12-10 13:39+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -57,6 +57,10 @@ msgstr "Positionnement uniquement"
 msgid "Instruction not started"
 msgstr "Instruction non démarrée"
 
+#: epl/apps/project/filters/resource.py:17
+msgid "Exclude resources"
+msgstr "Exclure les ressources"
+
 #: epl/apps/project/filters/resource.py:26
 msgid "ID of the library to compare against"
 msgstr "ID de la bibliothèque à comparer"
@@ -86,11 +90,11 @@ msgstr "Bibliothèque à comparer introuvable"
 msgid "Project not found"
 msgstr "Projet non trouvé"
 
-#: epl/apps/project/filters/resource.py:117
+#: epl/apps/project/filters/resource.py:119
 msgid "Invalid arbitration param, must be '0', '1' or 'all'"
 msgstr "Paramètre d'arbitrage non valide, doit être '0' ou '1' ou 'all'"
 
-#: epl/apps/project/filters/resource.py:246
+#: epl/apps/project/filters/resource.py:248
 msgid ""
 "'0' for arbitration type 0, '1' for arbitration type 1, 'all' for all "
 "arbitration types"
@@ -98,7 +102,7 @@ msgstr ""
 "'0' pour le type d'arbitrage 0, '1' pour le type d'arbitrage 1, 'all' pour "
 "tous les types d'arbitrage"
 
-#: epl/apps/project/filters/resource.py:258
+#: epl/apps/project/filters/resource.py:260
 msgid "'10' for Positioning only, '20' for Instruction not start"
 msgstr ""
 "'10' pour positionnement uniquement, '20' pour instruction non démarrée"
@@ -298,7 +302,7 @@ msgstr "Numérotation"
 
 #: epl/apps/project/models/collection.py:59
 #: epl/apps/project/models/collection.py:132
-#: epl/apps/project/models/project.py:84 epl/apps/project/models/segment.py:30
+#: epl/apps/project/models/project.py:84 epl/apps/project/models/segment.py:32
 #: epl/apps/tenant/models.py:12
 msgid "Created at"
 msgstr "Créé le"
@@ -353,7 +357,7 @@ msgid "Positioning rank of a collection"
 msgstr "Positionnement du rang d'une collection"
 
 #: epl/apps/project/models/collection.py:145
-#: epl/apps/project/serializers/collection.py:334
+#: epl/apps/project/serializers/collection.py:344
 msgid "Reason for excluding the collection from deduplication"
 msgstr "Raison de l'exclusion de la collection de la déduplication"
 
@@ -491,29 +495,29 @@ msgstr "Rôle utilisateur du projet"
 msgid "Project User Roles"
 msgstr "Rôles utilisateurs du projet"
 
-#: epl/apps/project/models/segment.py:14
+#: epl/apps/project/models/segment.py:16
 msgid "Segment type"
 msgstr "Type de segment"
 
-#: epl/apps/project/models/segment.py:16 epl/apps/project/models/segment.py:46
+#: epl/apps/project/models/segment.py:18 epl/apps/project/models/segment.py:48
 #: epl/templates/pdf/resulting-report.html:132
 msgid "Segment"
 msgstr "Segment"
 
-#: epl/apps/project/models/segment.py:17
+#: epl/apps/project/models/segment.py:19
 msgid "Improbable elements"
 msgstr "Éléments improbables"
 
-#: epl/apps/project/models/segment.py:18
+#: epl/apps/project/models/segment.py:20
 #: epl/templates/pdf/resulting-report.html:133
 msgid "Exception"
 msgstr "Exception"
 
-#: epl/apps/project/models/segment.py:35
+#: epl/apps/project/models/segment.py:37
 msgid "Collection segment"
 msgstr "Segment de collection"
 
-#: epl/apps/project/models/segment.py:36
+#: epl/apps/project/models/segment.py:38
 msgid "Collection segments"
 msgstr "Segments de collection"
 
@@ -533,77 +537,77 @@ msgstr "L'utilisateur qui a créé l'anomalie"
 msgid "Segment with the given ID does not exist."
 msgstr "Le segment avec l'ID donné n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:39
+#: epl/apps/project/serializers/collection.py:41
 msgid "Library to which the collection belongs"
 msgstr "Bibliothèque à laquelle appartient la collection"
 
-#: epl/apps/project/serializers/collection.py:44
+#: epl/apps/project/serializers/collection.py:46
 msgid "Project to which the collection belongs"
 msgstr "Projet auquel appartient la collection"
 
-#: epl/apps/project/serializers/collection.py:67
+#: epl/apps/project/serializers/collection.py:69
 msgid "CSV file to be imported."
 msgstr "Fichier CSV à importer."
 
-#: epl/apps/project/serializers/collection.py:68
+#: epl/apps/project/serializers/collection.py:70
 msgid "Library ID to which the collection belongs."
 msgstr "ID de la bibliothèque à laquelle appartient la collection."
 
-#: epl/apps/project/serializers/collection.py:69
+#: epl/apps/project/serializers/collection.py:71
 msgid "Project ID to which the collection belongs."
 msgstr "ID du projet auquel la collection appartient."
 
-#: epl/apps/project/serializers/collection.py:161
+#: epl/apps/project/serializers/collection.py:162
 #, python-format
 msgid "Column(s) %(column)s missing in the CSV file."
 msgstr "Colonne(s) %(column)s manquantes dans le fichier CSV."
 
-#: epl/apps/project/serializers/collection.py:170
+#: epl/apps/project/serializers/collection.py:171
 #, python-format
 msgid "Library with ID %(id)s does not exist."
 msgstr "La bibliothèque avec l'ID %(id)s n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:178
+#: epl/apps/project/serializers/collection.py:179
 #, python-format
 msgid "Project with ID %(id)s does not exist."
 msgstr "Le projet avec l'ID %(id)s n'existe pas."
 
-#: epl/apps/project/serializers/collection.py:185
+#: epl/apps/project/serializers/collection.py:186
 msgid "An alternative storage site can't receive a collection"
 msgstr "Un lieu de conservation alternatif ne peut pas recevoir de collection"
 
-#: epl/apps/project/serializers/collection.py:301
+#: epl/apps/project/serializers/collection.py:311
 msgid "Position (rank) between 1 and 4"
 msgstr "Position (rang) entre 1 et 4"
 
-#: epl/apps/project/serializers/collection.py:344
+#: epl/apps/project/serializers/collection.py:354
 msgid "Invalid exclusion reason."
 msgstr "Motif d'exclusion non valide."
 
-#: epl/apps/project/serializers/collection.py:369
-#: epl/apps/project/serializers/collection.py:401
+#: epl/apps/project/serializers/collection.py:381
+#: epl/apps/project/serializers/collection.py:413
 #: epl/apps/project/views/collection.py:286
 #: epl/apps/project/views/collection.py:295
 msgid "Positioning comment"
 msgstr "Message de positionnement"
 
-#: epl/apps/project/serializers/collection.py:410
+#: epl/apps/project/serializers/collection.py:422
 #: epl/apps/project/serializers/resource.py:72
-#: epl/apps/project/serializers/segment.py:63
+#: epl/apps/project/serializers/segment.py:64
 msgid "Number of fixed anomalies"
 msgstr "Nombre d'anomalies corrigées"
 
-#: epl/apps/project/serializers/collection.py:411
+#: epl/apps/project/serializers/collection.py:423
 #: epl/apps/project/serializers/resource.py:73
-#: epl/apps/project/serializers/segment.py:64
+#: epl/apps/project/serializers/segment.py:65
 msgid "Number of unfixed anomalies"
 msgstr "Nombre d'anomalies non corrigées"
 
-#: epl/apps/project/serializers/collection.py:439
+#: epl/apps/project/serializers/collection.py:453
 msgid "Resource is not in an instruction phase"
 msgstr "La ressource n'est pas en phase d'instruction"
 
-#: epl/apps/project/serializers/collection.py:456
+#: epl/apps/project/serializers/collection.py:470
 msgid "Invalid turn data"
 msgstr "Données de tour non valides"
 
@@ -649,195 +653,199 @@ msgstr "L'email est requis pour les utilisateurs non authentifiés"
 msgid "Contact form: {subject_label}"
 msgstr ""
 
-#: epl/apps/project/serializers/dashboard.py:63
+#: epl/apps/project/serializers/dashboard.py:64
 msgid "Initial Datas"
 msgstr "Données initiales"
 
-#: epl/apps/project/serializers/dashboard.py:64
+#: epl/apps/project/serializers/dashboard.py:68
 msgid "Initial collections number before positioning"
 msgstr "Nombre de Collections initiales avant positionnement"
 
-#: epl/apps/project/serializers/dashboard.py:65
+#: epl/apps/project/serializers/dashboard.py:73
 msgid "Initial resources number before positioning"
 msgstr "Nombre de Ressources initiales avant positionnement"
 
-#: epl/apps/project/serializers/dashboard.py:82
+#: epl/apps/project/serializers/dashboard.py:89
 msgid "Positioning Information"
 msgstr "Information sur le positionnement"
 
-#: epl/apps/project/serializers/dashboard.py:83
+#: epl/apps/project/serializers/dashboard.py:93
 msgid "Number of Collections positioned (exclusions included)"
 msgstr "Nombre de Collections positionnées (exclusions incluses)"
 
-#: epl/apps/project/serializers/dashboard.py:86
+#: epl/apps/project/serializers/dashboard.py:98
 msgid "Number of Collections positioned (excluding exclusions)"
 msgstr "Nombre de Collections positionnées (hors exclusions)"
 
-#: epl/apps/project/serializers/dashboard.py:91
+#: epl/apps/project/serializers/dashboard.py:105
 msgid "Number of Collections remaining to be positioned"
 msgstr "Nombre de Collections restant à positionner"
 
-#: epl/apps/project/serializers/dashboard.py:109
+#: epl/apps/project/serializers/dashboard.py:120
 msgid "Exclusion Information"
 msgstr "Information sur les exclusions"
 
-#: epl/apps/project/serializers/dashboard.py:110
+#: epl/apps/project/serializers/dashboard.py:124
 msgid "Number of excluded collections"
 msgstr "Nombre de Collections exclues"
 
-#: epl/apps/project/serializers/dashboard.py:118
+#: epl/apps/project/serializers/dashboard.py:133
 msgid "Number of resources discarded due to collection exclusion"
 msgstr "Nombre de Ressources écartées par exclusion de collection"
 
-#: epl/apps/project/serializers/dashboard.py:139
+#: epl/apps/project/serializers/dashboard.py:149
 msgid "Arbitration Information"
 msgstr "Information sur les arbitrages"
 
-#: epl/apps/project/serializers/dashboard.py:140
+#: epl/apps/project/serializers/dashboard.py:153
 msgid "Number of Collections in type 0 arbitration"
 msgstr "Nombre de Collections en arbitrage de type 0"
 
-#: epl/apps/project/serializers/dashboard.py:143
+#: epl/apps/project/serializers/dashboard.py:158
 msgid "Number of Collections in type 1 arbitration"
 msgstr "Nombre de Collections en arbitrage de type 1"
 
-#: epl/apps/project/serializers/dashboard.py:146
+#: epl/apps/project/serializers/dashboard.py:163
 msgid "Number of Resources affected by any arbitration"
 msgstr "Nombre de Ressources concernées par un arbitrage quelconque"
 
-#: epl/apps/project/serializers/dashboard.py:212
-msgid "Information on candidates for instruction"
-msgstr "Information sur les candidats à l’instruction"
+#: epl/apps/project/serializers/dashboard.py:211
+msgid ""
+"Information on candidates for instruction (upcoming, in progress, or "
+"completed)"
+msgstr ""
+"Informations sur les candidats à l'instruction (à venir, en cours, ou "
+"terminée)"
 
-#: epl/apps/project/serializers/dashboard.py:213
+#: epl/apps/project/serializers/dashboard.py:215
 msgid "Number of collections eligible for instruction"
 msgstr "Nombre de Collections candidates à l’instruction"
 
-#: epl/apps/project/serializers/dashboard.py:214
+#: epl/apps/project/serializers/dashboard.py:220
 msgid "Number of resources eligible for instruction"
 msgstr "Nombre de Ressources candidates à l’instruction"
 
-#: epl/apps/project/serializers/dashboard.py:216
+#: epl/apps/project/serializers/dashboard.py:225
 msgid "- of which Number of duplicates"
 msgstr "- dont Nombre de doublons"
 
-#: epl/apps/project/serializers/dashboard.py:219
+#: epl/apps/project/serializers/dashboard.py:231
 msgid "- of which Number of triplicates"
 msgstr "- dont Nombre de triplons"
 
-#: epl/apps/project/serializers/dashboard.py:222
+#: epl/apps/project/serializers/dashboard.py:237
 msgid "- of which Number of quadruplicates"
 msgstr "- dont Nombre de quadruplons"
 
-#: epl/apps/project/serializers/dashboard.py:225
+#: epl/apps/project/serializers/dashboard.py:243
 msgid "- of which Other higher multiples"
 msgstr "- dont Autres multiplons supérieurs"
 
-#: epl/apps/project/serializers/dashboard.py:244
-msgid "Information about instructions"
-msgstr "Information sur les instructions"
+#: epl/apps/project/serializers/dashboard.py:260
+msgid "Information about ongoing instructions"
+msgstr "Information sur les instructions en cours"
 
-#: epl/apps/project/serializers/dashboard.py:245
+#: epl/apps/project/serializers/dashboard.py:264
 msgid ""
 "Number of resources for which instruction of bound elements is in progress"
 msgstr ""
 "Nombre de Ressources dont l'instruction des éléments reliés est en cours"
 
-#: epl/apps/project/serializers/dashboard.py:249
+#: epl/apps/project/serializers/dashboard.py:269
 msgid ""
 "Number of resources for which instruction of unbound elements is in progress"
 msgstr ""
 "Nombre de Ressources dont l'instruction des éléments non reliés est en cours"
 
-#: epl/apps/project/serializers/dashboard.py:253
+#: epl/apps/project/serializers/dashboard.py:276
 msgid "Number of resources fully instructed (control performed)"
 msgstr "Nombre de Ressources complètement instruites (contrôle effectué)"
 
-#: epl/apps/project/serializers/dashboard.py:267
+#: epl/apps/project/serializers/dashboard.py:286
 msgid "Information about controls"
 msgstr "Information sur les contrôles"
 
-#: epl/apps/project/serializers/dashboard.py:268
+#: epl/apps/project/serializers/dashboard.py:290
 msgid "Number of resources for which bound elements are being controlled"
 msgstr "Nombre de Ressources dont le contrôle des éléments reliés est en cours"
 
-#: epl/apps/project/serializers/dashboard.py:272
+#: epl/apps/project/serializers/dashboard.py:295
 msgid "Number of resources for which unbound elements are being controlled"
 msgstr ""
 "Nombre de Ressources dont le contrôle des éléments non reliés est en cours"
 
-#: epl/apps/project/serializers/dashboard.py:290
+#: epl/apps/project/serializers/dashboard.py:305
 msgid "Information about anomalies"
 msgstr "Information sur les anomalies"
 
-#: epl/apps/project/serializers/dashboard.py:291
+#: epl/apps/project/serializers/dashboard.py:309
 msgid "Number of anomalies in progress"
 msgstr "Nombre d’anomalies en cours"
 
-#: epl/apps/project/serializers/dashboard.py:341
+#: epl/apps/project/serializers/dashboard.py:340
 msgid "Achievements"
 msgstr "Réalisations"
 
-#: epl/apps/project/serializers/dashboard.py:342
+#: epl/apps/project/serializers/dashboard.py:344
 msgid "Relative completion"
 msgstr "Réalisation relative"
 
-#: epl/apps/project/serializers/dashboard.py:343
+#: epl/apps/project/serializers/dashboard.py:350
 msgid "Absolute completion"
 msgstr "Réalisation absolue"
 
-#: epl/apps/project/serializers/dashboard.py:374
+#: epl/apps/project/serializers/dashboard.py:384
 #, python-format
 msgid "No collection in library '%(library_name)s'"
 msgstr "Aucune collection dans la bibliothèque '%(library_name)s'"
 
-#: epl/apps/project/serializers/dashboard.py:389
+#: epl/apps/project/serializers/dashboard.py:399
 #, python-format
 msgid "% of realized positioning progress by library"
 msgstr "% de l'avancement du positionnement réalisé par bibliothèque"
 
-#: epl/apps/project/serializers/dashboard.py:393
+#: epl/apps/project/serializers/dashboard.py:403
 #, python-format
 msgid "% of collections positioned"
 msgstr "% de collections positionnées"
 
-#: epl/apps/project/serializers/dashboard.py:439
+#: epl/apps/project/serializers/dashboard.py:448
 msgid "Number of resources to be instructed"
 msgstr "Nombre de ressources à instruire"
 
-#: epl/apps/project/serializers/dashboard.py:443
+#: epl/apps/project/serializers/dashboard.py:452
 msgid "bound"
 msgstr "relié"
 
-#: epl/apps/project/serializers/dashboard.py:447
+#: epl/apps/project/serializers/dashboard.py:456
 msgid "unbound"
 msgstr "non relié"
 
-#: epl/apps/project/serializers/dashboard.py:492
+#: epl/apps/project/serializers/dashboard.py:496
 msgid "duplicates"
 msgstr "doublons"
 
-#: epl/apps/project/serializers/dashboard.py:493
+#: epl/apps/project/serializers/dashboard.py:497
 msgid "triplicates"
 msgstr "triplons"
 
-#: epl/apps/project/serializers/dashboard.py:494
+#: epl/apps/project/serializers/dashboard.py:498
 msgid "quadruplicates"
 msgstr "quadruplons"
 
-#: epl/apps/project/serializers/dashboard.py:495
+#: epl/apps/project/serializers/dashboard.py:499
 msgid "more"
 msgstr "plus"
 
-#: epl/apps/project/serializers/dashboard.py:505
+#: epl/apps/project/serializers/dashboard.py:509
 msgid ""
-"Distribution of the number of occurrences in the collections eligible for "
+"Distribution of the number of occurrences in the collections candidate for "
 "the instruction"
 msgstr ""
 "Répartition du nombre d'occurrences dans les collections éligibles à "
 "l'instruction"
 
-#: epl/apps/project/serializers/dashboard.py:509
+#: epl/apps/project/serializers/dashboard.py:513
 msgid "Distribution of occurrence types"
 msgstr "Répartition des types d'occurrences"
 
@@ -860,7 +868,7 @@ msgid "Library should not be provided for this role."
 msgstr "La bibliothèque ne doit être renseignée pour ce rôle"
 
 #: epl/apps/project/serializers/project.py:141
-#: epl/apps/project/serializers/project.py:441
+#: epl/apps/project/serializers/project.py:454
 msgid "Library is not attached to the project."
 msgstr "La bibliothèque n'est pas rattachée au projet"
 
@@ -894,15 +902,15 @@ msgid "User does not exist."
 msgstr "L'utilisateur n'existe pas."
 
 #: epl/apps/project/serializers/project.py:354
-#: epl/apps/project/serializers/project.py:436 epl/apps/user/serializers.py:258
+#: epl/apps/project/serializers/project.py:449 epl/apps/user/serializers.py:258
 msgid "Library does not exist."
 msgstr "La bibliothèque n'existe pas."
 
-#: epl/apps/project/serializers/project.py:418
+#: epl/apps/project/serializers/project.py:424
 msgid "Role not found for this user in the project."
 msgstr "Rôle non trouvé pour cet utilisateur dans le projet."
 
-#: epl/apps/project/serializers/project.py:482
+#: epl/apps/project/serializers/project.py:495
 msgid "Exclusion reason to add or delete from the project"
 msgstr "Motifs d'exclusion à ajouter ou à supprimer du projet"
 
@@ -930,63 +938,63 @@ msgstr "Les tours d'instruction mis à jour de la ressource après validation"
 msgid "The resource is not in control status"
 msgstr "La resource n'est pas en phase de contrôle"
 
-#: epl/apps/project/serializers/resource.py:148
+#: epl/apps/project/serializers/resource.py:154
 msgid "The updated instruction turns of the resource"
 msgstr "Les tours d'instruction mis à jour de la ressource"
 
-#: epl/apps/project/serializers/resource.py:166
+#: epl/apps/project/serializers/resource.py:172
 msgid "The resource is not in instruction or control status"
 msgstr "La resource n'est pas en phase d'instruction ou de contrôle"
 
-#: epl/apps/project/serializers/resource.py:178
+#: epl/apps/project/serializers/resource.py:184
 msgid "The updated instruction turns of the resource after reset"
 msgstr ""
 "Les tours d'instruction mis à jour de la ressource après réinitialisation"
 
-#: epl/apps/project/serializers/resource.py:209
-#: epl/apps/project/serializers/resource.py:289
-#: epl/apps/project/serializers/resource.py:357
-#: epl/apps/project/serializers/resource.py:382
+#: epl/apps/project/serializers/resource.py:215
+#: epl/apps/project/serializers/resource.py:295
+#: epl/apps/project/serializers/resource.py:365
+#: epl/apps/project/serializers/resource.py:390
 msgid "The resource is not in anomaly status"
 msgstr "La resource n'est pas en phase d'anomalie"
 
-#: epl/apps/project/serializers/resource.py:229
+#: epl/apps/project/serializers/resource.py:235
 msgid "The updated instruction turns of the resource after reassigning turns"
 msgstr ""
 "Les tours d'instruction de la ressource mis à jour après la réaffectation "
 "des tours"
 
-#: epl/apps/project/serializers/resource.py:233
+#: epl/apps/project/serializers/resource.py:239
 msgid "The collection id to which the instruction turn will be reassigned"
 msgstr "L'ID de la collection à laquelle le tour d'instruction sera réaffecté"
 
-#: epl/apps/project/serializers/resource.py:238
+#: epl/apps/project/serializers/resource.py:244
 msgid "The library id to which the instruction turn will be reassigned"
 msgstr ""
 "L'ID de la bibliothèque à laquelle le tour d'instruction sera réaffecté"
 
-#: epl/apps/project/serializers/resource.py:243
+#: epl/apps/project/serializers/resource.py:249
 msgid "Indicates if the turn is reassigned to a controller"
 msgstr "Indique si le tour est réaffecté à un contrôleur"
 
-#: epl/apps/project/serializers/resource.py:267
+#: epl/apps/project/serializers/resource.py:273
 msgid "Collection does not exist"
 msgstr "La collection n'existe pas."
 
-#: epl/apps/project/serializers/resource.py:272
+#: epl/apps/project/serializers/resource.py:278
 msgid "Collection is not in the instruction turns of the resource"
 msgstr "Les tours d'instruction mis à jour de la ressource"
 
-#: epl/apps/project/serializers/resource.py:279
+#: epl/apps/project/serializers/resource.py:285
 msgid "Library does not exist"
 msgstr "La bibliothèque n'existe pas."
 
-#: epl/apps/project/serializers/resource.py:282
+#: epl/apps/project/serializers/resource.py:288
 msgid "Library is not in the instruction turns of the resource"
 msgstr ""
 "La bibliothèque ne fait pas partie des tours d'instruction de la ressource"
 
-#: epl/apps/project/serializers/resource.py:298
+#: epl/apps/project/serializers/resource.py:304
 msgid ""
 "When reassigning to a controller, collection_id and library_id should not be "
 "provided"
@@ -994,23 +1002,36 @@ msgstr ""
 "Lors de la réaffectation à un contrôleur, collection_id et library_id ne "
 "doivent pas être fournis"
 
-#: epl/apps/project/serializers/resource.py:307
+#: epl/apps/project/serializers/resource.py:313
 msgid "collection_id and library_id must be provided"
 msgstr "collection_id et library_id doivent être fournis"
 
-#: epl/apps/project/serializers/segment.py:90
+#: epl/apps/project/serializers/segment.py:89
+msgid "Segment cannot be placed before or among Nihil segments"
+msgstr ""
+
+#: epl/apps/project/serializers/segment.py:95
 msgid "Referenced segment does not exist"
 msgstr "Le segment référencé n'existe pas"
 
-#: epl/apps/project/serializers/segment.py:137
+#: epl/apps/project/serializers/segment.py:142
+#: epl/apps/project/serializers/segment.py:167
+msgid "Nihil segments cannot be moved"
+msgstr ""
+
+#: epl/apps/project/serializers/segment.py:145
 msgid "Segment is already at the top of the collection"
 msgstr "Le segment est déjà au sommet de la collection"
 
-#: epl/apps/project/serializers/segment.py:142
+#: epl/apps/project/serializers/segment.py:148
+msgid "Segment cannot be moved above Nihil segments"
+msgstr "Le segment ne peut pas être déplacé au-dessus des segments Nihil"
+
+#: epl/apps/project/serializers/segment.py:153
 msgid "Previous segment not found"
 msgstr "Le segment précédent n'a pas été trouvé"
 
-#: epl/apps/project/serializers/segment.py:158
+#: epl/apps/project/serializers/segment.py:172
 msgid "Segment is already at the bottom of the collection"
 msgstr "Le segment est déjà en bas de la collection"
 
@@ -1044,7 +1065,7 @@ msgstr "En tant que pilote, vous pouvez maintenant lancer ou programmer"
 #: epl/apps/project/tests/views/test_project_status.py:226
 #: epl/apps/project/tests/views/test_project_status.py:301
 #: epl/apps/user/tests/views/test_create_account.py:120
-#: epl/services/user/email.py:103
+#: epl/services/user/email.py:105
 msgid "your account creation"
 msgstr "création de votre compte"
 
@@ -1054,7 +1075,7 @@ msgstr "est désormais disponible pour le lancement"
 
 #: epl/apps/project/tests/views/test_resultant_report_available.py:65
 #: epl/apps/project/tests/views/test_resultant_report_available.py:170
-#: epl/services/user/email.py:439
+#: epl/services/user/email.py:443
 msgid "resultant"
 msgstr "résultante"
 
@@ -1150,7 +1171,7 @@ msgstr "Le paramètre library_id est requis"
 msgid "project_id parameter is required"
 msgstr "Le paramètre project_id est requis"
 
-#: epl/apps/project/views/contact.py:15
+#: epl/apps/project/views/contact.py:25
 msgid "Submit a support contact request"
 msgstr "Envoyer un message au support"
 
@@ -1633,64 +1654,64 @@ msgstr ""
 "La vue n'est pas dans le contexte du sérialiseur ou n'est pas une "
 "GenericApiView"
 
-#: epl/services/user/email.py:26 epl/templates/emails/password_changed.txt:3
+#: epl/services/user/email.py:28 epl/templates/emails/password_changed.txt:3
 #: epl/tests/services/email/test_user_email.py:26
 msgid "Password Change"
 msgstr "Modification du mot de passe"
 
-#: epl/services/user/email.py:46 epl/templates/emails/password_reset.txt:3
+#: epl/services/user/email.py:48 epl/templates/emails/password_reset.txt:3
 #: epl/tests/services/email/test_user_email.py:53
 msgid "Password Reset"
 msgstr "Réinitialisation du mot de passe"
 
-#: epl/services/user/email.py:83
+#: epl/services/user/email.py:85
 msgid "creating your account (pending)"
 msgstr "création de votre compte (en attente)"
 
-#: epl/services/user/email.py:136
+#: epl/services/user/email.py:138
 #, python-brace-format
 msgid "Creation of the {project_name} project"
 msgstr "Création du projet {project_name}"
 
-#: epl/services/user/email.py:168
+#: epl/services/user/email.py:170
 #, python-brace-format
 msgid "Availability of the {project_name} project for launch"
 msgstr "Disponibilité du projet {project_name} pour le lancement"
 
-#: epl/services/user/email.py:189
+#: epl/services/user/email.py:191
 msgid "now"
 msgstr "maintenant"
 
-#: epl/services/user/email.py:191
+#: epl/services/user/email.py:193
 msgid "at"
 msgstr "à"
 
-#: epl/services/user/email.py:200
+#: epl/services/user/email.py:202
 #, python-brace-format
 msgid "Launch of the {project_name} project"
 msgstr "Lancement du projet {project_name}"
 
-#: epl/services/user/email.py:227
+#: epl/services/user/email.py:229
 msgid "arbitration"
 msgstr "arbitrage"
 
-#: epl/services/user/email.py:262
+#: epl/services/user/email.py:265
 msgid "positioning"
 msgstr "positionnement"
 
-#: epl/services/user/email.py:287
+#: epl/services/user/email.py:290
 msgid "instruction"
 msgstr "instruction"
 
-#: epl/services/user/email.py:316
+#: epl/services/user/email.py:319
 msgid "control"
 msgstr "contrôle"
 
-#: epl/services/user/email.py:354
+#: epl/services/user/email.py:357
 msgid "anomaly"
 msgstr "anomalie"
 
-#: epl/services/user/email.py:401
+#: epl/services/user/email.py:404
 msgid "anomaly resolved"
 msgstr "anomalie résolue"
 
@@ -1715,8 +1736,8 @@ msgid "For the record, your username is:"
 msgstr "Pour mémoire, votre identifiant est : "
 
 #: epl/templates/emails/confirm_account_creation.txt:7
-#: epl/templates/emails/notify_anomalies.txt:11
-#: epl/templates/emails/notify_anomaly_resolved.txt:11
+#: epl/templates/emails/notify_anomalies.txt:12
+#: epl/templates/emails/notify_anomaly_resolved.txt:12
 #: epl/templates/emails/notify_control.txt:13
 #: epl/templates/emails/notify_instruction_turn.txt:5
 #: epl/templates/emails/notify_positioning.txt:6
@@ -1726,8 +1747,8 @@ msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:3
 #, python-format
-msgid "The project %(project_name)s is now available."
-msgstr "Le projet %(project_name)s est à présent disponible."
+msgid "The project `%(project_name)s` is now available."
+msgstr "Le projet `%(project_name)s` est à présent disponible."
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:4
 #, python-format
@@ -1739,7 +1760,7 @@ msgid ""
 "project creator %(project_creator_email)s"
 msgstr ""
 "En tant qu'administrateur de ce projet vous devez, en concertation avec vos "
-"éventuels co-administrateurs et les pilotes de  ce projet, en vérifier et "
+"éventuels co-administrateurs et les pilotes de ce projet, en vérifier et "
 "éventuellement modifier les réglages et les paramètres avant la mise en "
 "service effective.\n"
 "Si vous pensez que ce message fait suite à une erreur, veuillez contacter le "
@@ -1816,115 +1837,126 @@ msgstr ""
 msgid "This invitation will expire in 7 days"
 msgstr "Cette invitation va expirer dans 7 jours"
 
-#: epl/templates/emails/notify_anomalies.txt:3
+#: epl/templates/emails/notify_anomalies.txt:4
 #, python-format
 msgid ""
-"One or more anomalies have been reported by %(reporter_role)s "
+"One or more anomalies have been reported by the controller "
 "%(reporter_identifier)s %(reporter_email)s in the instruction of the "
-"resource:"
+"resource: `%(resource_title)s`."
 msgstr ""
-"Une ou plusieurs anomalies ont été signalées par %(reporter_role)s "
+"Une ou plusieurs anomalies ont été signalées par le contrôleur "
 "%(reporter_identifier)s %(reporter_email)s dans l'instruction de la "
-"ressource :"
+"ressource : `%(resource_title)s`"
 
 #: epl/templates/emails/notify_anomalies.txt:6
+#, python-format
+msgid ""
+"One or more anomalies have been reported by the instructor "
+"%(reporter_identifier)s %(reporter_email)s in the instruction of the "
+"resource: `%(resource_title)s`."
+msgstr ""
+"Une ou plusieurs anomalies ont été signalées par l'instructeur "
+"%(reporter_identifier)s %(reporter_email)s dans l'instruction de la "
+"ressource : `%(resource_title)s`."
+
+#: epl/templates/emails/notify_anomalies.txt:8
 msgid ""
 "An intervention from a project administrator is required. They will save the "
 "maximum number of lines and then restart the circulation of the form."
 msgstr ""
 "Une intervention d'un administrateur de projet est requise. Il sauvegardera "
-"le maximum de lignes puis relancera la circulation du formulaire."
+"le maximum de lignes puis relancera la circulation de la fiche."
 
 #: epl/templates/emails/notify_anomaly_resolved.txt:3
 #, python-format
 msgid ""
 "Instructor(s) of the library: %(library_code)s, your turn has come to "
-"instruct the resulting collection :"
+"instruct: '%(resource_title)s'."
 msgstr ""
 "Instructeur(s) de la bibliothèque : %(library_code)s, votre tour est venu "
-"d'instruire la collection résultante :"
+"d'instruire : '%(resource_title)s'."
 
 #: epl/templates/emails/notify_anomaly_resolved.txt:6
 #, python-format
 msgid ""
 "The turn has been assigned to you by the project administrator "
-"%(admin_identifier)s %(admin_email)s after processing one or more anomalies. "
-"To see the current situation:"
+"%(admin_user_display_name)s %(admin_email)s after processing one or more "
+"anomalies. To see the current situation:"
 msgstr ""
 "Le tour vous a été attribué par l'administrateur de projet "
-"%(admin_identifier)s %(admin_email)s après le traitement d'une ou plusieurs "
-"anomalies. Pour voir la situation actuelle :"
+"%(admin_user_display_name)s %(admin_email)s après le traitement d'une ou "
+"plusieurs anomalies. Pour voir la situation actuelle :"
 
-#: epl/templates/emails/notify_anomaly_resolved.txt:8
+#: epl/templates/emails/notify_anomaly_resolved.txt:9
 msgid ""
 "Any possible objection must be expressed as soon as possible in a "
 "circumstantiated manner and by using the 'Reply to all' option."
 msgstr ""
-"Toute contestation éventuelle doit être exprimée le plus tôt possible "
-"demanière circonstanciée et en utilisant l'option 'Répondre à tous'."
+"Toute contestation éventuelle doit être exprimée le plus tôt possible de "
+"manière circonstanciée et en utilisant l'option 'Répondre à tous'."
 
 #: epl/templates/emails/notify_arbitration_type0.txt:3
 #, python-format
 msgid ""
-"The repositioning of your collection for the resource \"%(resource_title)s\" "
+"The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 0 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource "
-"\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 0."
+"Le repositionnement de votre collection pour la ressource '%(resource_title)s' "
+"est susceptible de trancher un cas d'arbitrage de type 0 :"
 
 #: epl/templates/emails/notify_arbitration_type1.txt:3
 #, python-format
 msgid ""
-"The repositioning of your collection for the resource \"%(resource_title)s\" "
+"The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 1 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource "
-"\"%(resource_title)s\" peut trancher un cas d'arbitrage de type 1."
+"Le repositionnement de votre collection pour la ressource '%(resource_title)s' "
+"est susceptible de trancher un cas d'arbitrage de type 1 :"
 
 #: epl/templates/emails/notify_control.txt:3
 #, python-format
 msgid ""
 "The time has come for the end-of-cycle check of the bound elements for the "
-"\"%(resource_title)s\" resource: %(project_url)s."
+"'%(resource_title)s' resource: %(modal_url)s."
 msgstr ""
 "Le moment est venu du contrôle de fin de cycle des éléments réliés pour la "
-"resource \"%(resource_title)s\" : %(project_url)s."
+"ressource '%(resource_title)s' : %(modal_url)s."
 
 #: epl/templates/emails/notify_control.txt:7
 #, python-format
 msgid ""
 "The time has come for the end-of-cycle check of the unbound elements for the "
-"\"%(resource_title)s\" resource: %(project_url)s."
+"'%(resource_title)s' resource: %(modal_url)s."
 msgstr ""
 "Le moment est venu du contrôle de fin de cycle des éléments non reliés pour "
-"la resource \"%(resource_title)s\" : %(project_url)s."
+"ressource '%(resource_title)s' : %(modal_url)s."
 
 #: epl/templates/emails/notify_instruction_turn.txt:3
 #, python-format
 msgid ""
 "Your turn has come to instruct the resulting collection for the resource "
-"\"%(resource_title)s\": %(project_url)s"
+"'%(resource_title)s': %(modal_url)s"
 msgstr ""
 "Votre tour est venu d'instruire la collection résultante pour la ressource "
-"\"%(resource_title)s\": %(project_url)s"
+"'%(resource_title)s': %(modal_url)s"
 
 #: epl/templates/emails/notify_positioning.txt:3
 #, python-format
 msgid ""
-"The collection from the library %(library_code)s has just been positioned; "
-"to position yours, please go to %(project_url)s"
+"The collection from the library %(positioned_library_code)s has just been "
+"positioned; to position yours, please go to %(modal_url)s"
 msgstr ""
-"La collection de la bibliothèque %(library_code)s vient d'être positionnée; "
-"pour positionner la vôtre, veuillez vous rendre sur %(project_url)s"
+"La collection de la bibliothèque %(positioned_library_code)s vient d'être "
+"positionnée; pour positionner la vôtre rendez-vous en %(modal_url)s"
 
 #: epl/templates/emails/notify_resultant_report_available.txt:3
 #, python-format
 msgid ""
-"The resulting collection for the resource %(resource_title)s is now "
+"The resulting collection for the resource '%(resource_title)s' is now "
 "available with details of your collection's contributions :"
 msgstr ""
-"La collection résultante pour la ressource  %(resource_title)s est à présent "
-"disponible avec le détail des contributions de votre collection :"
+"La collection résultante pour la ressource '%(resource_title)s' est à "
+"présent disponible avec le détail des contributions de votre collection :"
 
 #: epl/templates/emails/password_changed.txt:5
 #: epl/tests/services/email/test_user_email.py:38
@@ -2079,6 +2111,26 @@ msgstr "Bibliothèque remédiée"
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
 
+#, fuzzy, python-format
+#~| msgid ""
+#~| "The repositioning of your collection for the resource "
+#~| "'%(resource_title)s' may resolve a type 0 arbitration case:"
+#~ msgid ""
+#~ "The repositioning of your collection for the resource "
+#~ "'%(resource_title|safe)s' may resolve a type 1 arbitration case:"
+#~ msgstr ""
+#~ "Le repositionnement de votre collection pour la ressource "
+#~ "'%(resource_title)s' est susceptible de trancher un cas d'arbitrage de "
+#~ "type 0:"
+
+#~ msgid "The repositioning of your collection for the resource"
+#~ msgstr "Le repositionnement de votre collection pour la ressource"
+
+#, fuzzy
+#~| msgid "Number of Collections in type 0 arbitration"
+#~ msgid "may resolve a type 0 arbitration case"
+#~ msgstr "Nombre de Collections en arbitrage de type 0"
+
 #~ msgid ""
 #~ "As an administrator, you must, in consultation with your co-administrators"
 #~ msgstr ""
@@ -2093,9 +2145,6 @@ msgstr "L'ISSN doit comporter 8 caractères"
 
 #~ msgid "Referenced segment belongs to a different collection"
 #~ msgstr "Le segment référencé appartient à une autre collection"
-
-#~ msgid "The repositioning of your collection for the resource"
-#~ msgstr "Le repositionnement de votre collection pour la ressource"
 
 #~ msgid "Invitation"
 #~ msgstr "Invitation"

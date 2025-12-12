@@ -32,8 +32,8 @@ class ResourceModel(BaseModel):
     project_id: UUID
     # issn: Annotated[str, Field(max_length=9)] = ""
     issn: str | None = Field(default="", max_length=9)
-    numbering: Annotated[str, Field(alias="Numerotation")] = ""
-    publication_history: Annotated[str, Field(alias="PublieEn")] = ""
+    numbering: str = ""
+    publication_history: str = ""
 
     @field_validator("*", mode="before")
     @classmethod

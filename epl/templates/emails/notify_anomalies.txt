@@ -1,11 +1,12 @@
 {% load i18n %}
 
-{% blocktrans %}One or more anomalies have been reported by {{ reporter_role }} {{ reporter_identifier }} {{ reporter_email }} in the instruction of the resource:{% endblocktrans %}
-{{ resource_title }}
-
+{% if reporter_role == "Controller" %}
+{% blocktrans with resource_title=resource_title|safe %}One or more anomalies have been reported by the controller {{ reporter_identifier }} {{ reporter_email }} in the instruction of the resource: `{{ resource_title }}`.{% endblocktrans %}
+{% else %}
+{% blocktrans with resource_title=resource_title|safe %}One or more anomalies have been reported by the instructor {{ reporter_identifier }} {{ reporter_email }} in the instruction of the resource: `{{ resource_title }}`.{% endblocktrans %}
+{% endif %}
 {% trans "An intervention from a project administrator is required. They will save the maximum number of lines and then restart the circulation of the form." %}
-
-{{ project_url }}
+{{ modal_url }}
 
 ---
 {% trans "This is an automated message, please do not reply." %}

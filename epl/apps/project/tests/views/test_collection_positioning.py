@@ -351,6 +351,42 @@ class ResourceExclusionTest(TestCase):
         self.resource.refresh_from_db()
         self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
 
+    def test_resource_status_becomes_excluded_if_all_collections_are_excluded(self):
+        """
+        Tests that resource is excluded when all its collections are excluded.
+        """
+        # Library 1 excludes its collection
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_1.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_1,
+        )
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.POSITIONING)
+
+        # Library 2 excludes its collection
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_2.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_2,
+        )
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.POSITIONING)
+
+        # Library 3 excludes its collection (last one)
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_3.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_3,
+        )
+
+        # resource.status should now be EXCLUDED
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
+
 
 class ArbitrationNotificationTest(TestCase):
     def setUp(self):

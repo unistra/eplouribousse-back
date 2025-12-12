@@ -337,7 +337,9 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
             )
 
         self.fix_anomalies()
-        # TODO notify instructors / controllers of the reassignment
+        notify_anomaly_resolved(
+            resource=self.instance, request=self.context["request"], admin_user=self.context["request"].user
+        )
         return self.instance
 
     def fix_anomalies(self):

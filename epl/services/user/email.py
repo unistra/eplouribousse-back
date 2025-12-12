@@ -1,3 +1,5 @@
+from html import unescape
+
 from django.conf import settings
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import signing
@@ -211,16 +213,16 @@ def send_arbitration_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/projects/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
-    # Choisir le template en fonction du type d'arbitrage
+    # Choosing the template according to the arbitration type
     template_name = f"emails/notify_arbitration_type{arbitration_type.value}.txt"
 
     email_content = render_to_string(
         template_name,
         {
-            "resource_title": resource.title,
-            "project_url": project_url,
+            "resource_title": unescape(resource.title),
+            "modal_url": modal_url,
         },
     )
 
@@ -239,6 +241,7 @@ def send_collection_positioned_email(
     email: str,
     request: Request,
     resource: Resource,
+    library_code,
     positioned_collection,
 ) -> None:
     """
@@ -249,17 +252,17 @@ def send_collection_positioned_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/projects/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     email_content = render_to_string(
         "emails/notify_positioning.txt",
         {
-            "library_code": positioned_collection.library.code,
-            "project_url": project_url,
+            "positioned_library_code": positioned_collection.library.code,
+            "modal_url": modal_url,
         },
     )
 
-    subject = f"eplouribousse | {tenant.name} | {project.name} | {positioned_collection.library.code} | {resource.code} | {_('positioning')}"
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('positioning')}"
 
     send_mail(
         subject=subject,
@@ -282,15 +285,15 @@ def send_instruction_turn_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('instruction')}"
 
     email_content = render_to_string(
         "emails/notify_instruction_turn.txt",
         {
-            "resource_title": resource.title,
-            "project_url": project_url,
+            "resource_title": unescape(resource.title),
+            "modal_url": modal_url,
         },
     )
 
@@ -307,20 +310,20 @@ def send_control_notification_email(
     email: str,
     request,
     resource,
-    cycle: str,  # "reliés" ou "non-reliés"
+    cycle: str,  # "bound" or "unbound"
 ):
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('control')}"
 
     email_content = render_to_string(
         "emails/notify_control.txt",
         {
             "cycle": cycle,
-            "resource_title": resource.title,
-            "project_url": project_url,
+            "resource_title": unescape(resource.title),
+            "modal_url": modal_url,
         },
     )
 
@@ -342,7 +345,7 @@ def send_anomaly_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     # Get the request user role label in the project and verify authorization
     reporter_role_display = None
@@ -356,11 +359,11 @@ def send_anomaly_notification_email(
     email_content = render_to_string(
         "emails/notify_anomalies.txt",
         {
-            "resource_title": resource.title,
+            "resource_title": unescape(resource.title),
             "reporter_role": reporter_role_display,
-            "reporter_identifier": reporter_user.username,
+            "reporter_identifier": str(reporter_user),
             "reporter_email": reporter_user.email,
-            "project_url": project_url,
+            "modal_url": modal_url,
         },
     )
 
@@ -396,7 +399,7 @@ def send_anomaly_resolved_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('anomaly resolved')}"
 
@@ -404,9 +407,10 @@ def send_anomaly_resolved_notification_email(
         "emails/notify_anomaly_resolved.txt",
         {
             "library_code": library_code,
-            "admin_identifier": admin_user.username,
+            "resource_title": unescape(resource.title),
+            "admin_user_display_name": str(admin_user),
             "admin_email": admin_user.email,
-            "project_url": project_url,
+            "modal_url": modal_url,
         },
     )
 
@@ -434,15 +438,15 @@ def send_resultant_report_available_notification_email(
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
-    project_url = f"{front_domain}/project/{project.id}"
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('resultant')}"
 
     email_content = render_to_string(
         "emails/notify_resultant_report_available.txt",
         {
-            "resource_title": resource.title,
-            "project_url": project_url,
+            "resource_title": unescape(resource.title),
+            "modal_url": modal_url,
         },
     )
 

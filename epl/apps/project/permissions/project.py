@@ -89,7 +89,7 @@ class ProjectPermissions(BasePermission):
             case "retrieve":
                 return ProjectPermissions.compute_retrieve_permission(user, project)
             case "update" | "partial_update" | "destroy":
-                return user.is_project_creator
+                return user.is_project_creator or user.is_project_admin(project)
             case "validate":
                 return ProjectPermissions.compute_validate_permission(user, project)
             case "update_status":
