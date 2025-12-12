@@ -398,11 +398,7 @@ def _get_invite_signer() -> signing.TimestampSigner:
     tags=["user"],
     summary=_("Send an invitation email"),
     description=_(
-        "Send an invitation email to a user. "
-        "For simple invitations, only email is required. "
-        "For project invitations, include project_id and role. "
-        "For instructor roles, library_id is required."
-        "This route is atm not used by the frontend"
+        "Invite someone to join Eplouribousse via a local account (outside the education and research federation). Only the email address is required; project, role and library can be assigned once the user is in the database."
     ),
     request=EmailSerializer,
     responses={
@@ -418,18 +414,18 @@ def invite(request: Request) -> Response:
     serializer = EmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
+    email = serializer.validated_data.get("email")
+
     invitation = {
-        "email": serializer.validated_data.get("email"),
-        "role": serializer.validated_data.get("role"),
-        "library_id": serializer.validated_data.get("library_id"),
+        "email": email,
     }
 
     send_invite_to_epl_email(
-        email=serializer.validated_data.get("email"),
+        email=email,
         request=request,
         signer=_get_invite_signer(),
         project_id=serializer.validated_data.get("project_id"),
-        invitations=[invitation] if serializer.validated_data.get("role") else [],
+        invitations=[invitation],
         assigned_by_id=request.user.id,
     )
     return Response({"detail": _("Invitation email sent successfully.")}, status=status.HTTP_200_OK)
