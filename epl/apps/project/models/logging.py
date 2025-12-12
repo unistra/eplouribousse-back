@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import typing
 
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -13,6 +14,9 @@ from epl.models import UUIDPrimaryKeyField
 
 if typing.TYPE_CHECKING:
     from epl.apps.user.models import User  # noqa: F401
+
+
+logger = logging.getLogger(__name__)
 
 
 class ActionLog(models.Model):
@@ -51,3 +55,4 @@ class ActionLog(models.Model):
             content_object=obj,
             created_by=actor,
         )
+        logger.info(f"{message} by {actor.username} ({ip}) on {str(obj)}")

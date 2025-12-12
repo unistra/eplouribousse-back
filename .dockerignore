@@ -1,0 +1,7 @@
+/.coverage
+/.tox/
+/docs/
+/epl/apps/*/tests/
+/epl.egg-info/
+/fabfile/
+/htmlcov/
