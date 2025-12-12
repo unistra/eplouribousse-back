@@ -428,6 +428,12 @@ def invite(request: Request) -> Response:
         invitations=[invitation],
         assigned_by_id=request.user.id,
     )
+    ActionLog.log(
+        message=f"Invited <{email}>",
+        actor=request.user,
+        obj=request.user,
+        request=request,
+    )
     return Response({"detail": _("Invitation email sent successfully.")}, status=status.HTTP_200_OK)
 
 
