@@ -354,6 +354,13 @@ class CreateAccountFromTokenSerializer(serializers.Serializer):
                     )
                     send_account_created_email(user, request)
 
+                    ActionLog.log(
+                        message=f"User account created for <{user.email}> after having been invited.",
+                        actor=user,
+                        obj=user,
+                        request=request,
+                    )
+
                 # If there is a project_id and invitations, we create a userrole instance per role
                 if self.project_id and self.invitations:
                     try:
