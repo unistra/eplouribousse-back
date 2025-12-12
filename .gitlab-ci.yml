@@ -92,6 +92,7 @@ r:docker:
   stage: release
   variables:
     DESTINATION: $CONTAINER_RELEASE_IMAGE
+    EXTRA_ARGS: '--destination "latest"'
   rules:
     - if: '$CI_COMMIT_TAG'
       when: always
