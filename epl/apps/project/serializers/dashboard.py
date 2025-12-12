@@ -1,3 +1,5 @@
+from hashlib import md5
+
 from django.core.cache import cache
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -50,7 +52,9 @@ class CacheDashboardMixin(DirectComputeMixin):
     def get_cache_key(self, project):
         """Generate cache key for this serializer section."""
         section_name = self.__class__.__name__.replace("Serializer", "").lower()
-        return f"dashboard_{project.id}_{section_name}"
+        tenant_id = self.context.get("request").tenant.id if self.context.get("request") else "no-tenant"
+        key_name: str = f"dashboard_{tenant_id}:{project.id}:{section_name}"
+        return md5(key_name.encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
 class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
