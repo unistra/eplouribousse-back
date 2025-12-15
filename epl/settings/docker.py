@@ -24,6 +24,8 @@ ALLOWED_HOSTS = [
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://cobal-api-test.eplouribousse.fr",
+    "https://cobal-api-pprd.eplouribousse.fr",
+    "https://cobal-api.eplouribousse.fr",
 ]
 
 #######################
