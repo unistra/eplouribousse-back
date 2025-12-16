@@ -88,7 +88,7 @@ b:docker:
     DESTINATION: $CONTAINER_TEST_IMAGE
     LATEST_DESTINATION: ""
   rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "better-ci"'
       when: always
 
 r:docker:
