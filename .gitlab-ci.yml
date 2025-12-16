@@ -74,8 +74,9 @@ include:
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}${CI_PROJECT_DIR_PATH}/docker/app/Dockerfile"
       --registry-mirror quay.apps.mgmt.paas.unistra.fr/dnum
-      --destination "${DESTINATION}" ${EXTRA_ARGS}
-      $([ -n "${LATEST_DESTINATION}" ] && echo "--destination \"${CONTAINER_BASE_IMAGE_NAME}:latest\"")
+      $([ -n "${LATEST_DESTINATION}" ] && echo "--destination "${LATEST_DESTINATION}")
+      --destination "${DESTINATION}"
+      ${EXTRA_ARGS}
   tags:
     - cluster
     - kubernetes
@@ -95,7 +96,7 @@ r:docker:
   stage: release
   variables:
     DESTINATION: $CONTAINER_RELEASE_IMAGE
-    LATEST_DESTINATION: $CONTAINER_BASE_IMAGE_NAME:latest
+    LATEST_DESTINATION: "$CONTAINER_BASE_IMAGE_NAME:latest"
   rules:
     - if: '$CI_COMMIT_TAG'
       when: always
