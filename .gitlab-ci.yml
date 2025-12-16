@@ -74,7 +74,7 @@ include:
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}${CI_PROJECT_DIR_PATH}/docker/app/Dockerfile"
       --registry-mirror quay.apps.mgmt.paas.unistra.fr/dnum
-      $([ -n "${LATEST_DESTINATION}" ] && echo "--destination "${LATEST_DESTINATION}")
+      $([ -n "${LATEST_DESTINATION}" ] && echo "--destination ${LATEST_DESTINATION}")
       --destination "${DESTINATION}"
       ${EXTRA_ARGS}
   tags:
