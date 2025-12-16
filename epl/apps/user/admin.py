@@ -7,7 +7,11 @@ from epl.apps.user.models import User
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
-    readonly_fields = ("date_joined", "last_login")
+    readonly_fields = (
+        "date_joined",
+        "last_login",
+        "settings",
+    )
 
     fieldsets = (
         (None, {"fields": ("username", "password")}),
