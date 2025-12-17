@@ -57,4 +57,4 @@ RUN chgrp -R 0 /app && \
 
 ENTRYPOINT ["sh", "/app/docker-prestart.sh"]
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "3", "--accesslog", "-", "--errorlog", "-", "epl.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "3", "--access-logfile", "-", "--error-logfile", "-", "epl.wsgi:application"]
