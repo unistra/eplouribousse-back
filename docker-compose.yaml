@@ -34,18 +34,15 @@ services:
     restart: always
 
   postgres:
-    image: "postgres_12_fr"
-    build:
-      context: .
-      dockerfile: docker/postgres/Dockerfile
+    image: "postgres:17"
     container_name: epl_db
-    restart: always
+    restart: unless-stopped
     environment:
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-      - POSTGRES_USER=${DATABASE_USER}
-      - POSTGRES_DB=${DATABASE_NAME}
-#    ports:
-#      - "5432:5432"
+      POSTGRES_PASSWORD: epl
+      POSTGRES_USER: epl
+      POSTGRES_DB: epl
+    ports:
+      - "5432:5432"
     volumes:
       - epl_db:/var/lib/postgresql/data
 
