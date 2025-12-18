@@ -1,7 +1,7 @@
 [project]
 name = "epl"
 version = "1.0.3"
-description = ""
+description = "Web application to facilitate the deduplication of periodicals within a group of libraries"
 authors = [
     { name = "DIP, Direction du numérique, Unistra", email = "dnum-dip@unistra.fr" }
 ]
@@ -9,6 +9,8 @@ maintainers = [
     { name = "DIP, Direction du numérique, Unistra", email = "dnum-dip@unistra.fr" }
 ]
 readme = "README.md"
+license = "CECILL-2.1"
+license-files = ["LICENSE"]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "cryptography (>=46.0.3,<47.0.0)",
