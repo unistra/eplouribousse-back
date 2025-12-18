@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-10 13:39+0100\n"
+"POT-Creation-Date: 2025-12-18 11:31+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -177,7 +177,7 @@ msgstr "Mauvaise utilisation de 'Bibliothèque remédié'"
 msgid "Confusing wording"
 msgstr "Formulation hétérogène prêtant à confusion"
 
-#: epl/apps/project/models/choices.py:25
+#: epl/apps/project/models/choices.py:25 epl/apps/project/models/project.py:19
 #: epl/apps/project/serializers/contact.py:16
 msgid "Other"
 msgstr "Autre"
@@ -414,6 +414,14 @@ msgstr "Bibliothèque"
 #: epl/apps/project/models/library.py:21
 msgid "Libraries"
 msgstr "Bibliothèques"
+
+#: epl/apps/project/models/project.py:17
+msgid "Participation in another project"
+msgstr "Participation à un autre projet"
+
+#: epl/apps/project/models/project.py:18
+msgid "Incorrect assignment"
+msgstr "Affectation incorrecte"
 
 #: epl/apps/project/models/project.py:77
 msgid "Description"
@@ -653,63 +661,63 @@ msgstr "L'email est requis pour les utilisateurs non authentifiés"
 msgid "Contact form: {subject_label}"
 msgstr ""
 
-#: epl/apps/project/serializers/dashboard.py:64
+#: epl/apps/project/serializers/dashboard.py:68
 msgid "Initial Datas"
 msgstr "Données initiales"
 
-#: epl/apps/project/serializers/dashboard.py:68
+#: epl/apps/project/serializers/dashboard.py:72
 msgid "Initial collections number before positioning"
 msgstr "Nombre de Collections initiales avant positionnement"
 
-#: epl/apps/project/serializers/dashboard.py:73
+#: epl/apps/project/serializers/dashboard.py:77
 msgid "Initial resources number before positioning"
 msgstr "Nombre de Ressources initiales avant positionnement"
 
-#: epl/apps/project/serializers/dashboard.py:89
+#: epl/apps/project/serializers/dashboard.py:93
 msgid "Positioning Information"
 msgstr "Information sur le positionnement"
 
-#: epl/apps/project/serializers/dashboard.py:93
+#: epl/apps/project/serializers/dashboard.py:97
 msgid "Number of Collections positioned (exclusions included)"
 msgstr "Nombre de Collections positionnées (exclusions incluses)"
 
-#: epl/apps/project/serializers/dashboard.py:98
+#: epl/apps/project/serializers/dashboard.py:102
 msgid "Number of Collections positioned (excluding exclusions)"
 msgstr "Nombre de Collections positionnées (hors exclusions)"
 
-#: epl/apps/project/serializers/dashboard.py:105
+#: epl/apps/project/serializers/dashboard.py:109
 msgid "Number of Collections remaining to be positioned"
 msgstr "Nombre de Collections restant à positionner"
 
-#: epl/apps/project/serializers/dashboard.py:120
+#: epl/apps/project/serializers/dashboard.py:124
 msgid "Exclusion Information"
 msgstr "Information sur les exclusions"
 
-#: epl/apps/project/serializers/dashboard.py:124
+#: epl/apps/project/serializers/dashboard.py:128
 msgid "Number of excluded collections"
 msgstr "Nombre de Collections exclues"
 
-#: epl/apps/project/serializers/dashboard.py:133
+#: epl/apps/project/serializers/dashboard.py:137
 msgid "Number of resources discarded due to collection exclusion"
 msgstr "Nombre de Ressources écartées par exclusion de collection"
 
-#: epl/apps/project/serializers/dashboard.py:149
+#: epl/apps/project/serializers/dashboard.py:153
 msgid "Arbitration Information"
 msgstr "Information sur les arbitrages"
 
-#: epl/apps/project/serializers/dashboard.py:153
+#: epl/apps/project/serializers/dashboard.py:157
 msgid "Number of Collections in type 0 arbitration"
 msgstr "Nombre de Collections en arbitrage de type 0"
 
-#: epl/apps/project/serializers/dashboard.py:158
+#: epl/apps/project/serializers/dashboard.py:162
 msgid "Number of Collections in type 1 arbitration"
 msgstr "Nombre de Collections en arbitrage de type 1"
 
-#: epl/apps/project/serializers/dashboard.py:163
+#: epl/apps/project/serializers/dashboard.py:167
 msgid "Number of Resources affected by any arbitration"
 msgstr "Nombre de Ressources concernées par un arbitrage quelconque"
 
-#: epl/apps/project/serializers/dashboard.py:211
+#: epl/apps/project/serializers/dashboard.py:215
 msgid ""
 "Information on candidates for instruction (upcoming, in progress, or "
 "completed)"
@@ -717,127 +725,127 @@ msgstr ""
 "Informations sur les candidats à l'instruction (à venir, en cours, ou "
 "terminée)"
 
-#: epl/apps/project/serializers/dashboard.py:215
+#: epl/apps/project/serializers/dashboard.py:219
 msgid "Number of collections eligible for instruction"
 msgstr "Nombre de Collections candidates à l’instruction"
 
-#: epl/apps/project/serializers/dashboard.py:220
+#: epl/apps/project/serializers/dashboard.py:224
 msgid "Number of resources eligible for instruction"
 msgstr "Nombre de Ressources candidates à l’instruction"
 
-#: epl/apps/project/serializers/dashboard.py:225
+#: epl/apps/project/serializers/dashboard.py:229
 msgid "- of which Number of duplicates"
 msgstr "- dont Nombre de doublons"
 
-#: epl/apps/project/serializers/dashboard.py:231
+#: epl/apps/project/serializers/dashboard.py:235
 msgid "- of which Number of triplicates"
 msgstr "- dont Nombre de triplons"
 
-#: epl/apps/project/serializers/dashboard.py:237
+#: epl/apps/project/serializers/dashboard.py:241
 msgid "- of which Number of quadruplicates"
 msgstr "- dont Nombre de quadruplons"
 
-#: epl/apps/project/serializers/dashboard.py:243
+#: epl/apps/project/serializers/dashboard.py:247
 msgid "- of which Other higher multiples"
 msgstr "- dont Autres multiplons supérieurs"
 
-#: epl/apps/project/serializers/dashboard.py:260
+#: epl/apps/project/serializers/dashboard.py:264
 msgid "Information about ongoing instructions"
 msgstr "Information sur les instructions en cours"
 
-#: epl/apps/project/serializers/dashboard.py:264
+#: epl/apps/project/serializers/dashboard.py:268
 msgid ""
 "Number of resources for which instruction of bound elements is in progress"
 msgstr ""
 "Nombre de Ressources dont l'instruction des éléments reliés est en cours"
 
-#: epl/apps/project/serializers/dashboard.py:269
+#: epl/apps/project/serializers/dashboard.py:273
 msgid ""
 "Number of resources for which instruction of unbound elements is in progress"
 msgstr ""
 "Nombre de Ressources dont l'instruction des éléments non reliés est en cours"
 
-#: epl/apps/project/serializers/dashboard.py:276
+#: epl/apps/project/serializers/dashboard.py:280
 msgid "Number of resources fully instructed (control performed)"
 msgstr "Nombre de Ressources complètement instruites (contrôle effectué)"
 
-#: epl/apps/project/serializers/dashboard.py:286
+#: epl/apps/project/serializers/dashboard.py:290
 msgid "Information about controls"
 msgstr "Information sur les contrôles"
 
-#: epl/apps/project/serializers/dashboard.py:290
+#: epl/apps/project/serializers/dashboard.py:294
 msgid "Number of resources for which bound elements are being controlled"
 msgstr "Nombre de Ressources dont le contrôle des éléments reliés est en cours"
 
-#: epl/apps/project/serializers/dashboard.py:295
+#: epl/apps/project/serializers/dashboard.py:299
 msgid "Number of resources for which unbound elements are being controlled"
 msgstr ""
 "Nombre de Ressources dont le contrôle des éléments non reliés est en cours"
 
-#: epl/apps/project/serializers/dashboard.py:305
+#: epl/apps/project/serializers/dashboard.py:309
 msgid "Information about anomalies"
 msgstr "Information sur les anomalies"
 
-#: epl/apps/project/serializers/dashboard.py:309
+#: epl/apps/project/serializers/dashboard.py:313
 msgid "Number of anomalies in progress"
 msgstr "Nombre d’anomalies en cours"
 
-#: epl/apps/project/serializers/dashboard.py:340
+#: epl/apps/project/serializers/dashboard.py:344
 msgid "Achievements"
 msgstr "Réalisations"
 
-#: epl/apps/project/serializers/dashboard.py:344
+#: epl/apps/project/serializers/dashboard.py:348
 msgid "Relative completion"
 msgstr "Réalisation relative"
 
-#: epl/apps/project/serializers/dashboard.py:350
+#: epl/apps/project/serializers/dashboard.py:354
 msgid "Absolute completion"
 msgstr "Réalisation absolue"
 
-#: epl/apps/project/serializers/dashboard.py:384
+#: epl/apps/project/serializers/dashboard.py:388
 #, python-format
 msgid "No collection in library '%(library_name)s'"
 msgstr "Aucune collection dans la bibliothèque '%(library_name)s'"
 
-#: epl/apps/project/serializers/dashboard.py:399
+#: epl/apps/project/serializers/dashboard.py:403
 #, python-format
 msgid "% of realized positioning progress by library"
 msgstr "% de l'avancement du positionnement réalisé par bibliothèque"
 
-#: epl/apps/project/serializers/dashboard.py:403
+#: epl/apps/project/serializers/dashboard.py:407
 #, python-format
 msgid "% of collections positioned"
 msgstr "% de collections positionnées"
 
-#: epl/apps/project/serializers/dashboard.py:448
+#: epl/apps/project/serializers/dashboard.py:452
 msgid "Number of resources to be instructed"
 msgstr "Nombre de ressources à instruire"
 
-#: epl/apps/project/serializers/dashboard.py:452
+#: epl/apps/project/serializers/dashboard.py:456
 msgid "bound"
 msgstr "relié"
 
-#: epl/apps/project/serializers/dashboard.py:456
+#: epl/apps/project/serializers/dashboard.py:460
 msgid "unbound"
 msgstr "non relié"
 
-#: epl/apps/project/serializers/dashboard.py:496
+#: epl/apps/project/serializers/dashboard.py:500
 msgid "duplicates"
 msgstr "doublons"
 
-#: epl/apps/project/serializers/dashboard.py:497
+#: epl/apps/project/serializers/dashboard.py:501
 msgid "triplicates"
 msgstr "triplons"
 
-#: epl/apps/project/serializers/dashboard.py:498
+#: epl/apps/project/serializers/dashboard.py:502
 msgid "quadruplicates"
 msgstr "quadruplons"
 
-#: epl/apps/project/serializers/dashboard.py:499
+#: epl/apps/project/serializers/dashboard.py:503
 msgid "more"
 msgstr "plus"
 
-#: epl/apps/project/serializers/dashboard.py:509
+#: epl/apps/project/serializers/dashboard.py:513
 msgid ""
 "Distribution of the number of occurrences in the collections candidate for "
 "the instruction"
@@ -845,7 +853,7 @@ msgstr ""
 "Répartition du nombre d'occurrences dans les collections éligibles à "
 "l'instruction"
 
-#: epl/apps/project/serializers/dashboard.py:513
+#: epl/apps/project/serializers/dashboard.py:517
 msgid "Distribution of occurrence types"
 msgstr "Répartition des types d'occurrences"
 
@@ -872,12 +880,11 @@ msgstr "La bibliothèque ne doit être renseignée pour ce rôle"
 msgid "Library is not attached to the project."
 msgstr "La bibliothèque n'est pas rattachée au projet"
 
-#: epl/apps/project/serializers/project.py:149 epl/apps/user/serializers.py:253
-#: epl/apps/user/serializers.py:489
+#: epl/apps/project/serializers/project.py:149 epl/apps/user/serializers.py:478
 msgid "Project does not exist."
 msgstr "Le projet n'existe pas."
 
-#: epl/apps/project/serializers/project.py:153 epl/apps/user/serializers.py:271
+#: epl/apps/project/serializers/project.py:153 epl/apps/user/serializers.py:253
 msgid "Library must be provided for instructor role."
 msgstr "La bibliothèque doit être fournie pour le rôle d'instructeur."
 
@@ -902,7 +909,7 @@ msgid "User does not exist."
 msgstr "L'utilisateur n'existe pas."
 
 #: epl/apps/project/serializers/project.py:354
-#: epl/apps/project/serializers/project.py:449 epl/apps/user/serializers.py:258
+#: epl/apps/project/serializers/project.py:449
 msgid "Library does not exist."
 msgstr "La bibliothèque n'existe pas."
 
@@ -1428,36 +1435,32 @@ msgstr "Non d'affichage de l'utilisateur"
 msgid "Role in project"
 msgstr "Rôle dans le projet"
 
-#: epl/apps/user/serializers.py:263
-msgid "Invalid role."
-msgstr "Rôle non valide."
-
-#: epl/apps/user/serializers.py:268 epl/apps/user/tests/views/test_invite.py:55
+#: epl/apps/user/serializers.py:250 epl/apps/user/tests/views/test_invite.py:55
 msgid "Email is already linked to an account"
 msgstr "L'email est déjà lié à un compte"
 
-#: epl/apps/user/serializers.py:287
+#: epl/apps/user/serializers.py:269
 msgid "Token is required."
 msgstr "Le jeton est requis."
 
-#: epl/apps/user/serializers.py:294
+#: epl/apps/user/serializers.py:276
 msgid "Invalid token format."
 msgstr "Format de jeton invalide."
 
-#: epl/apps/user/serializers.py:302
+#: epl/apps/user/serializers.py:284
 msgid "Invite token expired"
 msgstr "Le jeton d'invitation a expiré"
 
-#: epl/apps/user/serializers.py:304
+#: epl/apps/user/serializers.py:286
 msgid "Invalid invite token"
 msgstr "Le jeton d'invitation n'est pas valide"
 
-#: epl/apps/user/serializers.py:339
+#: epl/apps/user/serializers.py:321
 msgid "Password and confirm password do not match"
 msgstr ""
 "Le mot de passe et le mot de passe de confirmation ne correspondent pas"
 
-#: epl/apps/user/serializers.py:362
+#: epl/apps/user/serializers.py:344
 msgid ""
 "An inactive user account exists with this email. Please contact an "
 "administrator to reactivate the account before accepting invitations."
@@ -1465,24 +1468,24 @@ msgstr ""
 "Un compte utilisateur inactif existe avec cet email. Veuillez contacter un "
 "administrateur pour réactiver le compte avant d'accepter les invitations."
 
-#: epl/apps/user/serializers.py:381
+#: epl/apps/user/serializers.py:370
 msgid "The project associated with this invitation no longer exists."
 msgstr "Le projet associé à l'invitation a été supprimé."
 
-#: epl/apps/user/serializers.py:391
+#: epl/apps/user/serializers.py:380
 msgid "Invitation expired. The user who sent the invitation no longer exists."
 msgstr ""
 "L'invitation a expiré. L'utilisateur qui a envoyé l'invitation n'existe plus."
 
-#: epl/apps/user/serializers.py:397
+#: epl/apps/user/serializers.py:386
 msgid "This email is not invited to join this project."
 msgstr "L'adresse email n'est pas invitée à rejoindre ce projet."
 
-#: epl/apps/user/serializers.py:413
+#: epl/apps/user/serializers.py:402
 msgid "The library associated with this invitation no longer exists."
 msgstr "La bibliothèque associée à cette invitation n'existe plus."
 
-#: epl/apps/user/serializers.py:481
+#: epl/apps/user/serializers.py:470
 msgid "Alert settings for the project"
 msgstr "Paramètres d'alerte pour le projet"
 
@@ -1599,44 +1602,39 @@ msgstr "Envoyer un email d'invitation"
 
 #: epl/apps/user/views.py:401
 msgid ""
-"Send an invitation email to a user. For simple invitations, only email is "
-"required. For project invitations, include project_id and role. For "
-"instructor roles, library_id is required.This route is atm not used by the "
-"frontend"
+"Invite someone to join Eplouribousse via a local account (outside the "
+"education and research federation). Only the email address is required; "
+"project, role and library can be assigned once the user is in the database."
 msgstr ""
-"Envoie un email d'invitation à un utilisateur. Pour des invitations simples, "
-"seul l'email est requis. Pour les invitations à un projet, incluez "
-"project_id et role. Pour les rôles d'instructeur, library_id est requis. "
-"Cette route n'est pas encore utilisée par le frontend"
 
-#: epl/apps/user/views.py:411 epl/apps/user/views.py:435
+#: epl/apps/user/views.py:407 epl/apps/user/views.py:437
 msgid "Invitation email sent successfully."
 msgstr "L'email d'invitation a été envoyé."
 
-#: epl/apps/user/views.py:444
+#: epl/apps/user/views.py:446
 msgid "Validate invitation token"
 msgstr "Valider le jeton d'invitation"
 
-#: epl/apps/user/views.py:445
+#: epl/apps/user/views.py:447
 msgid ""
 "Validates an invitation token and returns the associated email address if "
 "valid."
 msgstr ""
 "Valide un jeton d'invitation et retourne l'adresse email associée si valide."
 
-#: epl/apps/user/views.py:450
+#: epl/apps/user/views.py:452
 msgid "Email address associated with the invitation"
 msgstr "Adresse email associée à l'invitation"
 
-#: epl/apps/user/views.py:468
+#: epl/apps/user/views.py:470
 msgid "Create a new user account"
 msgstr "Créer un nouveau compte utilisateur"
 
-#: epl/apps/user/views.py:469
+#: epl/apps/user/views.py:471
 msgid "Creates a new user account based on an invitation token"
 msgstr "Crée un nouveau compte utilisateur basé sur un jeton d'invitation"
 
-#: epl/apps/user/views.py:474 epl/apps/user/views.py:487
+#: epl/apps/user/views.py:476 epl/apps/user/views.py:489
 msgid "Account created successfully."
 msgstr "Compte créé avec succès."
 
@@ -1901,8 +1899,9 @@ msgid ""
 "The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 0 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource '%(resource_title)s' "
-"est susceptible de trancher un cas d'arbitrage de type 0 :"
+"Le repositionnement de votre collection pour la ressource "
+"'%(resource_title)s' est susceptible de trancher un cas d'arbitrage de type "
+"0 :"
 
 #: epl/templates/emails/notify_arbitration_type1.txt:3
 #, python-format
@@ -1910,8 +1909,9 @@ msgid ""
 "The repositioning of your collection for the resource '%(resource_title)s' "
 "may resolve a type 1 arbitration case:"
 msgstr ""
-"Le repositionnement de votre collection pour la ressource '%(resource_title)s' "
-"est susceptible de trancher un cas d'arbitrage de type 1 :"
+"Le repositionnement de votre collection pour la ressource "
+"'%(resource_title)s' est susceptible de trancher un cas d'arbitrage de type "
+"1 :"
 
 #: epl/templates/emails/notify_control.txt:3
 #, python-format
@@ -2111,6 +2111,20 @@ msgstr "Bibliothèque remédiée"
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
 
+#~ msgid "Invalid role."
+#~ msgstr "Rôle non valide."
+
+#~ msgid ""
+#~ "Send an invitation email to a user. For simple invitations, only email is "
+#~ "required. For project invitations, include project_id and role. For "
+#~ "instructor roles, library_id is required.This route is atm not used by "
+#~ "the frontend"
+#~ msgstr ""
+#~ "Envoie un email d'invitation à un utilisateur. Pour des invitations "
+#~ "simples, seul l'email est requis. Pour les invitations à un projet, "
+#~ "incluez project_id et role. Pour les rôles d'instructeur, library_id est "
+#~ "requis. Cette route n'est pas encore utilisée par le frontend"
+
 #, fuzzy, python-format
 #~| msgid ""
 #~| "The repositioning of your collection for the resource "
@@ -2172,12 +2186,6 @@ msgstr "L'ISSN doit comporter 8 caractères"
 
 #~ msgid "Project ID to which the resource belongs"
 #~ msgstr "ID du projet auquel la ressource appartient"
-
-#~ msgid "Participation in another project"
-#~ msgstr "Participation à un autre projet"
-
-#~ msgid "Incorrect assignment"
-#~ msgstr "Affectation incorrecte"
 
 #~ msgid "Instruction of unbound resources"
 #~ msgstr "Instruction des ressources non reliées"
