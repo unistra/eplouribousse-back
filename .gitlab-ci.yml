@@ -21,7 +21,7 @@ variables:
   SENTRY_REPO: "di / eplouribousse / eplback"
 
 services:
-  - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:12
+  - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:17
     alias: postgres
 
 before_script:
