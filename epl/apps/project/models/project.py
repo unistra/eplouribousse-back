@@ -99,8 +99,8 @@ class Project(models.Model):
     objects = ProjectQuerySet.as_manager()
 
     class Meta:
-        verbose_name = _("Project")
-        verbose_name_plural = _("Projects")
+        verbose_name = gettext_lazy("Project")
+        verbose_name_plural = gettext_lazy("Projects")
         ordering = ["name"]
         constraints = [
             models.CheckConstraint(
@@ -172,8 +172,8 @@ class UserRole(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Project User Role")
-        verbose_name_plural = _("Project User Roles")
+        verbose_name = gettext_lazy("Project User Role")
+        verbose_name_plural = gettext_lazy("Project User Roles")
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "role", "project"],

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-18 11:31+0100\n"
+"POT-Creation-Date: 2025-12-19 10:32+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -414,6 +414,14 @@ msgstr "Bibliothèque"
 #: epl/apps/project/models/library.py:21
 msgid "Libraries"
 msgstr "Bibliothèques"
+
+#: epl/apps/project/models/logging.py:37
+msgid "Log Entry"
+msgstr "Entrée de journal"
+
+#: epl/apps/project/models/logging.py:38
+msgid "Log Entries"
+msgstr "Entrées de journal"
 
 #: epl/apps/project/models/project.py:17
 msgid "Participation in another project"

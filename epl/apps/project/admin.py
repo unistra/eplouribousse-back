@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.models import Group
+from django.contrib.sites.models import Site
 
 from epl.apps.project.models import ActionLog, Project
 
@@ -22,3 +24,7 @@ class ActionLogAdmin(admin.ModelAdmin):
         "actor",
     )
     list_filter = ("action_time",)
+
+
+admin.site.unregister(Site)
+admin.site.unregister(Group)
