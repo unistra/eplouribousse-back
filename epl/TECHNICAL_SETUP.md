@@ -41,7 +41,7 @@ Autres points de configuration :
   `SAML_TENANT_CONFIG`
 - CAS : URL différente selon l’environnement (dev/prod/preprod/test) dans les fichiers de settings correspondants.
 
-### Déploiement local
+### Déploiement local (environnement de developpement)
 
 1) Démarrer l’infra locale (Postgres, Redis, Maildev) :
 
