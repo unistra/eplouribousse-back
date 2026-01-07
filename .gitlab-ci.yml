@@ -12,8 +12,9 @@ variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
   PYTHON_VERSION: "3.12"
-  CONTAINER_TEST_IMAGE: $CI_REGISTRY/dnum/eplouribousse-backend:$CI_COMMIT_REF_NAME
-  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY/dnum/eplouribousse-backend:latest
+  CONTAINER_BASE_IMAGE_NAME: $CI_REGISTRY/dnum/eplouribousse-backend
+  CONTAINER_TEST_IMAGE: $CONTAINER_BASE_IMAGE_NAME:$CI_COMMIT_REF_NAME
+  CONTAINER_RELEASE_IMAGE: $CONTAINER_BASE_IMAGE_NAME:$CI_COMMIT_TAG
 
 services:
   - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:12
@@ -60,7 +61,7 @@ include:
   image:
     # gcr.io/kaniko-project/executor:v1.7.0-debug
     name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
+    entrypoint: [ "" ]
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
@@ -69,8 +70,10 @@ include:
       /kaniko/executor
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}${CI_PROJECT_DIR_PATH}/docker/app/Dockerfile"
-      --destination "${DESTINATION}" ${EXTRA_ARGS}
       --registry-mirror quay.apps.mgmt.paas.unistra.fr/dnum
+      $([ -n "${LATEST_DESTINATION}" ] && echo "--destination ${LATEST_DESTINATION}")
+      --destination "${DESTINATION}"
+      ${EXTRA_ARGS}
   tags:
     - cluster
     - kubernetes
@@ -80,6 +83,7 @@ b:docker:
   stage: build
   variables:
     DESTINATION: $CONTAINER_TEST_IMAGE
+    LATEST_DESTINATION: ""
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
       when: always
@@ -89,6 +93,7 @@ r:docker:
   stage: release
   variables:
     DESTINATION: $CONTAINER_RELEASE_IMAGE
+    LATEST_DESTINATION: "$CONTAINER_BASE_IMAGE_NAME:latest"
   rules:
     - if: '$CI_COMMIT_TAG'
       when: always

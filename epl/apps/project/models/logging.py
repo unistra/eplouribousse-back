@@ -7,6 +7,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.http import HttpRequest
+from django.utils.translation import gettext_lazy as _
 from ipware import get_client_ip
 from rest_framework.request import Request
 
@@ -33,8 +34,8 @@ class ActionLog(models.Model):
     created_by = models.ForeignKey("user.User", on_delete=models.SET_NULL, related_name="log_entries", null=True)
 
     class Meta:
-        verbose_name = "Log Entry"
-        verbose_name_plural = "Log Entries"
+        verbose_name = _("Log Entry")
+        verbose_name_plural = _("Log Entries")
         ordering = ["-action_time"]
 
     def __str__(self):

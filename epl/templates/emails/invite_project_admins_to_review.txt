@@ -14,4 +14,4 @@ If you believe this message is the result of an error, please contact the projec
 --
 
 {% trans "This is an automated message, please do not reply" %}.
-Eplouribousse - {% now "Y" %}
+Eplouribousse

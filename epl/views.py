@@ -1,5 +1,8 @@
-from django.shortcuts import render
+from django.http import HttpResponseRedirect
+
+from epl.services.tenant import get_front_domain
 
 
 def home(request):
-    return render(request, "base.html")
+    url = get_front_domain(request) + "/"
+    return HttpResponseRedirect(url)

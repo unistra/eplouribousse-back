@@ -5,7 +5,7 @@ import typing
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext as _
-from django.utils.translation import gettext_lazy as _lazy
+from django.utils.translation import gettext_lazy
 
 from epl.apps.project.models import ProjectStatus
 from epl.models import UUIDPrimaryKeyField
@@ -14,9 +14,9 @@ if typing.TYPE_CHECKING:
     from epl.apps.user.models import User
 
 DEFAULT_EXCLUSION_REASONS = [
-    _lazy("Participation in another project"),
-    _lazy("Incorrect assignment"),
-    _lazy("Other"),
+    gettext_lazy("Participation in another project"),
+    gettext_lazy("Incorrect assignment"),
+    gettext_lazy("Other"),
 ]
 
 
@@ -99,8 +99,8 @@ class Project(models.Model):
     objects = ProjectQuerySet.as_manager()
 
     class Meta:
-        verbose_name = _("Project")
-        verbose_name_plural = _("Projects")
+        verbose_name = gettext_lazy("Project")
+        verbose_name_plural = gettext_lazy("Projects")
         ordering = ["name"]
         constraints = [
             models.CheckConstraint(
@@ -172,8 +172,8 @@ class UserRole(models.Model):
     )
 
     class Meta:
-        verbose_name = _("Project User Role")
-        verbose_name_plural = _("Project User Roles")
+        verbose_name = gettext_lazy("Project User Role")
+        verbose_name_plural = gettext_lazy("Project User Roles")
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "role", "project"],
