@@ -3,6 +3,7 @@
 ## Next release
 
 - 🐛 Fix exclusion reasons not being translated at project initialization
+- 📝 Remove date from email signatures
 
 ## 1.0.1 - 12-12-2025
 
