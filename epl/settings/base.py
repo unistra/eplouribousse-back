@@ -1,4 +1,4 @@
-from os import path, environ
+from os import path
 from pathlib import Path
 
 import saml2.saml
@@ -350,7 +350,7 @@ SAML_ALLOWED_HOSTS = []
 SAML_DEFAULT_BINDING = saml2.BINDING_HTTP_POST
 SAML_LOGOUT_REQUEST_PREFERRED_BINDING = saml2.BINDING_HTTP_POST
 SAML_IGNORE_LOGOUT_ERRORS = True
-SAML2_DISCO_URL = environ.get("SAML2_DISCO_URL")
+SAML2_DISCO_URL = "https://discovery.renater.fr/test"
 SAML2_IDPHINT_PARAM = "idphint"
 
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = "username"
