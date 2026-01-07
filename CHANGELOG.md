@@ -2,6 +2,8 @@
 
 ## Next release
 
+## 1.0.2 - 07-01-2026
+
 - 🐛 Fix exclusion reasons not being translated at project initialization
 - 📝 Remove date from email signatures
 
