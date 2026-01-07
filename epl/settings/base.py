@@ -2,6 +2,7 @@ from os import path
 from pathlib import Path
 
 import saml2.saml
+from django.core.exceptions import ImproperlyConfigured
 
 ######################
 # Path configuration #
@@ -309,8 +310,8 @@ def load_key(keyfile):
         keyfile = SITE_ROOT / "keys" / keyfile
         with open(keyfile, "rb") as f:
             return f.read()
-    except FileNotFoundError:
-        return b""
+    except (FileNotFoundError, PermissionError):
+        raise ImproperlyConfigured(f"Invalid key file {keyfile}")
 
 
 SIMPLE_JWT = {
