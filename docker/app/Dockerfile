@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1
 
 RUN set -ex \
     && apt update \
-    && apt install -y build-essential gcc gettext libpq-dev locales tzdata \
+    && apt install -y build-essential xmlsec1 gcc gettext libpq-dev locales tzdata \
     && localedef -i fr_FR -c -f UTF-8 -A /usr/share/locale/locale.alias fr_FR.UTF-8 \
     && ln -fs /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
@@ -36,6 +36,11 @@ RUN useradd -m -r appuser && \
 
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy xmlsec1 and its dependencies
+COPY --from=builder /usr/bin/xmlsec1 /usr/bin/xmlsec1
+RUN ldd /usr/bin/xmlsec1 2>/dev/null | grep "=> /" | awk '{print $3}' \
+    | xargs -I '{}' sh -c 'mkdir -p $(dirname {}) && cp {} {}' 2>/dev/null || true
 
 WORKDIR /app
 
