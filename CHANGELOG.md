@@ -1,6 +1,8 @@
 # Changelog
 
 ## Next release
+ 
+- 🔧 Refactor Sentry config
 
 ## 1.0.2 - 07-01-2026
 
