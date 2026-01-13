@@ -3,8 +3,6 @@ from pathlib import Path
 
 import saml2.saml
 
-SENTRY_DSN = "https://1ec47dc3f4a500ba87705bb8830b5549@sentry.app.unistra.fr/66"
-
 ######################
 # Path configuration #
 ######################

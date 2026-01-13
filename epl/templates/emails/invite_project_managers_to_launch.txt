@@ -17,4 +17,4 @@ To do so, go to {{ project_url }}.{% endblocktranslate %}
 ---
 
 {% trans "This is an automated message, please do not reply" %}.
-Eplouribousse - {% now "Y" %}
+Eplouribousse
