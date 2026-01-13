@@ -1,6 +1,6 @@
 [project]
 name = "epl"
-version = "1.0.2"
+version = "1.0.3"
 description = ""
 authors = [
     { name = "DIP, Direction du numérique, Unistra", email = "dnum-dip@unistra.fr" }
