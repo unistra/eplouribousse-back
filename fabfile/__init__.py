@@ -119,6 +119,7 @@ def test():
         "redis_host": "REDIS_HOST",
         "redis_db": "REDIS_DB",
         "redis_port": "REDIS_PORT",
+        "sentry_dsn": "SENTRY_DSN",
     }
     execute(build_env)
 
@@ -152,6 +153,7 @@ def preprod():
         "redis_host": "REDIS_HOST",
         "redis_db": "REDIS_DB",
         "redis_port": "REDIS_PORT",
+        "sentry_dsn": "SENTRY_DSN",
     }
     execute(build_env)
 
@@ -185,6 +187,7 @@ def prod():
         "redis_host": "REDIS_HOST",
         "redis_db": "REDIS_DB",
         "redis_port": "REDIS_PORT",
+        "sentry_dsn": "SENTRY_DSN",
     }
     execute(build_env)
 
