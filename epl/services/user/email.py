@@ -16,7 +16,7 @@ from epl.apps.user.models import User
 from epl.services.tenant import get_front_domain
 
 
-def send_password_change_email(user: Request.user):
+def send_password_change_email(user: User):
     email_content = render_to_string(
         "emails/password_changed.txt",
         {
