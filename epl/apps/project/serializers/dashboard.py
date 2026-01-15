@@ -119,17 +119,19 @@ class InitialDataSerializer(NonSingletonHelperMixin, DirectComputeMixin, seriali
             "computations": [
                 {
                     "key": "initial_collections_count",
-                    "label": _("Number of initial collections before positioning"),
+                    "label": _("Number of initial collections before positioning (without singletons)"),
                     "value": self.count_collections_eligible_for_deduplication(project),
                 },
                 {
                     "key": "initial_resources_count",
-                    "label": _("Number of initial resources before positioning"),
+                    "label": _(
+                        "Number of initial resources before positioning (without resources containing single collections)"
+                    ),
                     "value": self.count_resources_eligible_for_deduplication(project),
                 },
                 {
                     "key": "singletons_count",
-                    "label": _("Number of singletons"),
+                    "label": _("Number of singletons (collections unique in a resource)"),
                     "value": self.count_collections_ineligible_for_deduplication(project),
                 },
             ],
