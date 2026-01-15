@@ -64,18 +64,44 @@ class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
     """
 
     def compute_data(self, project):
+        # Get all collections for the project
+        all_collections = Collection.objects.filter(project=project)
+
+        # Group by resource code and count occurrences
+        code_qs = all_collections.values("resource__code").annotate(count=Count("id"))
+
+        # Separate unique (count=1) and non-unique (count>1) resource codes
+        non_unique_codes = code_qs.filter(count__gt=1).values_list("resource__code", flat=True)
+        unique_codes = code_qs.filter(count=1).values_list("resource__code", flat=True)
+
+        # Count collections for each category
+        non_unique_collections_count = all_collections.filter(resource__code__in=non_unique_codes).count()
+        unique_collections_count = all_collections.filter(resource__code__in=unique_codes).count()
+
         return {
             "title": _("Initial Datas"),
             "computations": [
                 {
                     "key": "initial_collections_count",
-                    "label": _("Initial collections number before positioning"),
-                    "value": Collection.objects.filter(project=project).count(),
+                    "label": _(
+                        "Number of initial collections before positioning (excluding collections that are alone in their resource)"
+                    ),
+                    "value": non_unique_collections_count,
                 },
                 {
                     "key": "initial_resources_count",
-                    "label": _("Initial resources number before positioning"),
-                    "value": Resource.objects.filter(project=project).count(),
+                    "label": _(
+                        "Number of initial resources before positioning (resources containing only one collection are excluded)"
+                    ),
+                    "value": Resource.objects.filter(project=project)
+                    .annotate(collection_count=Count("collections"))
+                    .exclude(collection_count=1)
+                    .count(),
+                },
+                {
+                    "key": "singletons_count",
+                    "label": _("Number of singletons (collections unique in a resource)"),
+                    "value": unique_collections_count,
                 },
             ],
         }
@@ -89,6 +115,11 @@ class PositioningInformationSerializer(DirectComputeMixin, serializers.Serialize
     """
 
     def compute_data(self, project):
+        # Get resource codes that have more than one collection (exclude singletons)
+        all_collections = Collection.objects.filter(project=project)
+        code_qs = all_collections.values("resource__code").annotate(count=Count("id"))
+        non_unique_codes = code_qs.filter(count__gt=1).values_list("resource__code", flat=True)
+
         return {
             "title": _("Positioning Information"),
             "computations": [
@@ -106,8 +137,8 @@ class PositioningInformationSerializer(DirectComputeMixin, serializers.Serialize
                 },
                 {
                     "key": "collections_remaining_to_position",
-                    "label": _("Number of Collections remaining to be positioned"),
-                    "value": Collection.objects.filter(project=project, position__isnull=True).count(),
+                    "label": _("Number of Collections remaining to be positioned (excluding singletons)"),
+                    "value": all_collections.filter(position__isnull=True, resource__code__in=non_unique_codes).count(),
                 },
             ],
         }
@@ -329,7 +360,12 @@ class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Seriali
         processed_resources = Resource.objects.filter(project=project, status=ResourceStatus.EDITION).count()
         eligible_resources = Resource.objects.filter(project=project).exclude(status=ResourceStatus.EXCLUDED).count()
         excluded_resources = Resource.objects.filter(project=project, status=ResourceStatus.EXCLUDED).count()
-        initial_resources = Resource.objects.filter(project=project).count()
+        initial_resources = (
+            Resource.objects.filter(project=project)
+            .annotate(collection_count=Count("collections"))
+            .exclude(collection_count=1)
+            .count()
+        )
 
         resources_no_longer_to_be_processed = processed_resources + excluded_resources
 
@@ -364,7 +400,7 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
     Prepares data for a bar chart showing positioning progress per library.
     Formatted for Chart.js (labels and data only).
 
-    Represents the number of positionings carried out as a percentage by library (excluding resources discarded by collection exclusion).
+    Represents the number of positionings carried out as a percentage by library (excluding resources discarded by collection exclusion, or resources containing a unique collection).
     For each library, 100% represents the number of collections (excluding resources discarded by collection exclusion).
     """
 
@@ -376,12 +412,18 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
         realized_positionings_by_libraries_percentage = []
         errors = []
 
+        # Get resource codes that have more than one collection (exclude singletons)
+        all_collections = Collection.objects.filter(project=project)
+        code_qs = all_collections.values("resource__code").annotate(count=Count("id"))
+        non_unique_codes = code_qs.filter(count__gt=1).values_list("resource__code", flat=True)
+
         for library in libraries:
             # Denominator: Total collections for this library in this project,
-            # excluding collections that are part of an already excluded resource.
-            collections_in_library = Collection.objects.filter(project=project, library=library).exclude(
-                resource__status=ResourceStatus.EXCLUDED
-            )
+            # excluding collections that are part of an already excluded resource
+            # and excluding collections that are unique in their resource.
+            collections_in_library = Collection.objects.filter(
+                project=project, library=library, resource__code__in=non_unique_codes
+            ).exclude(resource__status=ResourceStatus.EXCLUDED)
 
             denom = collections_in_library.count()
             if denom == 0:
