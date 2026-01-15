@@ -75,25 +75,32 @@ class SegmentViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
     def get_segment_type(self, resource: Resource):
         return SegmentType.BOUND if resource.status <= ResourceStatus.INSTRUCTION_BOUND else SegmentType.UNBOUND
 
+    def _annotate_anomalies(self, queryset):
+        return queryset.annotate(
+            fixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=True)),
+            unfixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=False)),
+        )
+
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        if self.action != "list":
-            return queryset
+        if self.action == "list":
+            resource_id = self.request.query_params.get("resource_id")
+            if not resource_id:
+                raise exceptions.ValidationError({"detail": _("Missing required query parameter: resource_id")})
 
-        resource_id = self.request.query_params.get("resource_id")
-        if not resource_id:
-            raise exceptions.ValidationError({"detail": _("Missing required query parameter: resource_id")})
-        try:
-            resource = Resource.objects.get(id=resource_id)
-            queryset = resource.segments.annotate(
-                fixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=True)),
-                unfixed_anomalies=models.Count("anomalies", filter=models.Q(anomalies__fixed=False)),
-            )
-        except Resource.DoesNotExist:
-            raise exceptions.NotFound({"detail": _("Resource does not exist")})
+            try:
+                resource = Resource.objects.get(id=resource_id)
+                queryset = self._annotate_anomalies(resource.segments)
+            except Resource.DoesNotExist:
+                raise exceptions.NotFound({"detail": _("Resource does not exist")})
 
-        return queryset.order_by("order")
+            return queryset.order_by("order")
+
+        if self.action in ["retrieve", "update", "partial_update"]:
+            queryset = self._annotate_anomalies(queryset)
+
+        return queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
