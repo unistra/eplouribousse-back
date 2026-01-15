@@ -26,6 +26,7 @@ before_script:
     else
     export DOCKER_IMAGE_TAG="$CI_COMMIT_TAG";
     fi
+  - export DESTINATION="${CONTAINER_BASE_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
 
 unittest:
   stage: test
@@ -64,19 +65,20 @@ sentry-release:
   image: getsentry/sentry-cli:latest
   variables:
     SENTRY_AUTH_TOKEN: $SENTRY_AUTH_TOKEN
-    SENTRY_ORG: "unistra"
+    SENTRY_URL: "https://sentry.app.unistra.fr"
+    SENTRY_ORG: "sentry"
     SENTRY_PROJECT: "eplouribousse-back"
+    SENTRY_REPO: "di / eplouribousse / eplback"
   script:
     - export SENTRY_RELEASE="epl-back@$DOCKER_IMAGE_TAG"
     - sentry-cli releases new -p "$SENTRY_PROJECT" "$SENTRY_RELEASE"
-    - sentry-cli releases set-commits --ignore-missing --commit "$CI_PROJECT_PATH@$CI_COMMIT_SHA" "$SENTRY_RELEASE"
+    - sentry-cli releases set-commits --ignore-missing --commit "$SENTRY_REPO@$CI_COMMIT_SHA" "$SENTRY_RELEASE"
     - sentry-cli releases finalize "$SENTRY_RELEASE"
   rules:
     - if: '$CI_COMMIT_TAG'
       when: always
   needs:
     - job: r:docker
-    - job: b:docker
 
 include:
   - project: "docker/template"
@@ -108,7 +110,6 @@ b:docker:
   extends: .build-image
   stage: build
   variables:
-    DESTINATION: $CONTAINER_BASE_IMAGE_NAME:$DOCKER_IMAGE_TAG
     LATEST_DESTINATION: ""
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
@@ -118,7 +119,6 @@ r:docker:
   extends: .build-image
   stage: release
   variables:
-    DESTINATION: $CONTAINER_BASE_IMAGE_NAME:$DOCKER_IMAGE_TAG
     LATEST_DESTINATION: "$CONTAINER_BASE_IMAGE_NAME:latest"
   rules:
     - if: '$CI_COMMIT_TAG'
