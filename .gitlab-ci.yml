@@ -4,21 +4,28 @@ stages:
   - sonarqube-check
   - build
   - release
+  - sentry
 
 variables:
   POSTGRES_USER: epl
   POSTGRES_PASSWORD: epl
   POSTGRES_DB: epl
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-  GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project
+  GIT_STRATEGY: fetch  # Tells git to fetch changes
   PYTHON_VERSION: "3.12"
   CONTAINER_BASE_IMAGE_NAME: $CI_REGISTRY/dnum/eplouribousse-backend
-  CONTAINER_TEST_IMAGE: $CONTAINER_BASE_IMAGE_NAME:$CI_COMMIT_REF_NAME
-  CONTAINER_RELEASE_IMAGE: $CONTAINER_BASE_IMAGE_NAME:$CI_COMMIT_TAG
 
 services:
   - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:12
     alias: postgres
+
+before_script:
+  - if [ -z "$CI_COMMIT_TAG" ]; then
+    export DOCKER_IMAGE_TAG=$(git describe --long --always);
+    else
+    export DOCKER_IMAGE_TAG="$CI_COMMIT_TAG";
+    fi
 
 unittest:
   stage: test
@@ -52,6 +59,25 @@ sonarqube-check:
   rules:
     - if: $CI_COMMIT_BRANCH == 'develop'
 
+sentry-release:
+  stage: sentry
+  image: getsentry/sentry-cli:latest
+  variables:
+    SENTRY_AUTH_TOKEN: $SENTRY_AUTH_TOKEN
+    SENTRY_ORG: "unistra"
+    SENTRY_PROJECT: "eplouribousse-back"
+  script:
+    - export SENTRY_RELEASE="epl-back@$DOCKER_IMAGE_TAG"
+    - sentry-cli releases new -p "$SENTRY_PROJECT" "$SENTRY_RELEASE"
+    - sentry-cli releases set-commits --ignore-missing --commit "$CI_PROJECT_PATH@$CI_COMMIT_SHA" "$SENTRY_RELEASE"
+    - sentry-cli releases finalize "$SENTRY_RELEASE"
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: always
+  needs:
+    - job: r:docker
+    - job: b:docker
+
 include:
   - project: "docker/template"
     file: "python-pip-audit.gitlab-ci.yml"
@@ -82,7 +108,7 @@ b:docker:
   extends: .build-image
   stage: build
   variables:
-    DESTINATION: $CONTAINER_TEST_IMAGE
+    DESTINATION: $CONTAINER_BASE_IMAGE_NAME:$DOCKER_IMAGE_TAG
     LATEST_DESTINATION: ""
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
@@ -92,7 +118,7 @@ r:docker:
   extends: .build-image
   stage: release
   variables:
-    DESTINATION: $CONTAINER_RELEASE_IMAGE
+    DESTINATION: $CONTAINER_BASE_IMAGE_NAME:$DOCKER_IMAGE_TAG
     LATEST_DESTINATION: "$CONTAINER_BASE_IMAGE_NAME:latest"
   rules:
     - if: '$CI_COMMIT_TAG'
