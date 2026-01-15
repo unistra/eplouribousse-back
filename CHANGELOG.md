@@ -1,8 +1,9 @@
 # Changelog
 
 ## Next release
- 
+
 - 🔧 Refactor Sentry config
+- 📊 Exclude single collections and single collection resources from all dashboard metrics via a shared helper/mixin
 
 ## 1.0.2 - 07-01-2026
 
