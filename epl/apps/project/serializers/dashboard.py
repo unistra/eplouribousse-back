@@ -57,68 +57,95 @@ class CacheDashboardMixin(DirectComputeMixin):
         return md5(key_name.encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
-class InitialDataSerializer(DirectComputeMixin, serializers.Serializer):
+class NonSingletonHelperMixin:
     """
-    Number of initial Collections before positioning
-    Number of initial Resources before positioning
+    Sépare les ressources et collections éligibles au dédoublonnage
+    (>1 collection par ressource) des non-éligibles (singletons).
     """
 
+    def resources_eligible_for_deduplication(self, project):
+        # Ressources avec plus d'une collection
+        if not hasattr(self, "_resources_eligible_for_deduplication"):
+            self._resources_eligible_for_deduplication = (
+                Resource.objects.filter(project=project)
+                .annotate(collections_count=Count("collections", distinct=True))
+                .filter(collections_count__gt=1)
+            )
+        return self._resources_eligible_for_deduplication
+
+    def collections_eligible_for_deduplication(self, project):
+        # Collections rattachées aux ressources éligibles au dédoublonnage
+        if not hasattr(self, "_collections_eligible_for_deduplication"):
+            self._collections_eligible_for_deduplication = Collection.objects.filter(
+                resource__in=self.resources_eligible_for_deduplication(project)
+            )
+        return self._collections_eligible_for_deduplication
+
+    def resources_ineligible_for_deduplication(self, project):
+        # Ressources singleton (une seule collection)
+        if not hasattr(self, "_resources_ineligible_for_deduplication"):
+            self._resources_ineligible_for_deduplication = (
+                Resource.objects.filter(project=project)
+                .annotate(collections_count=Count("collections", distinct=True))
+                .filter(collections_count=1)
+            )
+        return self._resources_ineligible_for_deduplication
+
+    def collections_ineligible_for_deduplication(self, project):
+        # Collections seules dans leur ressource
+        if not hasattr(self, "_collections_ineligible_for_deduplication"):
+            self._collections_ineligible_for_deduplication = Collection.objects.filter(
+                resource__in=self.resources_ineligible_for_deduplication(project)
+            )
+        return self._collections_ineligible_for_deduplication
+
+    def count_resources_eligible_for_deduplication(self, project):
+        return self.resources_eligible_for_deduplication(project).count()
+
+    def count_collections_eligible_for_deduplication(self, project):
+        return self.collections_eligible_for_deduplication(project).count()
+
+    def count_resources_ineligible_for_deduplication(self, project):
+        return self.resources_ineligible_for_deduplication(project).count()
+
+    def count_collections_ineligible_for_deduplication(self, project):
+        return self.collections_ineligible_for_deduplication(project).count()
+
+
+class InitialDataSerializer(NonSingletonHelperMixin, DirectComputeMixin, serializers.Serializer):
     def compute_data(self, project):
-        # Get all collections for the project
-        all_collections = Collection.objects.filter(project=project)
-
-        # Group by resource code and count occurrences
-        code_qs = all_collections.values("resource__code").annotate(count=Count("id"))
-
-        # Separate unique (count=1) and non-unique (count>1) resource codes
-        non_unique_codes = code_qs.filter(count__gt=1).values_list("resource__code", flat=True)
-        unique_codes = code_qs.filter(count=1).values_list("resource__code", flat=True)
-
-        # Count collections for each category
-        non_unique_collections_count = all_collections.filter(resource__code__in=non_unique_codes).count()
-        unique_collections_count = all_collections.filter(resource__code__in=unique_codes).count()
-
         return {
-            "title": _("Initial Datas"),
+            "title": _("Initial data"),
             "computations": [
                 {
                     "key": "initial_collections_count",
-                    "label": _(
-                        "Number of initial collections before positioning (excluding collections that are alone in their resource)"
-                    ),
-                    "value": non_unique_collections_count,
+                    "label": _("Number of initial collections before positioning"),
+                    "value": self.count_collections_eligible_for_deduplication(project),
                 },
                 {
                     "key": "initial_resources_count",
-                    "label": _(
-                        "Number of initial resources before positioning (resources containing only one collection are excluded)"
-                    ),
-                    "value": Resource.objects.filter(project=project)
-                    .annotate(collection_count=Count("collections"))
-                    .exclude(collection_count=1)
-                    .count(),
+                    "label": _("Number of initial resources before positioning"),
+                    "value": self.count_resources_eligible_for_deduplication(project),
                 },
                 {
                     "key": "singletons_count",
-                    "label": _("Number of singletons (collections unique in a resource)"),
-                    "value": unique_collections_count,
+                    "label": _("Number of singletons"),
+                    "value": self.count_collections_ineligible_for_deduplication(project),
                 },
             ],
         }
 
 
-class PositioningInformationSerializer(DirectComputeMixin, serializers.Serializer):
+class PositioningInformationSerializer(NonSingletonHelperMixin, DirectComputeMixin, serializers.Serializer):
     """
     Number of collections positioned (exclusions included)
     Number of collections positioned (exclusions excluded)
     Number of collections remaining to be positioned
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
-        # Get resource codes that have more than one collection (exclude singletons)
-        all_collections = Collection.objects.filter(project=project)
-        code_qs = all_collections.values("resource__code").annotate(count=Count("id"))
-        non_unique_codes = code_qs.filter(count__gt=1).values_list("resource__code", flat=True)
+        collections_eligible_for_deduplication = self.collections_eligible_for_deduplication(project)
 
         return {
             "title": _("Positioning Information"),
@@ -126,39 +153,43 @@ class PositioningInformationSerializer(DirectComputeMixin, serializers.Serialize
                 {
                     "key": "positioned_collections_exclusions_included",
                     "label": _("Number of Collections positioned (exclusions included)"),
-                    "value": Collection.objects.filter(project=project, position__isnull=False).count(),
+                    "value": collections_eligible_for_deduplication.filter(position__isnull=False).count(),
                 },
                 {
                     "key": "positioned_collections_exclusions_excluded",
                     "label": _("Number of Collections positioned (excluding exclusions)"),
-                    "value": Collection.objects.filter(project=project, position__gt=0)
+                    "value": collections_eligible_for_deduplication.filter(position__gt=0)
                     .exclude(resource__status=ResourceStatus.EXCLUDED)
                     .count(),
                 },
                 {
                     "key": "collections_remaining_to_position",
-                    "label": _("Number of Collections remaining to be positioned (excluding singletons)"),
-                    "value": all_collections.filter(position__isnull=True, resource__code__in=non_unique_codes).count(),
+                    "label": _("Number of Collections remaining to be positioned"),
+                    "value": collections_eligible_for_deduplication.filter(position__isnull=True).count(),
                 },
             ],
         }
 
 
-class ExclusionInformationSerializer(DirectComputeMixin, serializers.Serializer):
+class ExclusionInformationSerializer(NonSingletonHelperMixin, DirectComputeMixin, serializers.Serializer):
     """
     Excluded collections (by exclusion of collections or resources)
     Excluded resources (by exclusion of collections)
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
+        collections_eligible_for_deduplication = self.collections_eligible_for_deduplication(project)
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
+
         return {
             "title": _("Exclusion Information"),
             "computations": [
                 {
                     "key": "excluded_collections",
                     "label": _("Number of excluded collections"),
-                    "value": Collection.objects.filter(
-                        Q(project=project) & (Q(position=0) | Q(resource__status=ResourceStatus.EXCLUDED))
+                    "value": collections_eligible_for_deduplication.filter(
+                        Q(position=0) | Q(resource__status=ResourceStatus.EXCLUDED)
                     )
                     .distinct()
                     .count(),
@@ -166,78 +197,101 @@ class ExclusionInformationSerializer(DirectComputeMixin, serializers.Serializer)
                 {
                     "key": "excluded_resources",
                     "label": _("Number of resources discarded due to collection exclusion"),
-                    "value": Resource.objects.filter(project=project, status=ResourceStatus.EXCLUDED).count(),
+                    "value": resources_eligible_for_deduplication.filter(status=ResourceStatus.EXCLUDED).count(),
                 },
             ],
         }
 
 
-class ArbitrationInformationSerializer(DirectComputeMixin, serializers.Serializer):
+class ArbitrationInformationSerializer(NonSingletonHelperMixin, DirectComputeMixin, serializers.Serializer):
     """
     Number of Collections in arbitration type 0
     Number of Collections in arbitration type 1
     Number of Resources affected by any arbitration type
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
+        collections_eligible_for_deduplication = self.collections_eligible_for_deduplication(project)
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
+
         return {
             "title": _("Arbitration Information"),
             "computations": [
                 {
                     "key": "collections_arbitration_type_0",
                     "label": _("Number of Collections in type 0 arbitration"),
-                    "value": Collection.objects.filter(project=project, resource__arbitration=Arbitration.ZERO).count(),
+                    "value": collections_eligible_for_deduplication.filter(
+                        resource__arbitration=Arbitration.ZERO
+                    ).count(),
                 },
                 {
                     "key": "collections_arbitration_type_1",
                     "label": _("Number of Collections in type 1 arbitration"),
-                    "value": Collection.objects.filter(project=project, resource__arbitration=Arbitration.ONE).count(),
+                    "value": collections_eligible_for_deduplication.filter(
+                        resource__arbitration=Arbitration.ONE
+                    ).count(),
                 },
                 {
                     "key": "resources_with_arbitration",
                     "label": _("Number of Resources affected by any arbitration"),
-                    "value": Resource.objects.filter(
-                        project=project, arbitration__in=[Arbitration.ZERO, Arbitration.ONE]
+                    "value": resources_eligible_for_deduplication.filter(
+                        arbitration__in=[Arbitration.ZERO, Arbitration.ONE]
                     ).count(),
                 },
             ],
         }
 
 
-class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+class InstructionCandidatesInformationSerializer(NonSingletonHelperMixin, CacheDashboardMixin, serializers.Serializer):
     """
     Information on candidates for instruction
     - Number of collections eligible for instruction
     - Number of resources eligible for instruction
       - of which Number of duplicates, triplicates, etc.
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
         """
-        Canditate resources for instruction :
+        Candidate resources for instruction:
         - have all their collections positioned (position = 0, 1, 2, 3 or 4)
         - is not in arbitration status
         - is not excluded (not ResourceStatus.EXCLUDED)
         i.e. resource.Status >= ResourceStatus.INSTRUCTION_BOUND
+        - AND belong to resources_eligible_for_deduplication (>1 collection)
 
-        Candidate collections for instruction :
+        Candidate collections for instruction:
         - belongs to a candidate resource for instruction
-        - are not excluded
+        - are not excluded (position != 0)
+        - AND belong to collections_eligible_for_deduplication
         """
-        candidate_resources_qs = Resource.objects.filter(
-            project=project,
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
+        collections_eligible_for_deduplication = self.collections_eligible_for_deduplication(project)
+
+        # Candidate resources: instruction_bound status + eligible for deduplication
+        resources_candidate_for_instruction = resources_eligible_for_deduplication.filter(
             status__gte=ResourceStatus.INSTRUCTION_BOUND,
         )
-        candidate_collections_qs = Collection.objects.filter(resource__in=candidate_resources_qs).exclude(position=0)
 
-        code_qs = candidate_collections_qs.values("resource__code").annotate(count=Count("id")).filter(count__gt=1)
+        # Candidate collections: not excluded + eligible for deduplication
+        collections_candidate_for_instruction = collections_eligible_for_deduplication.filter(
+            resource__in=resources_candidate_for_instruction
+        ).exclude(position=0)
+
+        # Group by resource code and count occurrences
+        code_qs = (
+            collections_candidate_for_instruction.values("resource__code")
+            .annotate(count=Count("id"))
+            .filter(count__gt=1)
+        )
 
         duplicates = code_qs.filter(count=2).count()
         triplicates = code_qs.filter(count=3).count()
         quadruplicates = code_qs.filter(count=4).count()
         other_multiples = code_qs.filter(count__gt=4).count()
 
-        total_candidate_resources = candidate_resources_qs.count()
+        total_resources_candidate_for_instruction = resources_candidate_for_instruction.count()
 
         def calculate_ratio(count, total):
             return round((count / total) * 100, 1) if total > 0 else 0.0
@@ -248,132 +302,168 @@ class InstructionCandidatesInformationSerializer(CacheDashboardMixin, serializer
                 {
                     "key": "collections_eligible_for_instruction",
                     "label": _("Number of collections eligible for instruction"),
-                    "value": candidate_collections_qs.count(),
+                    "value": collections_candidate_for_instruction.count(),
                 },
                 {
                     "key": "resources_eligible_for_instruction",
                     "label": _("Number of resources eligible for instruction"),
-                    "value": total_candidate_resources,
+                    "value": total_resources_candidate_for_instruction,
                 },
                 {
                     "key": "duplicates_count",
                     "label": _("- of which Number of duplicates"),
                     "value": duplicates,
-                    "ratio": calculate_ratio(duplicates, total_candidate_resources),
+                    "ratio": calculate_ratio(duplicates, total_resources_candidate_for_instruction),
                 },
                 {
                     "key": "triplicates_count",
                     "label": _("- of which Number of triplicates"),
                     "value": triplicates,
-                    "ratio": calculate_ratio(triplicates, total_candidate_resources),
+                    "ratio": calculate_ratio(triplicates, total_resources_candidate_for_instruction),
                 },
                 {
                     "key": "quadruplicates_count",
                     "label": _("- of which Number of quadruplicates"),
                     "value": quadruplicates,
-                    "ratio": calculate_ratio(quadruplicates, total_candidate_resources),
+                    "ratio": calculate_ratio(quadruplicates, total_resources_candidate_for_instruction),
                 },
                 {
                     "key": "other_multiples_count",
                     "label": _("- of which Other higher multiples"),
                     "value": other_multiples,
-                    "ratio": calculate_ratio(other_multiples, total_candidate_resources),
+                    "ratio": calculate_ratio(other_multiples, total_resources_candidate_for_instruction),
                 },
             ],
         }
 
 
-class InstructionsInformationSerializer(DirectComputeMixin, serializers.Serializer):
+class InstructionsInformationSerializer(NonSingletonHelperMixin, DirectComputeMixin, serializers.Serializer):
     """
     Number of resources for which instruction of related elements is in progress
     Number of resources for which instruction of unrelated elements is in progress
     Number of resources fully instructed (control performed)
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
+
         return {
             "title": _("Information about ongoing instructions"),
             "computations": [
                 {
                     "key": "resources_instruction_bound",
                     "label": _("Number of resources for which instruction of bound elements is in progress"),
-                    "value": Resource.objects.filter(project=project, status=ResourceStatus.INSTRUCTION_BOUND).count(),
+                    "value": resources_eligible_for_deduplication.filter(
+                        status=ResourceStatus.INSTRUCTION_BOUND
+                    ).count(),
                 },
                 {
                     "key": "resources_instruction_unbound",
                     "label": _("Number of resources for which instruction of unbound elements is in progress"),
-                    "value": Resource.objects.filter(
-                        project=project, status=ResourceStatus.INSTRUCTION_UNBOUND
+                    "value": resources_eligible_for_deduplication.filter(
+                        status=ResourceStatus.INSTRUCTION_UNBOUND
                     ).count(),
                 },
                 {
                     "key": "resources_instruction_completed",
                     "label": _("Number of resources fully instructed (control performed)"),
-                    "value": Resource.objects.filter(project=project, status=ResourceStatus.EDITION).count(),
+                    "value": resources_eligible_for_deduplication.filter(status=ResourceStatus.EDITION).count(),
                 },
             ],
         }
 
 
-class ControlsInformationSerializer(DirectComputeMixin, serializers.Serializer):
+class ControlsInformationSerializer(NonSingletonHelperMixin, DirectComputeMixin, serializers.Serializer):
+    """
+    Information about controls
+    (Singletons excluded from all counts)
+    """
+
     def compute_data(self, project):
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
+
         return {
             "title": _("Information about controls"),
             "computations": [
                 {
                     "key": "resources_control_bound",
                     "label": _("Number of resources for which bound elements are being controlled"),
-                    "value": Resource.objects.filter(project=project, status=ResourceStatus.CONTROL_BOUND).count(),
+                    "value": resources_eligible_for_deduplication.filter(status=ResourceStatus.CONTROL_BOUND).count(),
                 },
                 {
                     "key": "resources_control_unbound",
                     "label": _("Number of resources for which unbound elements are being controlled"),
-                    "value": Resource.objects.filter(project=project, status=ResourceStatus.CONTROL_UNBOUND).count(),
+                    "value": resources_eligible_for_deduplication.filter(status=ResourceStatus.CONTROL_UNBOUND).count(),
                 },
             ],
         }
 
 
-class AnomaliesInformationSerializer(DirectComputeMixin, serializers.Serializer):
+class AnomaliesInformationSerializer(NonSingletonHelperMixin, DirectComputeMixin, serializers.Serializer):
+    """
+    Information about anomalies
+    (Singletons excluded from all counts)
+    """
+
     def compute_data(self, project):
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
+
         return {
             "title": _("Information about anomalies"),
             "computations": [
                 {
                     "key": "anomalies_in_progress",
                     "label": _("Number of anomalies in progress"),
-                    "value": Anomaly.objects.filter(resource__project=project, fixed=False).count(),
+                    "value": Anomaly.objects.filter(
+                        resource__in=resources_eligible_for_deduplication, fixed=False
+                    ).count(),
                 }
             ],
         }
 
 
-class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Serializer):
+class AchievementsInformationSerializer(NonSingletonHelperMixin, CacheDashboardMixin, serializers.Serializer):
     """
-    Relative achievement (resources processed/number of resources eligible for instruction)
-     - processed resources = all resources eligible for instruction AND that have passed the final control
-    Absolute achievement (resources no longer to be processed/number of initial resources before positioning)
-    - resources no longer to be processed = processed resources + resources discarded by collection exclusion
+    Relative achievement (processed resources / candidate ressources for instruction)
+     - processed resources = resources eligible for deduplication AND eligible for instruction AND that have passed the final control (status EDITION)
+    Absolute achievement (processed + excluded resources / initial resources eligible for deduplication)
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
-        processed_resources = Resource.objects.filter(project=project, status=ResourceStatus.EDITION).count()
-        eligible_resources = Resource.objects.filter(project=project).exclude(status=ResourceStatus.EXCLUDED).count()
-        excluded_resources = Resource.objects.filter(project=project, status=ResourceStatus.EXCLUDED).count()
-        initial_resources = (
-            Resource.objects.filter(project=project)
-            .annotate(collection_count=Count("collections"))
-            .exclude(collection_count=1)
-            .count()
-        )
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
 
+        # Candidate resources for instruction: status >= INSTRUCTION_BOUND
+        resources_candidate_for_instruction = resources_eligible_for_deduplication.filter(
+            status__gte=ResourceStatus.INSTRUCTION_BOUND,
+        )
+        total_resources_candidate_for_instruction = resources_candidate_for_instruction.count()
+
+        # Processed resources: status = EDITION
+        processed_resources = resources_eligible_for_deduplication.filter(status=ResourceStatus.EDITION).count()
+
+        # Excluded resources
+        excluded_resources = resources_eligible_for_deduplication.filter(status=ResourceStatus.EXCLUDED).count()
+
+        # Initial resources eligible for deduplication
+        initial_resources_eligible_for_deduplication = self.count_resources_eligible_for_deduplication(project)
+
+        # Resources no longer to be processed
         resources_no_longer_to_be_processed = processed_resources + excluded_resources
 
+        # Relative completion: processed / candidates for instruction
         relative_completion = (
-            round((processed_resources / eligible_resources) * 100, 2) if eligible_resources > 0 else 0.0
+            round((processed_resources / total_resources_candidate_for_instruction) * 100, 2)
+            if total_resources_candidate_for_instruction > 0
+            else 0.0
         )
+
+        # Absolute completion: (processed + excluded) / initial
         absolute_completion = (
-            round((resources_no_longer_to_be_processed / initial_resources) * 100, 2) if initial_resources > 0 else 0.0
+            round((resources_no_longer_to_be_processed / initial_resources_eligible_for_deduplication) * 100, 2)
+            if initial_resources_eligible_for_deduplication > 0
+            else 0.0
         )
 
         return {
@@ -395,35 +485,32 @@ class AchievementsInformationSerializer(CacheDashboardMixin, serializers.Seriali
         }
 
 
-class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serializer):
+class RealizedPositioningChartSerializer(NonSingletonHelperMixin, CacheDashboardMixin, serializers.Serializer):
     """
     Prepares data for a bar chart showing positioning progress per library.
     Formatted for Chart.js (labels and data only).
 
-    Represents the number of positionings carried out as a percentage by library (excluding resources discarded by collection exclusion, or resources containing a unique collection).
-    For each library, 100% represents the number of collections (excluding resources discarded by collection exclusion).
+    Represents the number of positionings carried out as a percentage by library
+    (excluding resources discarded by collection exclusion and excluding resources containing a single collection).
+    For each library, 100% represents the number of collections eligible for deduplication.
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
         # Get all libraries involved in the project
         libraries = project.libraries.distinct()
+        collections_eligible_for_deduplication = self.collections_eligible_for_deduplication(project)
 
         labels = []
         realized_positionings_by_libraries_percentage = []
         errors = []
 
-        # Get resource codes that have more than one collection (exclude singletons)
-        all_collections = Collection.objects.filter(project=project)
-        code_qs = all_collections.values("resource__code").annotate(count=Count("id"))
-        non_unique_codes = code_qs.filter(count__gt=1).values_list("resource__code", flat=True)
-
         for library in libraries:
             # Denominator: Total collections for this library in this project,
-            # excluding collections that are part of an already excluded resource
-            # and excluding collections that are unique in their resource.
-            collections_in_library = Collection.objects.filter(
-                project=project, library=library, resource__code__in=non_unique_codes
-            ).exclude(resource__status=ResourceStatus.EXCLUDED)
+            # already filtered to exclude singletons and excluded resources
+            collections_in_library = collections_eligible_for_deduplication.filter(library=library).exclude(
+                resource__status=ResourceStatus.EXCLUDED
+            )
 
             denom = collections_in_library.count()
             if denom == 0:
@@ -431,11 +518,8 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
                 continue
 
             # Numerator: Collections that are effectively positioned (position >= 0)
-            # The .exclude() on resource status is technically redundant if a positioned
-            # collection cannot belong to an excluded resource, but it's safer.
-            positioned_collections_in_library = (
-                collections_in_library.filter(position__gte=0).exclude(resource__status=ResourceStatus.EXCLUDED).count()
-            )
+            positioned_collections_in_library = collections_in_library.filter(position__gte=0).count()
+
             percentage = round((positioned_collections_in_library / denom) * 100, 2)
 
             labels.append(library.alias)
@@ -456,18 +540,19 @@ class RealizedPositioningChartSerializer(CacheDashboardMixin, serializers.Serial
         return result
 
 
-class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serializer):
+class ResourcesToInstructChartSerializer(NonSingletonHelperMixin, CacheDashboardMixin, serializers.Serializer):
     """
     Prepares data for a stacked bar chart showing resources to be instructed
     (bound vs unbound) per library. Formatted for Chart.js.
-    The count is based on resources filtered with the same constraints as ResourceFilter.
+    The count is based on resources eligible for deduplication and filtered with the same constraints as ResourceFilter.
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
         libraries = project.libraries.distinct().order_by("name")
         labels = [lib.alias for lib in libraries]
 
-        base_queryset = Resource.objects.filter(project=project)
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
 
         bound_counts = {}
         unbound_counts = {}
@@ -487,8 +572,8 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
                 instruction_turns__unbound_copies__turns__0__library=lib_id_str,
             )
 
-            bound_counts[lib_alias] = base_queryset.filter(bound_q).distinct().count()
-            unbound_counts[lib_alias] = base_queryset.filter(unbound_q).distinct().count()
+            bound_counts[lib_alias] = resources_eligible_for_deduplication.filter(bound_q).distinct().count()
+            unbound_counts[lib_alias] = resources_eligible_for_deduplication.filter(unbound_q).distinct().count()
 
         return {
             "title": _("Number of resources to be instructed"),
@@ -506,28 +591,37 @@ class ResourcesToInstructChartSerializer(CacheDashboardMixin, serializers.Serial
         }
 
 
-class CollectionOccurrencesChartSerializer(CacheDashboardMixin, serializers.Serializer):
+class CollectionOccurrencesChartSerializer(NonSingletonHelperMixin, CacheDashboardMixin, serializers.Serializer):
     """
     Prepares data for a bar chart showing the percentage distribution of resource
     multiplicities (doubles, triples, etc.) among instruction candidates.
+    (Singletons excluded from all counts)
     """
 
     def compute_data(self, project):
-        # get candidates ressources
-        candidate_resources = Resource.objects.filter(
-            project=project,
+        resources_eligible_for_deduplication = self.resources_eligible_for_deduplication(project)
+        collections_eligible_for_deduplication = self.collections_eligible_for_deduplication(project)
+
+        # Get candidate resources for instruction (eligible for deduplication + instruction status)
+        resources_candidate_for_instruction = resources_eligible_for_deduplication.filter(
             status__gte=ResourceStatus.INSTRUCTION_BOUND,
         )
 
-        total_candidate_resources = candidate_resources.count()
+        total_candidate_resources = resources_candidate_for_instruction.count()
 
-        # get candidate collections
-        candidate_collections = Collection.objects.filter(resource__in=candidate_resources).exclude(position=0)
+        # Get candidate collections (eligible for deduplication + in candidate resources + not excluded)
+        collections_candidate_for_instruction = collections_eligible_for_deduplication.filter(
+            resource__in=resources_candidate_for_instruction
+        ).exclude(position=0)
 
-        # group by resource code and count occurrences
-        code_qs = candidate_collections.values("resource__code").annotate(count=Count("id")).filter(count__gt=1)
+        # Group by resource code and count occurrences
+        code_qs = (
+            collections_candidate_for_instruction.values("resource__code")
+            .annotate(count=Count("id"))
+            .filter(count__gt=1)
+        )
 
-        # count occurrences
+        # Count occurrences
         doubles = code_qs.filter(count=2).count()
         triples = code_qs.filter(count=3).count()
         quadruples = code_qs.filter(count=4).count()
