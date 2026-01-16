@@ -97,7 +97,7 @@ include:
       else
       touch "${CI_PROJECT_DIR}/docker/app/sentry-release.env";
       fi
-    - chmod 0644 "${CI_PROJECT_DIR}/docker/sentry-release.env"
+    - chmod 0644 "${CI_PROJECT_DIR}/docker/app/sentry-release.env"
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
     - echo "${CI_PROJECT_DIR} ${CI_PROJECT_DIR_PATH} ${CI_REGISTRY} ${CI_REGISTRY_USER} ${DESTINATION} ${EXTRA_ARGS}"
     - >-
