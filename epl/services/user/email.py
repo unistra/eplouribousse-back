@@ -399,14 +399,15 @@ def prepare_anomaly_resolved_notification_email(
     )
 
 
-def send_resultant_report_available_notification_email(
+def prepare_resultant_report_available_email(
     email: str,
     request: Request,
     resource: Resource,
     library_code: str,
-) -> None:
+) -> tuple[str, str, str, list[str]]:
     """
-    Notifies an instructor that the resultant sheet is available.
+    Prepares per-recipient resultant report email for send_mass_mail.
+    Returns (subject, message, from_email, [recipient]).
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -415,7 +416,7 @@ def send_resultant_report_available_notification_email(
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('resultant')}"
 
-    email_content = render_to_string(
+    body = render_to_string(
         "emails/notify_resultant_report_available.txt",
         {
             "resource_title": unescape(resource.title),
@@ -423,10 +424,4 @@ def send_resultant_report_available_notification_email(
         },
     )
 
-    send_mail(
-        subject=str(subject),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, body, settings.DEFAULT_FROM_EMAIL, [email]

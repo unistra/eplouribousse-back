@@ -16,11 +16,11 @@ from epl.services.user.email import (
     prepare_collection_positioned_email,
     prepare_control_notification_email,
     prepare_instruction_turn_email,
+    prepare_resultant_report_available_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
     send_project_launched_email,
-    send_resultant_report_available_notification_email,
 )
 
 
@@ -533,12 +533,10 @@ def notify_resultant_report_available(resource: Resource, request) -> None:
     """
     project = resource.project
 
-    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.EDITION.value, True) is False:
         return
 
-    # Get instructors concerned by the resource instruction (excluding those with excluded collections)
     instructors_to_notify = (
         UserRole.objects.filter(
             project=project,
@@ -550,14 +548,17 @@ def notify_resultant_report_available(resource: Resource, request) -> None:
         .distinct()
     )
 
-    if not instructors_to_notify:
-        return
-
+    messages = []
     for instructor in instructors_to_notify:
         if should_send_alert(instructor.user, project, AlertType.EDITION):
-            send_resultant_report_available_notification_email(
-                email=instructor.user.email,
-                request=request,
-                resource=resource,
-                library_code=instructor.library.code,
+            messages.append(
+                prepare_resultant_report_available_email(
+                    email=instructor.user.email,
+                    request=request,
+                    resource=resource,
+                    library_code=instructor.library.code,
+                )
             )
+
+    if messages:
+        send_mass_mail(messages, fail_silently=False)
