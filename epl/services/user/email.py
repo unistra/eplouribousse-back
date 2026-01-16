@@ -336,18 +336,21 @@ def send_control_notification_email(
     )
 
 
-def send_anomaly_notification_email(
+def prepare_anomaly_notification_email(
     email: str,
     request: Request,
     resource: Resource,
     reporter_user: User,
-) -> None:
+) -> tuple[str, str, str, list[str]]:
+    """
+    Prepares anomaly notification email data for send_mass_mail.
+    Returns a tuple of (subject, message, from_email, [recipient_email])
+    """
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
     modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
-    # Get the request user role label in the project and verify authorization
     reporter_role_display = None
     if reporter_user.is_controller(project):
         reporter_role_display = Role.CONTROLLER.label
@@ -367,13 +370,7 @@ def send_anomaly_notification_email(
         },
     )
 
-    send_mail(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
 def send_anomaly_resolved_notification_email(

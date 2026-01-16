@@ -1,13 +1,15 @@
 from collections import defaultdict
 from typing import Any
 
+from django.core.mail import send_mass_mail
+
 from epl.apps.project.models import Library, Project, Resource, Role, UserRole
 from epl.apps.project.models.choices import AlertType
 from epl.apps.project.models.collection import Arbitration, Collection
 from epl.apps.user.models import User
 from epl.apps.user.views import _get_invite_signer
 from epl.services.user.email import (
-    send_anomaly_notification_email,
+    prepare_anomaly_notification_email,
     send_anomaly_resolved_notification_email,
     send_arbitration_notification_email,
     send_collection_positioned_email,
@@ -397,9 +399,15 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     if should_send_alert(reporter_user, project, AlertType.INSTRUCTION):
         recipients.add(reporter_user.email)
 
-    # Send emails to all recipients
-    for email in recipients:
-        send_anomaly_notification_email(email=email, request=request, resource=resource, reporter_user=reporter_user)
+    # Prepare all emails and send in one SMTP connection
+    if recipients:
+        messages = [
+            prepare_anomaly_notification_email(
+                email=email, request=request, resource=resource, reporter_user=reporter_user
+            )
+            for email in recipients
+        ]
+        send_mass_mail(messages)
 
 
 def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
