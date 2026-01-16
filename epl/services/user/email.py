@@ -240,17 +240,15 @@ def prepare_arbitration_notification_email(
     return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
-def send_collection_positioned_email(
+def prepare_collection_positioned_email(
     email: str,
     request: Request,
     resource: Resource,
-    library_code,
+    library_code: str,
     positioned_collection,
-) -> None:
+) -> tuple[str, str, str, list[str]]:
     """
-    Notifies instructors that have not yet positionned their collections for a resource,
-    that another collection for the same resource has been positioned.
-    This message is sent only if at least one collection has not been positioned yet.
+    Prépare les données pour send_mass_mail : (subject, message, from_email, [recipient]).
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -267,13 +265,7 @@ def send_collection_positioned_email(
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('positioning')}"
 
-    send_mail(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
 def prepare_instruction_turn_email(

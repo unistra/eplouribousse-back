@@ -13,9 +13,9 @@ from epl.services.user.email import (
     prepare_anomaly_notification_email,
     prepare_anomaly_resolved_notification_email,
     prepare_arbitration_notification_email,
+    prepare_collection_positioned_email,
     prepare_control_notification_email,
     prepare_instruction_turn_email,
-    send_collection_positioned_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
@@ -265,7 +265,6 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
     - Any instructor who has already positioned their collection for this resource.
     """
     project = resource.project
-    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.POSITIONING.value, True) is False:
         return
@@ -282,15 +281,21 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
         .distinct()
     )
 
+    messages = []
     for instructor_role in instructors_to_notify:
         if should_send_alert(instructor_role.user, project, AlertType.POSITIONING):
-            send_collection_positioned_email(
-                email=instructor_role.user.email,
-                request=request,
-                resource=resource,
-                library_code=instructor_role.library.code,
-                positioned_collection=positioned_collection,
+            messages.append(
+                prepare_collection_positioned_email(
+                    email=instructor_role.user.email,
+                    request=request,
+                    resource=resource,
+                    library_code=instructor_role.library.code,
+                    positioned_collection=positioned_collection,
+                )
             )
+
+    if messages:
+        send_mass_mail(messages, fail_silently=False)
 
 
 def notify_instructors_of_instruction_turn(resource: Resource, library: Library, request):
