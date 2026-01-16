@@ -276,14 +276,14 @@ def send_collection_positioned_email(
     )
 
 
-def send_instruction_turn_email(
+def prepare_instruction_turn_email(
     email: str,
     request: Request,
     resource: Resource,
     library_code: str,
-) -> None:
+) -> tuple[str, str, str, list[str]]:
     """
-    Notifies an instructor that it's their turn to instruct their collection.
+    Prépare les données pour send_mass_mail : (subject, message, from_email, [recipient])
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -300,13 +300,7 @@ def send_instruction_turn_email(
         },
     )
 
-    send_mail(
-        subject=str(subject),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
 def prepare_control_notification_email(

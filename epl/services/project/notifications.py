@@ -14,8 +14,8 @@ from epl.services.user.email import (
     prepare_anomaly_resolved_notification_email,
     prepare_arbitration_notification_email,
     prepare_control_notification_email,
+    prepare_instruction_turn_email,
     send_collection_positioned_email,
-    send_instruction_turn_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
     send_invite_to_epl_email,
@@ -304,21 +304,26 @@ def notify_instructors_of_instruction_turn(resource: Resource, library: Library,
     if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
-    # Find the instructors of the collection that has to be instructed.
     instructors_to_notify = (
         UserRole.objects.filter(project=project, role=Role.INSTRUCTOR, library=library)
         .select_related("user")
         .distinct()
     )
 
-    for instructor_to_notify in instructors_to_notify:
-        if should_send_alert(instructor_to_notify.user, project, AlertType.INSTRUCTION):
-            send_instruction_turn_email(
-                email=instructor_to_notify.user.email,
-                request=request,
-                resource=resource,
-                library_code=library.code,
+    messages = []
+    for instructor in instructors_to_notify:
+        if should_send_alert(instructor.user, project, AlertType.INSTRUCTION):
+            messages.append(
+                prepare_instruction_turn_email(
+                    email=instructor.user.email,
+                    request=request,
+                    resource=resource,
+                    library_code=library.code,
+                )
             )
+
+    if messages:
+        send_mass_mail(messages, fail_silently=False)
 
 
 def notify_controllers_of_control(resource, request, cycle):
