@@ -22,7 +22,7 @@ services:
 
 before_script:
   - if [ -z "$CI_COMMIT_TAG" ]; then
-    export DOCKER_IMAGE_TAG=$(git describe --long --always);
+    export DOCKER_IMAGE_TAG="$CI_COMMIT_SHORT_SHA";
     else
     export DOCKER_IMAGE_TAG="$CI_COMMIT_TAG";
     fi
