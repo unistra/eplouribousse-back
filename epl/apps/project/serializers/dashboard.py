@@ -59,45 +59,67 @@ class CacheDashboardMixin(DirectComputeMixin):
 
 class NonSingletonHelperMixin:
     """
-    Sépare les ressources et collections éligibles au dédoublonnage
-    (>1 collection par ressource) des non-éligibles (singletons).
+    Separates resources and collections eligible for deduplication
+    (resources with more than one collection per resource, collections not alone in their resource) from those that are not.
+    Caches eligible/ineligible resources and collections in Redis for 2 minutes
     """
 
+    CACHE_TIMEOUT = 120
+
+    def _get_cache_key(self, project, data_type):
+        # section = name of the current serializer, consistent with CacheDashboardMixin
+        section_name = self.__class__.__name__.replace("Serializer", "").lower()
+        tenant_id = self.context.get("request").tenant.id if self.context.get("request") else "no-tenant"
+        key_name = f"dashboard_{tenant_id}:{project.id}:{section_name}:{data_type}"
+        return md5(key_name.encode("utf-8"), usedforsecurity=False).hexdigest()
+
     def resources_eligible_for_deduplication(self, project):
-        # Ressources avec plus d'une collection
-        if not hasattr(self, "_resources_eligible_for_deduplication"):
-            self._resources_eligible_for_deduplication = (
-                Resource.objects.filter(project=project)
-                .annotate(collections_count=Count("collections", distinct=True))
-                .filter(collections_count__gt=1)
-            )
-        return self._resources_eligible_for_deduplication
+        cache_key = self._get_cache_key(project, "resources_eligible")
+        cached_ids = cache.get(cache_key)
+        if cached_ids is not None:
+            return Resource.objects.filter(id__in=cached_ids)
+
+        qs = (
+            Resource.objects.filter(project=project)
+            .annotate(collections_count=Count("collections", distinct=True))
+            .filter(collections_count__gt=1)
+        )
+        cache.set(cache_key, list(qs.values_list("id", flat=True)), timeout=self.CACHE_TIMEOUT)
+        return qs
 
     def collections_eligible_for_deduplication(self, project):
-        # Collections rattachées aux ressources éligibles au dédoublonnage
-        if not hasattr(self, "_collections_eligible_for_deduplication"):
-            self._collections_eligible_for_deduplication = Collection.objects.filter(
-                resource__in=self.resources_eligible_for_deduplication(project)
-            )
-        return self._collections_eligible_for_deduplication
+        cache_key = self._get_cache_key(project, "collections_eligible")
+        cached_ids = cache.get(cache_key)
+        if cached_ids is not None:
+            return Collection.objects.filter(id__in=cached_ids)
+
+        qs = Collection.objects.filter(resource__in=self.resources_eligible_for_deduplication(project))
+        cache.set(cache_key, list(qs.values_list("id", flat=True)), timeout=self.CACHE_TIMEOUT)
+        return qs
 
     def resources_ineligible_for_deduplication(self, project):
-        # Ressources singleton (une seule collection)
-        if not hasattr(self, "_resources_ineligible_for_deduplication"):
-            self._resources_ineligible_for_deduplication = (
-                Resource.objects.filter(project=project)
-                .annotate(collections_count=Count("collections", distinct=True))
-                .filter(collections_count=1)
-            )
-        return self._resources_ineligible_for_deduplication
+        cache_key = self._get_cache_key(project, "resources_ineligible")
+        cached_ids = cache.get(cache_key)
+        if cached_ids is not None:
+            return Resource.objects.filter(id__in=cached_ids)
+
+        qs = (
+            Resource.objects.filter(project=project)
+            .annotate(collections_count=Count("collections", distinct=True))
+            .filter(collections_count=1)
+        )
+        cache.set(cache_key, list(qs.values_list("id", flat=True)), timeout=self.CACHE_TIMEOUT)
+        return qs
 
     def collections_ineligible_for_deduplication(self, project):
-        # Collections seules dans leur ressource
-        if not hasattr(self, "_collections_ineligible_for_deduplication"):
-            self._collections_ineligible_for_deduplication = Collection.objects.filter(
-                resource__in=self.resources_ineligible_for_deduplication(project)
-            )
-        return self._collections_ineligible_for_deduplication
+        cache_key = self._get_cache_key(project, "collections_ineligible")
+        cached_ids = cache.get(cache_key)
+        if cached_ids is not None:
+            return Collection.objects.filter(id__in=cached_ids)
+
+        qs = Collection.objects.filter(resource__in=self.resources_ineligible_for_deduplication(project))
+        cache.set(cache_key, list(qs.values_list("id", flat=True)), timeout=self.CACHE_TIMEOUT)
+        return qs
 
     def count_resources_eligible_for_deduplication(self, project):
         return self.resources_eligible_for_deduplication(project).count()
