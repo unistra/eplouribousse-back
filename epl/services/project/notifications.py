@@ -12,8 +12,8 @@ from epl.apps.user.views import _get_invite_signer
 from epl.services.user.email import (
     prepare_anomaly_notification_email,
     prepare_anomaly_resolved_notification_email,
+    prepare_arbitration_notification_email,
     prepare_control_notification_email,
-    send_arbitration_notification_email,
     send_collection_positioned_email,
     send_instruction_turn_email,
     send_invite_project_admins_to_review_email,
@@ -219,7 +219,6 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     Notifies instructors concerned by an arbitration case (type 0 or 1).
     """
     project = resource.project
-    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.ARBITRATION.value, True) is False:
         return
@@ -230,29 +229,32 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     match arbitration_type:
         case Arbitration.ONE:
             library_ids_to_notify = resource.collections.filter(position=1).values_list("library_id", flat=True)
-
         case Arbitration.ZERO:
-            # Every resource instructor has to be notified, except those with position (excluded collection)
             library_ids_to_notify = resource.collections.filter(position__gt=0).values_list("library_id", flat=True)
-
         case _:
             return
 
     instructors_to_notify = (
         UserRole.objects.filter(project=project, role=Role.INSTRUCTOR, library_id__in=library_ids_to_notify)
         .select_related("user", "library")
-        .distinct()  # prevent sending multiple emails to the same user if the code eventually evolves.
+        .distinct()
     )
 
+    messages = []
     for instructor in instructors_to_notify:
         if should_send_alert(instructor.user, project, AlertType.ARBITRATION):
-            send_arbitration_notification_email(
-                email=instructor.user.email,
-                request=request,
-                resource=resource,
-                library_code=instructor.library.code,
-                arbitration_type=arbitration_type,
+            messages.append(
+                prepare_arbitration_notification_email(
+                    email=instructor.user.email,
+                    request=request,
+                    resource=resource,
+                    library_code=instructor.library.code,
+                    arbitration_type=arbitration_type,
+                )
             )
+
+    if messages:
+        send_mass_mail(messages, fail_silently=False)
 
 
 def notify_other_instructors_of_positioning(resource: Resource, request, positioned_collection) -> None:

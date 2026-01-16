@@ -207,15 +207,21 @@ def send_project_launched_email(
     )
 
 
-def send_arbitration_notification_email(
-    email: str, request: Request, resource: Resource, library_code: str, arbitration_type: Arbitration
-) -> None:
+def prepare_arbitration_notification_email(
+    email: str,
+    request: Request,
+    resource: Resource,
+    library_code: str,
+    arbitration_type: Arbitration,
+) -> tuple[str, str, str, list[str]]:
+    """
+    Prépare les données pour send_mass_mail (subject, message, from_email, [recipient]).
+    """
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
     modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
-    # Choosing the template according to the arbitration type
     template_name = f"emails/notify_arbitration_type{arbitration_type.value}.txt"
 
     email_content = render_to_string(
@@ -226,15 +232,12 @@ def send_arbitration_notification_email(
         },
     )
 
-    subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('arbitration')} {arbitration_type.value}"
-
-    send_mail(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
+    subject = (
+        f"eplouribousse | {tenant.name} | {project.name} | {library_code} | "
+        f"{resource.code} | {_('arbitration')} {arbitration_type.value}"
     )
+
+    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
 def send_collection_positioned_email(
