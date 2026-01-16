@@ -15,6 +15,10 @@ variables:
   GIT_STRATEGY: fetch  # Tells git to fetch changes
   PYTHON_VERSION: "3.12"
   CONTAINER_BASE_IMAGE_NAME: $CI_REGISTRY/dnum/eplouribousse-backend
+  SENTRY_URL: "https://sentry.app.unistra.fr"
+  SENTRY_ORG: "sentry"
+  SENTRY_PROJECT: "eplouribousse-back"
+  SENTRY_REPO: "di / eplouribousse / eplback"
 
 services:
   - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:12
@@ -65,10 +69,6 @@ sentry-release:
   image: getsentry/sentry-cli:latest
   variables:
     SENTRY_AUTH_TOKEN: $SENTRY_AUTH_TOKEN
-    SENTRY_URL: "https://sentry.app.unistra.fr"
-    SENTRY_ORG: "sentry"
-    SENTRY_PROJECT: "eplouribousse-back"
-    SENTRY_REPO: "di / eplouribousse / eplback"
   script:
     - export SENTRY_RELEASE="epl-back@$DOCKER_IMAGE_TAG"
     - sentry-cli releases new -p "$SENTRY_PROJECT" "$SENTRY_RELEASE"
@@ -92,6 +92,12 @@ include:
     entrypoint: [ "" ]
   script:
     - mkdir -p /kaniko/.docker
+    - if [ ${CI_COMMIT_TAG} ]; then
+      echo "SENTRY_RELEASE_VERSION=epl-back@${DOCKER_IMAGE_TAG}" > "${CI_PROJECT_DIR}/docker/app/sentry-release.env";
+      else
+      touch "${CI_PROJECT_DIR}/docker/app/sentry-release.env";
+      fi
+    - chmod 0644 "${CI_PROJECT_DIR}/docker/sentry-release.env"
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
     - echo "${CI_PROJECT_DIR} ${CI_PROJECT_DIR_PATH} ${CI_REGISTRY} ${CI_REGISTRY_USER} ${DESTINATION} ${EXTRA_ARGS}"
     - >-

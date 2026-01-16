@@ -60,6 +60,9 @@ RUN python manage.py collectstatic --settings=epl.settings.docker --noinput && \
 RUN chgrp -R 0 /app && \
     chmod -R g+rwX /app
 
+# This file is built in the CI
+COPY ./docker/app/sentry-release.env /app/sentry-release.env
+
 ENTRYPOINT ["sh", "/app/docker-prestart.sh"]
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "3", "--access-logfile", "-", "--error-logfile", "-", "epl.wsgi:application"]
