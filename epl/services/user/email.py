@@ -306,19 +306,23 @@ def send_instruction_turn_email(
     )
 
 
-def send_control_notification_email(
-    email: str,
+def prepare_control_notification_email(
     request,
     resource,
     cycle: str,  # "bound" or "unbound"
-):
+) -> tuple[str, str]:
+    """
+    Prepares control notification email content.
+    Returns a tuple of (subject, body)
+    """
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
     modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
+
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('control')}"
 
-    email_content = render_to_string(
+    body = render_to_string(
         "emails/notify_control.txt",
         {
             "cycle": cycle,
@@ -327,13 +331,7 @@ def send_control_notification_email(
         },
     )
 
-    send_mail(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, body
 
 
 def prepare_anomaly_notification_email(
@@ -373,26 +371,18 @@ def prepare_anomaly_notification_email(
     return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
-def send_anomaly_resolved_notification_email(
+def prepare_anomaly_resolved_notification_email(
     to_emails: list[str],
     cc_emails: list[str],
-    request: Request,
-    resource: Resource,
+    request,
+    resource,
     library_code: str,
-    admin_user: User,
-) -> None:
+    admin_user,
+) -> EmailMessage:
     """
-    Sends an email notification when anomalies are resolved and instruction turn is assigned.
-
-    Args:
-        to_emails: List of primary recipients (instructors with turn + project admins)
-        cc_emails: List of CC recipients (other instructors concerned)
-        request: HTTP request object
-        resource: The resource for which anomalies were resolved
-        library_code: Code of the library that got the instruction turn
-        admin_user: The administrator who resolved the anomaly
+    Prepares anomaly resolved notification email with TO and CC recipients.
+    Returns an EmailMessage ready to send.
     """
-
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
@@ -411,16 +401,13 @@ def send_anomaly_resolved_notification_email(
         },
     )
 
-    # Create EmailMessage with TO and CC recipients
-    email_message = EmailMessage(
+    return EmailMessage(
         subject=subject,
         body=email_content,
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=to_emails,
         cc=cc_emails,
     )
-
-    email_message.send(fail_silently=False)
 
 
 def send_resultant_report_available_notification_email(

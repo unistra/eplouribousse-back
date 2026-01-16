@@ -1,7 +1,8 @@
 from collections import defaultdict
 from typing import Any
 
-from django.core.mail import send_mass_mail
+from django.conf import settings
+from django.core.mail import EmailMessage, send_mass_mail
 
 from epl.apps.project.models import Library, Project, Resource, Role, UserRole
 from epl.apps.project.models.choices import AlertType
@@ -10,10 +11,10 @@ from epl.apps.user.models import User
 from epl.apps.user.views import _get_invite_signer
 from epl.services.user.email import (
     prepare_anomaly_notification_email,
-    send_anomaly_resolved_notification_email,
+    prepare_anomaly_resolved_notification_email,
+    prepare_control_notification_email,
     send_arbitration_notification_email,
     send_collection_positioned_email,
-    send_control_notification_email,
     send_instruction_turn_email,
     send_invite_project_admins_to_review_email,
     send_invite_project_managers_to_launch_email,
@@ -323,20 +324,34 @@ def notify_controllers_of_control(resource, request, cycle):
     Notifies controllers (role CONTROLLER) at the end of the instruction cycle.
     """
     project = resource.project
+
     # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.CONTROL.value, True) is False:
         return
+
     controllers = UserRole.objects.filter(project=project, role=Role.CONTROLLER).select_related("user").distinct()
 
+    recipients = set()
     for controller in controllers:
         if should_send_alert(controller.user, project, AlertType.CONTROL):
-            send_control_notification_email(
-                email=controller.user.email,
-                request=request,
-                resource=resource,
-                cycle=cycle,
-            )
+            recipients.add(controller.user.email)
+
+    # Send one email with all recipients in CC
+    if recipients:
+        subject, body = prepare_control_notification_email(
+            request=request,
+            resource=resource,
+            cycle=cycle,
+        )
+
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            cc=list(recipients),
+        )
+        email.send(fail_silently=False)
 
 
 def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
@@ -489,7 +504,7 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
     library_codes_str = ", ".join(library_codes_with_turn) if library_codes_with_turn else "N/A"
 
     if to_recipients:  # Only send if there are TO recipients
-        send_anomaly_resolved_notification_email(
+        prepare_anomaly_resolved_notification_email(
             to_emails=list(to_recipients),
             cc_emails=list(cc_recipients),
             request=request,
