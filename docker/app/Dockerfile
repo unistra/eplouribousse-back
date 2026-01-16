@@ -40,9 +40,19 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy xmlsec1 and its dependencies
 COPY --from=builder /usr/bin/xmlsec1 /usr/bin/xmlsec1
 RUN ldd /usr/bin/xmlsec1 2>/dev/null | grep "=> /" | awk '{print $3}' \
-    | xargs -I '{}' sh -c 'mkdir -p $(dirname {}) && cp {} {}' 2>/dev/null || true \
+    | xargs -I '{}' sh -c 'mkdir -p $(dirname {}) && cp {} {}' 2>/dev/null || true
+
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libxslt.so.1* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libexslt.so.0* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libxml2.so.2* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libcrypto.so.3* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libssl.so.3* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/liblzma.so.5* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libicuuc.so.72* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libicudata.so.72* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libstdc++.so.6* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /lib/x86_64-linux-gnu/libgcc_s.so.1* /lib/x86_64-linux-gnu/
+RUN ldconfig
 
 WORKDIR /app
 
