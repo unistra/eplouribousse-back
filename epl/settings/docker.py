@@ -111,7 +111,6 @@ if SENTRY_DSN := os.environ.get("SENTRY_DSN"):
         "environment": sentry_environment,
         "traces_sample_rate": 1.0,
         "send_default_pii": True,
-        "integrations": [DjangoIntegration()],
     }
     if sentry_release:
         config["release"] = sentry_release
