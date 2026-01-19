@@ -3,6 +3,6 @@
 {% blocktrans with resource_title=resource_title|safe %}The resulting collection for the resource '{{ resource_title }}' is now available with details of your collection's contributions :{% endblocktrans %}
 {{ modal_url }}
 
----
+---{{ " " }}
 {% trans "This is an automated message, please do not reply." %}
 Eplouribousse

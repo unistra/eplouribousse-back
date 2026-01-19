@@ -9,6 +9,6 @@ The time has come for the end-of-cycle check of the unbound elements for the '{{
 {% endblocktrans %}
 {% endif %}
 
----
+---{{ " " }}
 {% trans "This is an automated message, please do not reply." %}
 Eplouribousse

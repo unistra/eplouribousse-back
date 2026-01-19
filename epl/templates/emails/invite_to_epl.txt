@@ -13,7 +13,7 @@
 
 {% trans "This invitation will expire in 7 days" %}.
 
----
+---{{ " " }}
 
 {% trans "This is an automated message, please do not reply" %}.
 Eplouribousse

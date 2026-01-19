@@ -3,7 +3,7 @@
 {% blocktranslate with resource_title=resource_title|safe %}The repositioning of your collection for the resource '{{ resource_title }}' may resolve a type 1 arbitration case:{% endblocktranslate %}
 {{ modal_url }}
 
----
+---{{ " " }}
 
 {% trans "This is an automated message, please do not reply" %}.
 Eplouribousse
