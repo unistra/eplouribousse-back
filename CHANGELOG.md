@@ -4,6 +4,7 @@
 
 - 🔧 Refactor Sentry config
 - 📊 Exclude single collections and single collection resources from all dashboard metrics via a shared helper/mixin
+- 📧 Improve email notifications performances by opening single SMTP connections per email batch
 
 ## 1.0.2 - 07-01-2026
 
