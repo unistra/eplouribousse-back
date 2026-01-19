@@ -9,7 +9,7 @@ from epl.settings.base import SITE_ROOT
 SAML_CONFIG = {
     "xmlsec_binary": "/usr/bin/xmlsec1",
     # your entity id, usually your subdomain plus the url to the metadata view
-    "entityid": "https://{{ SITE_DOMAIN }}/saml2/metadata/",
+    "entityid": "https://{{ ENV }}.eplouribousse.fr/saml2/metadata/",
     "allow_unknown_attributes": True,
     "service": {
         "sp": {
