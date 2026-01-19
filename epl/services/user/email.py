@@ -215,7 +215,7 @@ def prepare_arbitration_notification_email(
     arbitration_type: Arbitration,
 ) -> tuple[str, str, str, list[str]]:
     """
-    Prépare les données pour send_mass_mail (subject, message, from_email, [recipient]).
+    Prepares datas for send_mass_mail (subject, message, from_email, [recipient]).
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -248,7 +248,10 @@ def prepare_collection_positioned_email(
     positioned_collection,
 ) -> tuple[str, str, str, list[str]]:
     """
-    Prépare les données pour send_mass_mail : (subject, message, from_email, [recipient]).
+    Prepares datas for send_mass_mail : (subject, message, from_email, [recipient]).
+    Notifies instructors that have not yet positionned their collections for a resource,
+    that another collection for the same resource has been positioned.
+    This message is sent only if at least one collection has not been positioned yet.
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -275,7 +278,8 @@ def prepare_instruction_turn_email(
     library_code: str,
 ) -> tuple[str, str, str, list[str]]:
     """
-    Prépare les données pour send_mass_mail : (subject, message, from_email, [recipient])
+    Notifies an instructor that it's their turn to instruct their collection.
+    Prepares datas for send_mass_mail : (subject, message, from_email, [recipient]).
     """
     front_domain = get_front_domain(request)
     project = resource.project

@@ -219,6 +219,7 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     Notifies instructors concerned by an arbitration case (type 0 or 1).
     """
     project = resource.project
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.ARBITRATION.value, True) is False:
         return
@@ -237,7 +238,7 @@ def notify_instructors_of_arbitration(resource: Resource, request):
     instructors_to_notify = (
         UserRole.objects.filter(project=project, role=Role.INSTRUCTOR, library_id__in=library_ids_to_notify)
         .select_related("user", "library")
-        .distinct()
+        .distinct()  # prevent sending multiple emails to the same user if the code eventually evolves.
     )
 
     messages = []
@@ -265,6 +266,7 @@ def notify_other_instructors_of_positioning(resource: Resource, request, positio
     - Any instructor who has already positioned their collection for this resource.
     """
     project = resource.project
+    # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.POSITIONING.value, True) is False:
         return
@@ -336,7 +338,6 @@ def notify_controllers_of_control(resource, request, cycle):
     Notifies controllers (role CONTROLLER) at the end of the instruction cycle.
     """
     project = resource.project
-
     # Avoid unnecessary queries if notifications are already disabled at the project level.
     project_alerts = project.settings.get("alerts", {})
     if project_alerts.get(AlertType.CONTROL.value, True) is False:
@@ -349,7 +350,6 @@ def notify_controllers_of_control(resource, request, cycle):
         if should_send_alert(controller.user, project, AlertType.CONTROL):
             recipients.add(controller.user.email)
 
-    # Send one email with all recipients in CC
     if recipients:
         subject, body = prepare_control_notification_email(
             request=request,
@@ -361,7 +361,7 @@ def notify_controllers_of_control(resource, request, cycle):
             subject=subject,
             body=body,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            cc=list(recipients),
+            to=list(recipients),
         )
         email.send(fail_silently=False)
 
@@ -515,8 +515,8 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
     # Send email with TO and CC
     library_codes_str = ", ".join(library_codes_with_turn) if library_codes_with_turn else "N/A"
 
-    if to_recipients:  # Only send if there are TO recipients
-        prepare_anomaly_resolved_notification_email(
+    if to_recipients:  # Send only if there are TO recipients
+        email_message = prepare_anomaly_resolved_notification_email(
             to_emails=list(to_recipients),
             cc_emails=list(cc_recipients),
             request=request,
@@ -524,6 +524,7 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
             library_code=library_codes_str,
             admin_user=admin_user,
         )
+        email_message.send(fail_silently=False)
 
 
 def notify_resultant_report_available(resource: Resource, request) -> None:
