@@ -437,36 +437,11 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
         send_mass_mail(messages)
 
 
-def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
+def _get_to_recipients_for_anomaly_resolved(project, current_turn_collections):
     """
-    Sends notification emails when anomalies are resolved by a project administrator.
-
-    Recipients:
-    - TO: Instructors whose turn has come to instruct + Project administrators
-    - CC: Other instructors concerned by the resource instruction
+    Helper for notify_anomaly_resolved.
+    Get instructors with turn + project admins for TO field.
     """
-    project = resource.project
-
-    # Avoid unnecessary queries if notifications are already disabled at the project level.
-    project_alerts = project.settings.get("alerts", {})
-    if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
-        return
-
-    # Get the current turn using the existing utility
-    next_turn = resource.next_turn
-    current_turn_collections = []
-    library_codes_with_turn = []
-
-    if next_turn:
-        # Get the collection that has the current turn
-        try:
-            current_collection = resource.collections.get(id=next_turn["collection"])
-            current_turn_collections = [current_collection]
-            library_codes_with_turn = [current_collection.library.code]
-        except Collection.DoesNotExist:
-            pass
-
-    # Collect TO recipients (instructors with turn + project admins)
     to_recipients = set()
 
     # Get instructors whose turn has come
@@ -488,7 +463,14 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
         if should_send_alert(admin_role.user, project, AlertType.INSTRUCTION):
             to_recipients.add(admin_role.user.email)
 
-    # Collect CC recipients (other instructors concerned by the resource)
+    return to_recipients
+
+
+def _get_cc_recipients_for_anomaly_resolved(project, resource, current_turn_collections):
+    """
+    Helper for notify_anomaly_resolved.
+    Get other instructors (not with turn, not excluded) for CC field.
+    """
     cc_recipients = set()
     other_instructors = (
         UserRole.objects.filter(
@@ -496,14 +478,8 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
             role=Role.INSTRUCTOR,
             library__collections__resource=resource,
         )
-        .exclude(
-            library__collections__position=0  # Exclude excluded collections
-        )
-        .exclude(
-            library__in=[
-                collection.library for collection in current_turn_collections
-            ]  # Exclude those who got the turn
-        )
+        .exclude(library__collections__position=0)
+        .exclude(library__in=[collection.library for collection in current_turn_collections])
         .select_related("user")
         .distinct()
     )
@@ -512,10 +488,43 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
         if should_send_alert(instructor_role.user, project, AlertType.INSTRUCTION):
             cc_recipients.add(instructor_role.user.email)
 
-    # Send email with TO and CC
-    library_codes_str = ", ".join(library_codes_with_turn) if library_codes_with_turn else "N/A"
+    return cc_recipients
 
-    if to_recipients:  # Send only if there are TO recipients
+
+def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
+    """
+    Sends notification emails when anomalies are resolved by a project administrator.
+
+    Recipients:
+    - TO: Instructors whose turn has come to instruct + Project administrators
+    - CC: Other instructors concerned by the resource instruction
+    """
+    project = resource.project
+
+    project_alerts = project.settings.get("alerts", {})
+    if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
+        return
+
+    # Get the current turn
+    next_turn = resource.next_turn
+    current_turn_collections = []
+    library_codes_with_turn = []
+
+    if next_turn:
+        try:
+            current_collection = resource.collections.get(id=next_turn["collection"])
+            current_turn_collections = [current_collection]
+            library_codes_with_turn = [current_collection.library.code]
+        except Collection.DoesNotExist:
+            pass
+
+    # Collect TO and CC recipients
+    to_recipients = _get_to_recipients_for_anomaly_resolved(project, current_turn_collections)
+    cc_recipients = _get_cc_recipients_for_anomaly_resolved(project, resource, current_turn_collections)
+
+    # Send email
+    if to_recipients:
+        library_codes_str = ", ".join(library_codes_with_turn) if library_codes_with_turn else "N/A"
         email_message = prepare_anomaly_resolved_notification_email(
             to_emails=list(to_recipients),
             cc_emails=list(cc_recipients),
