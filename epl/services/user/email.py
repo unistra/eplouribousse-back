@@ -16,7 +16,7 @@ from epl.apps.user.models import User
 from epl.services.tenant import get_front_domain
 
 
-def send_password_change_email(user: Request.user):
+def send_password_change_email(user: User):
     email_content = render_to_string(
         "emails/password_changed.txt",
         {
@@ -207,15 +207,21 @@ def send_project_launched_email(
     )
 
 
-def send_arbitration_notification_email(
-    email: str, request: Request, resource: Resource, library_code: str, arbitration_type: Arbitration
-) -> None:
+def prepare_arbitration_notification_email(
+    email: str,
+    request: Request,
+    resource: Resource,
+    library_code: str,
+    arbitration_type: Arbitration,
+) -> tuple[str, str, str, list[str]]:
+    """
+    Prepares datas for send_mass_mail (subject, message, from_email, [recipient]).
+    """
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
     modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
-    # Choosing the template according to the arbitration type
     template_name = f"emails/notify_arbitration_type{arbitration_type.value}.txt"
 
     email_content = render_to_string(
@@ -226,25 +232,23 @@ def send_arbitration_notification_email(
         },
     )
 
-    subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('arbitration')} {arbitration_type.value}"
-
-    send_mail(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
+    subject = (
+        f"eplouribousse | {tenant.name} | {project.name} | {library_code} | "
+        f"{resource.code} | {_('arbitration')} {arbitration_type.value}"
     )
 
+    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
-def send_collection_positioned_email(
+
+def prepare_collection_positioned_email(
     email: str,
     request: Request,
     resource: Resource,
-    library_code,
+    library_code: str,
     positioned_collection,
-) -> None:
+) -> tuple[str, str, str, list[str]]:
     """
+    Prepares datas for send_mass_mail : (subject, message, from_email, [recipient]).
     Notifies instructors that have not yet positionned their collections for a resource,
     that another collection for the same resource has been positioned.
     This message is sent only if at least one collection has not been positioned yet.
@@ -264,23 +268,18 @@ def send_collection_positioned_email(
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('positioning')}"
 
-    send_mail(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
-def send_instruction_turn_email(
+def prepare_instruction_turn_email(
     email: str,
     request: Request,
     resource: Resource,
     library_code: str,
-) -> None:
+) -> tuple[str, str, str, list[str]]:
     """
     Notifies an instructor that it's their turn to instruct their collection.
+    Prepares datas for send_mass_mail : (subject, message, from_email, [recipient]).
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -297,28 +296,26 @@ def send_instruction_turn_email(
         },
     )
 
-    send_mail(
-        subject=str(subject),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
-def send_control_notification_email(
-    email: str,
+def prepare_control_notification_email(
     request,
     resource,
     cycle: str,  # "bound" or "unbound"
-):
+) -> tuple[str, str]:
+    """
+    Prepares control notification email content.
+    Returns a tuple of (subject, body)
+    """
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
     modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
+
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('control')}"
 
-    email_content = render_to_string(
+    body = render_to_string(
         "emails/notify_control.txt",
         {
             "cycle": cycle,
@@ -327,27 +324,24 @@ def send_control_notification_email(
         },
     )
 
-    send_mail(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, body
 
 
-def send_anomaly_notification_email(
+def prepare_anomaly_notification_email(
     email: str,
     request: Request,
     resource: Resource,
     reporter_user: User,
-) -> None:
+) -> tuple[str, str, str, list[str]]:
+    """
+    Prepares anomaly notification email data for send_mass_mail.
+    Returns a tuple of (subject, message, from_email, [recipient_email])
+    """
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
     modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
 
-    # Get the request user role label in the project and verify authorization
     reporter_role_display = None
     if reporter_user.is_controller(project):
         reporter_role_display = Role.CONTROLLER.label
@@ -367,35 +361,21 @@ def send_anomaly_notification_email(
         },
     )
 
-    send_mail(
-        subject=subject,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
 
 
-def send_anomaly_resolved_notification_email(
+def prepare_anomaly_resolved_notification_email(
     to_emails: list[str],
     cc_emails: list[str],
-    request: Request,
-    resource: Resource,
+    request,
+    resource,
     library_code: str,
-    admin_user: User,
-) -> None:
+    admin_user,
+) -> EmailMessage:
     """
-    Sends an email notification when anomalies are resolved and instruction turn is assigned.
-
-    Args:
-        to_emails: List of primary recipients (instructors with turn + project admins)
-        cc_emails: List of CC recipients (other instructors concerned)
-        request: HTTP request object
-        resource: The resource for which anomalies were resolved
-        library_code: Code of the library that got the instruction turn
-        admin_user: The administrator who resolved the anomaly
+    Prepares anomaly resolved notification email with TO and CC recipients.
+    Returns an EmailMessage ready to send.
     """
-
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
@@ -414,8 +394,7 @@ def send_anomaly_resolved_notification_email(
         },
     )
 
-    # Create EmailMessage with TO and CC recipients
-    email_message = EmailMessage(
+    return EmailMessage(
         subject=subject,
         body=email_content,
         from_email=settings.DEFAULT_FROM_EMAIL,
@@ -423,17 +402,16 @@ def send_anomaly_resolved_notification_email(
         cc=cc_emails,
     )
 
-    email_message.send(fail_silently=False)
 
-
-def send_resultant_report_available_notification_email(
+def prepare_resultant_report_available_email(
     email: str,
     request: Request,
     resource: Resource,
     library_code: str,
-) -> None:
+) -> tuple[str, str, str, list[str]]:
     """
-    Notifies an instructor that the resultant sheet is available.
+    Prepares per-recipient resultant report email for send_mass_mail.
+    Returns (subject, message, from_email, [recipient]).
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -442,7 +420,7 @@ def send_resultant_report_available_notification_email(
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {library_code} | {resource.code} | {_('resultant')}"
 
-    email_content = render_to_string(
+    body = render_to_string(
         "emails/notify_resultant_report_available.txt",
         {
             "resource_title": unescape(resource.title),
@@ -450,10 +428,4 @@ def send_resultant_report_available_notification_email(
         },
     )
 
-    send_mail(
-        subject=str(subject),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-        message=email_content,
-    )
+    return subject, body, settings.DEFAULT_FROM_EMAIL, [email]

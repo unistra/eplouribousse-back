@@ -74,7 +74,7 @@ def handle_import(
         row_number += 1
         ppn = row.pop("PPN").strip()
         titre = row.pop("Titre").strip()
-        issn = row.pop("Issn", None).strip()
+        issn = row.pop("Issn", "").strip()
         numbering = row.pop("Numerotation", "").strip()  # Non disponible dans les fichiers actuels
         publication_history = row.pop("PublieEn", "").strip().split(",", 1)[0]
 

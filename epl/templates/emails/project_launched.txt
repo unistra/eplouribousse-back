@@ -8,7 +8,7 @@
 {% endif %}
 {% blocktranslate %}If you think this message was sent by error, please contact: {{ launcher_name }}{% endblocktranslate %}
 
----
+---{{ " " }}
 
 {% trans "This is an automated message, please do not reply" %}.
 Eplouribousse

@@ -27,6 +27,7 @@ ARG SECRET_KEY="django-insecure-temporary-for-build-only"
 
 # Needed for weasyprint
 RUN apt update && apt install -y --no-install-recommends \
+    xmlsec1 libxslt1.1 \
     gettext libglib2.0-0 libgobject-2.0-0 libpango-1.0-0 libpangoft2-1.0-0 \
     && apt clean && rm -rf /var/lib/apt/lists/*
 
@@ -55,6 +56,12 @@ RUN python manage.py collectstatic --settings=epl.settings.docker --noinput && \
 RUN chgrp -R 0 /app && \
     chmod -R g+rwX /app
 
+RUN if [ -f ./docker/app/sentry-release.env ]; then \
+    # This file is built in the CI
+        cp ./docker/app/sentry-release.env /app/sentry-release.env; \
+    else \
+        touch /app/sentry-release.env; \
+    fi
 ENTRYPOINT ["sh", "/app/docker-prestart.sh"]
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "3", "--access-logfile", "-", "--error-logfile", "-", "epl.wsgi:application"]

@@ -193,7 +193,7 @@ class MoveToInstructionMixin:
         if (
             all(c.position is not None for c in collections)
             and resource.arbitration is Arbitration.NONE
-            and resource.status is not ResourceStatus.EXCLUDED
+            and resource.status != ResourceStatus.EXCLUDED
         ):
             # All libraries have positioned and no arbitration is needed: move to Instruction Bound and set turns
             resource.status = ResourceStatus.INSTRUCTION_BOUND

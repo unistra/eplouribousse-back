@@ -100,14 +100,23 @@ STATIC_URL = "/assets/"
 ##########
 
 if SENTRY_DSN := os.environ.get("SENTRY_DSN"):
+    from dotenv import load_dotenv
+
+    load_dotenv(SITE_ROOT / "sentry-release.env")
+    sentry_release = os.environ.get("SENTRY_RELEASE_VERSION", None)
     sentry_environment = os.environ.get("SENTRY_ENVIRONMENT", "prod")
+
+    config = {
+        "dsn": SENTRY_DSN,
+        "environment": sentry_environment,
+        "traces_sample_rate": 1.0,
+        "send_default_pii": True,
+    }
+    if sentry_release:
+        config["release"] = sentry_release
+
     sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for tracing.
-        traces_sample_rate=1.0,
-        send_default_pii=True,
-        environment=sentry_environment,
+        **config,
         integrations=[DjangoIntegration()],
     )
 
