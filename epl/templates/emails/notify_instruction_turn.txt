@@ -1,6 +1,6 @@
 {% load i18n %}
 
 {% blocktrans with resource_title=resource_title|safe %}Your turn has come to instruct the resulting collection for the resource '{{ resource_title }}': {{ modal_url }}{% endblocktrans %}
----
+---{{ " " }}
 {% trans "This is an automated message, please do not reply." %}
 Eplouribousse

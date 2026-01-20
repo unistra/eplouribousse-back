@@ -3,6 +3,6 @@
 
 {% trans "For the record, your username is:" %} {{ username }}
 
----
+---{{ " " }}
 {% trans "This is an automated message, please do not reply." %}
 Eplouribousse

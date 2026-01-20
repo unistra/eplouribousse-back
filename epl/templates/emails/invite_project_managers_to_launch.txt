@@ -14,7 +14,7 @@ To do so, go to {{ project_url }}.{% endblocktranslate %}
 
 ===>    {{ email_support }}
 
----
+---{{ " " }}
 
 {% trans "This is an automated message, please do not reply" %}.
 Eplouribousse
