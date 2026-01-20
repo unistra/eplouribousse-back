@@ -2,9 +2,16 @@
 
 ## Next release
 
-- 🔧 Refactor Sentry config
+## 1.0.4 - 20-01-2026
+
 - 📊 Exclude single collections and single collection resources from all dashboard metrics via a shared helper/mixin
 - 📧 Improve email notifications performances by opening single SMTP connections per email batch
+- 👷 Improve CI/CD Docker image build
+- 🔧 Refactor Saml2 configuration
+
+## 1.0.3 - 13-01-2026
+
+- 🔧 Refactor Sentry configuration
 
 ## 1.0.2 - 07-01-2026
 
