@@ -2,6 +2,8 @@
 
 ## Next release
 
+- ⬆️ Django 5.2.10
+
 ## 1.0.4 - 20-01-2026
 
 - 📊 Exclude single collections and single collection resources from all dashboard metrics via a shared helper/mixin
