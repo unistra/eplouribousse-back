@@ -514,7 +514,7 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
                 )
                 resource.instruction_turns[cycle_key]["turns"] = []
                 resource.save(update_fields=["instruction_turns", "status"])
-                notify_controllers_of_control(resource, self.context["request"], cycle.label)
+                notify_controllers_of_control(resource, self.context["request"], cycle.value)
                 ActionLog.log(
                     f"Resource status moved to {ResourceStatus(resource.status).name}",
                     actor=self.context["request"].user,

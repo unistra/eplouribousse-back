@@ -1935,7 +1935,7 @@ msgid ""
 "The time has come for the end-of-cycle check of the bound elements for the "
 "'%(resource_title)s' resource: %(modal_url)s."
 msgstr ""
-"Le moment est venu du contrôle de fin de cycle des éléments réliés pour la "
+"Le moment est venu du contrôle de fin de cycle des éléments reliés pour la "
 "ressource '%(resource_title)s' : %(modal_url)s."
 
 #: epl/templates/emails/notify_control.txt:7
