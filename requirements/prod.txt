@@ -324,9 +324,6 @@ charset-normalizer==3.4.4 ; python_version == "3.12" \
     --hash=sha256:fa09f53c465e532f4d3db095e0c55b615f010ad81803d383195b6b5ca6cbf5f3 \
     --hash=sha256:faa3a41b2b66b6e50f84ae4a68c64fcd0c44355741c6374813a800cd6695db9e \
     --hash=sha256:fd44c878ea55ba351104cb93cc85e74916eb8fa440ca7903e57575e97394f608
-chaussette-backport==1.3.1 ; python_version == "3.12" \
-    --hash=sha256:a9a2dc0105c15b1aa9df3a8220cfe0dd72f938b644fffc89363252440892a88a \
-    --hash=sha256:fb4af770aaa1878b95bae926b27ff1e9e0f2d942ff418a68b9d70e580cb12520
 click==8.3.1 ; python_version == "3.12" \
     --hash=sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a \
     --hash=sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6
@@ -1214,9 +1211,6 @@ uritemplate==4.2.0 ; python_version == "3.12" \
 urllib3==2.6.3 ; python_version == "3.12" \
     --hash=sha256:1b62b6884944a57dbe321509ab94fd4d3b307075e0c2eae991ac71ee15ad38ed \
     --hash=sha256:bf272323e553dfb2e87d9bfd225ca7b0f467b919d7bbd355436d3fd37cb0acd4
-waitress==3.0.2 ; python_version == "3.12" \
-    --hash=sha256:682aaaf2af0c44ada4abfb70ded36393f0e307f4ab9456a215ce0020baefc31f \
-    --hash=sha256:c56d67fd6e87c2ee598b76abdd4e96cfad1f24cacdea5078d382b1f9d7b5ed2e
 wcwidth==0.2.14 ; python_version == "3.12" \
     --hash=sha256:4d478375d31bc5395a3c55c40ccdf3354688364cd61c4f6adacaa9215d0b3605 \
     --hash=sha256:a7bb560c8aee30f9957e5f9895805edd20602f2d7f720186dfd906e82b4982e1
