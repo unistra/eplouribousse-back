@@ -58,26 +58,29 @@ class AnomalyNotificationTest(TestCase):
         self.resource.refresh_from_db()
         self.assertEqual(self.resource.status, ResourceStatus.ANOMALY_BOUND)
 
-        self.assertEqual(len(mail.outbox), 4)  # 2 instructors + 1 admin + 1 copy to controller
+        # Should send 1 email with multiple TO and CC recipients
+        self.assertEqual(len(mail.outbox), 1)
 
-        recipients = [email.to[0] for email in mail.outbox]
-        expected_recipients = {
+        email = mail.outbox[0]
+
+        # Check TO recipients (instructors + admin, excluding reporter)
+        expected_to = {
             self.instructor_1.email,
             self.instructor_2.email,
             self.project_admin.email,
-            self.controller.email,  # copy to sender # todo add copy as cc field in email
         }
-        self.assertEqual(set(recipients), expected_recipients)
+        actual_to = set(email.to)
+        self.assertEqual(actual_to, expected_to)
 
-        # Check email content
-        anomaly_emails = [email for email in mail.outbox if "anomaly" in str(email.subject).lower()]
-        self.assertEqual(len(anomaly_emails), 4)
+        # Check CC recipients (reporter)
+        expected_cc = {self.controller.email}
+        actual_cc = set(email.cc)
+        self.assertEqual(actual_cc, expected_cc)
 
         # Check email subject
-        for email in anomaly_emails:
-            self.assertIn(self.project.name, str(email.subject))
-            self.assertIn(self.resource.code, str(email.subject))
-            self.assertIn("anomaly", str(email.subject).lower())
+        self.assertIn(self.project.name, email.subject)
+        self.assertIn(self.resource.code, email.subject)
+        self.assertIn("anomaly", email.subject.lower())
 
     def test_instructor_reports_anomaly_sends_notifications(self):
         mail.outbox = []
@@ -92,25 +95,28 @@ class AnomalyNotificationTest(TestCase):
         self.resource.refresh_from_db()
         self.assertEqual(self.resource.status, ResourceStatus.ANOMALY_BOUND)
 
-        # Check emails sent
-        recipients = [email.to[0] for email in mail.outbox]
+        # Should send 1 email
+        self.assertEqual(len(mail.outbox), 1)
 
-        # Should notify: other instructors (not reporting one), project admin, other controllers, copy to instructor
-        expected_recipients = {
-            self.instructor_2.email,
-            self.project_admin.email,
-            self.instructor_1.email,
-        }
+        email = mail.outbox[0]
 
-        # Check if there are other controllers to notify
+        # Check TO recipients (other instructor + admin + controllers, excluding reporter)
+        expected_to = {self.instructor_2.email, self.project_admin.email}
+
+        # Add other controllers to expected_to
         other_controllers = UserRole.objects.filter(project=self.project, role=Role.CONTROLLER).exclude(
             user=self.instructor_1
         )
-
         for controller_role in other_controllers:
-            expected_recipients.add(controller_role.user.email)
+            expected_to.add(controller_role.user.email)
 
-        self.assertEqual(set(recipients), expected_recipients)
+        actual_to = set(email.to)
+        self.assertEqual(actual_to, expected_to)
+
+        # Check CC recipients (reporter instructor)
+        expected_cc = {self.instructor_1.email}
+        actual_cc = set(email.cc)
+        self.assertEqual(actual_cc, expected_cc)
 
     def test_excluded_collection_instructor_not_notified(self):
         """Test that instructors of excluded collections don't receive notifications"""
@@ -132,15 +138,24 @@ class AnomalyNotificationTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        recipients = [email.to[0] for email in mail.outbox]
+        # Should send 1 email
+        self.assertEqual(len(mail.outbox), 1)
 
-        # Only instructor 1 should receive notification (not instructor 2)
-        self.assertIn(self.instructor_1.email, recipients)
-        self.assertNotIn(self.instructor_2.email, recipients)
+        email = mail.outbox[0]
 
-        # Admin and controller should still receive notifications
-        self.assertIn(self.project_admin.email, recipients)
-        self.assertIn(self.controller.email, recipients)
+        # Check TO recipients (instructor_1 + admin, excluding instructor_2 and reporter)
+        expected_to = {self.instructor_1.email, self.project_admin.email}
+        actual_to = set(email.to)
+        self.assertEqual(actual_to, expected_to)
+
+        # Check CC recipients (reporter)
+        expected_cc = {self.controller.email}
+        actual_cc = set(email.cc)
+        self.assertEqual(actual_cc, expected_cc)
+
+        # Verify instructor_2 is NOT in TO or CC (excluded collection)
+        self.assertNotIn(self.instructor_2.email, email.to)
+        self.assertNotIn(self.instructor_2.email, email.cc)
 
     def test_no_anomaly_alerts_setting_no_notification(self):
         self.project.settings["alerts"] = {AlertType.INSTRUCTION.value: False}
@@ -175,15 +190,24 @@ class AnomalyNotificationTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-        recipients = [email.to[0] for email in mail.outbox]
+        # Should send 1 email
+        self.assertEqual(len(mail.outbox), 1)
 
-        # instructor_1 should not receive notification (alerts disabled)
-        self.assertNotIn(self.instructor_1.email, recipients)
+        email = mail.outbox[0]
 
-        # Others should still receive notifications
-        self.assertIn(self.instructor_2.email, recipients)
-        self.assertIn(self.project_admin.email, recipients)
-        self.assertIn(self.controller.email, recipients)  # copy to sender
+        # Check TO recipients (instructor_2 + admin, excluding instructor_1 and reporter)
+        expected_to = {self.instructor_2.email, self.project_admin.email}
+        actual_to = set(email.to)
+        self.assertEqual(actual_to, expected_to)
+
+        # Check CC recipients (reporter)
+        expected_cc = {self.controller.email}
+        actual_cc = set(email.cc)
+        self.assertEqual(actual_cc, expected_cc)
+
+        # Verify instructor_1 is NOT in TO or CC (alerts disabled)
+        self.assertNotIn(self.instructor_1.email, email.to)
+        self.assertNotIn(self.instructor_1.email, email.cc)
 
     def test_email_content_and_format(self):
         mail.outbox = []
