@@ -10,7 +10,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from rest_framework.request import Request
 
-from epl.apps.project.models import Project, Resource
+from epl.apps.project.models import Project, Resource, Role
 from epl.apps.project.models.collection import Arbitration
 from epl.apps.user.models import User
 from epl.services.tenant import get_front_domain
@@ -328,20 +328,26 @@ def prepare_control_notification_email(
 
 
 def prepare_anomaly_notification_email(
-    to_emails: list[str],
-    cc_emails: list[str],
-    request,
-    resource,
+    request: Request,
+    resource: Resource,
     reporter_user: User,
+    to_emails: list[str],
+    cc_emails: list[str] | None = None,
 ) -> EmailMessage:
     """
-    Prepares anomaly notification email with TO and CC recipients.
-    Returns an EmailMessage ready to send.
+    Prepares anomaly notification email.
+    Returns an EmailMessage instance.
     """
     front_domain = get_front_domain(request)
     project = resource.project
     tenant = request.tenant
     modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
+
+    reporter_role_display = None
+    if reporter_user.is_controller(project):
+        reporter_role_display = Role.CONTROLLER.label
+    elif reporter_user.is_instructor(project):
+        reporter_role_display = Role.INSTRUCTOR.label
 
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('anomaly')}"
 
@@ -349,19 +355,22 @@ def prepare_anomaly_notification_email(
         "emails/notify_anomalies.txt",
         {
             "resource_title": unescape(resource.title),
-            "reporter_display_name": str(reporter_user),
+            "reporter_role": reporter_role_display,
+            "reporter_identifier": str(reporter_user),
             "reporter_email": reporter_user.email,
             "modal_url": modal_url,
         },
     )
 
-    return EmailMessage(
+    email = EmailMessage(
         subject=subject,
         body=email_content,
-        from_email=reporter_user.email,
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=to_emails,
-        cc=cc_emails,
+        cc=cc_emails or [],
     )
+
+    return email
 
 
 def prepare_anomaly_resolved_notification_email(
