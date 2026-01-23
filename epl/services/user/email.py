@@ -406,7 +406,8 @@ def prepare_anomaly_resolved_notification_email(
     return EmailMessage(
         subject=subject,
         body=email_content,
-        from_email=admin_user.email,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        reply_to=[admin_user.email],
         to=to_emails,
         cc=cc_emails,
     )
