@@ -9,5 +9,4 @@
 {% trans "Any possible objection must be expressed as soon as possible in a circumstantiated manner and by using the 'Reply to all' option." %}
 
 ---{{ " " }}
-{% trans "This is an automated message, please do not reply." %}
 Eplouribousse

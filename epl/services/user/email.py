@@ -328,14 +328,15 @@ def prepare_control_notification_email(
 
 
 def prepare_anomaly_notification_email(
-    email: str,
     request: Request,
     resource: Resource,
     reporter_user: User,
-) -> tuple[str, str, str, list[str]]:
+    to_emails: list[str],
+    cc_emails: list[str] | None = None,
+) -> EmailMessage:
     """
-    Prepares anomaly notification email data for send_mass_mail.
-    Returns a tuple of (subject, message, from_email, [recipient_email])
+    Prepares anomaly notification email.
+    Returns an EmailMessage instance.
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -361,7 +362,15 @@ def prepare_anomaly_notification_email(
         },
     )
 
-    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
+    email = EmailMessage(
+        subject=subject,
+        body=email_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=to_emails,
+        cc=cc_emails or [],
+    )
+
+    return email
 
 
 def prepare_anomaly_resolved_notification_email(
@@ -398,6 +407,7 @@ def prepare_anomaly_resolved_notification_email(
         subject=subject,
         body=email_content,
         from_email=settings.DEFAULT_FROM_EMAIL,
+        reply_to=[admin_user.email],
         to=to_emails,
         cc=cc_emails,
     )

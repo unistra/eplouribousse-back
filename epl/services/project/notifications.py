@@ -371,10 +371,9 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     Sends notification emails when anomalies are reported on a resource.
 
     Recipients:
-    - Instructors concerned by the resource instruction (excluding those with excluded collections)
-    - Project administrators
-    - Other controllers
-    - Copy to the sender (reporter)
+    - TO: Instructors concerned by the resource instruction (excluding those with excluded collections),
+          Project administrators, and other controllers
+    - CC: The reporter
     """
     project = resource.project
 
@@ -383,7 +382,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     if project_alerts.get(AlertType.INSTRUCTION.value, True) is False:
         return
 
-    recipients = set()
+    to_recipients = set()
 
     # Get instructors concerned by the resource instruction (excluding those with excluded collections)
     instructors_to_notify = (
@@ -400,18 +399,18 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
     )
 
     for instructor_role in instructors_to_notify:
-        # Exclude the instructor who reported the anomaly (he will receive a copy later)
+        # Exclude the instructor who reported the anomaly (he will receive a copy in CC)
         if instructor_role.user != reporter_user and should_send_alert(
             instructor_role.user, project, AlertType.INSTRUCTION
         ):
-            recipients.add(instructor_role.user.email)
+            to_recipients.add(instructor_role.user.email)
 
     # Get project administrators
     project_admins = UserRole.objects.filter(project=project, role=Role.PROJECT_ADMIN).select_related("user").distinct()
 
     for admin_role in project_admins:
-        if should_send_alert(admin_role.user, project, AlertType.INSTRUCTION):
-            recipients.add(admin_role.user.email)
+        if admin_role.user != reporter_user and should_send_alert(admin_role.user, project, AlertType.INSTRUCTION):
+            to_recipients.add(admin_role.user.email)
 
     # Get other controllers (excluding the reporter if he's a controller)
     controllers = UserRole.objects.filter(project=project, role=Role.CONTROLLER).select_related("user").distinct()
@@ -420,21 +419,23 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
         if controller_role.user != reporter_user and should_send_alert(
             controller_role.user, project, AlertType.INSTRUCTION
         ):
-            recipients.add(controller_role.user.email)
+            to_recipients.add(controller_role.user.email)
 
-    # Add copy to sender
+    # Prepare CC list with reporter
+    cc_recipients = []
     if should_send_alert(reporter_user, project, AlertType.INSTRUCTION):
-        recipients.add(reporter_user.email)
+        cc_recipients.append(reporter_user.email)
 
-    # Prepare all emails and send in one SMTP connection
-    if recipients:
-        messages = [
-            prepare_anomaly_notification_email(
-                email=email, request=request, resource=resource, reporter_user=reporter_user
-            )
-            for email in recipients
-        ]
-        send_mass_mail(messages)
+    # Send email if there are recipients
+    if to_recipients or cc_recipients:
+        email_message = prepare_anomaly_notification_email(
+            to_emails=list(to_recipients),
+            cc_emails=cc_recipients,
+            request=request,
+            resource=resource,
+            reporter_user=reporter_user,
+        )
+        email_message.send(fail_silently=False)
 
 
 def _get_to_recipients_for_anomaly_resolved(project, current_turn_collections):
