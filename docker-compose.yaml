@@ -28,6 +28,15 @@ services:
       - redis
       - postgres
 
+  maildev:
+    image: "maildev/maildev:2.2.1"
+    container_name: maildev
+    restart: unless-stopped
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+
   redis:
     image: "redis:6"
     container_name: epl_redis
