@@ -383,7 +383,7 @@ def prepare_anomaly_details(anomalies, resource):
                 "segment_order": segment.order,
                 "owner_library": library.code,
                 "segment_type": segment.get_segment_type_display(),
-                "segment_line": segment.content,
+                "segment_content": segment.content,
                 "exception": segment.exception,
                 "improvable_elements": segment.improvable_elements,
                 "remediated_library": remediated_library,

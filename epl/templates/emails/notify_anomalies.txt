@@ -23,7 +23,7 @@
 {% trans "Collection position:" %} {{ segment.collection_position }}
 {% trans "Call number:" %} {{ segment.collection_call_number }}
 {% trans "Collection form:" %} {{ segment.segment_type }}
-{% trans "Segment:" %} {{ segment.segment_line }}
+{% trans "Segment:" %} {{ segment.segment_content|safe  }}
 {% if segment.exception %}{% trans "Exception:" %} {{ segment.exception }}{% endif %}
 {% if segment.improvable_elements %}{% trans "Improvable elements:" %} {{ segment.improvable_elements|safe }}{% endif %}
 {% if segment.remediated_library %}{% trans "Remediated library:" %} {{ segment.remediated_library|safe }}{% endif %}
