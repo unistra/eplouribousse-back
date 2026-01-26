@@ -329,18 +329,18 @@ def prepare_control_notification_email(
 
 def prepare_anomaly_details(anomalies, resource):
     """
-    Prépare les détails des anomalies groupées par segment pour l'email.
+    Prepares details of anomalies grouped by segment for the email.
     """
     from collections import defaultdict
 
-    # Grouper les anomalies par segment
+    # Group anomalies by segment
     segments_map = defaultdict(list)
 
     for anomaly in anomalies:
         segment = anomaly.segment
         segments_map[segment.id].append(anomaly)
 
-    # Préparer les infos de la resource (une seule fois)
+    # Prepares resource info (once)
     resource_info = {
         "resource_name": resource.title,
         "resource_code": resource.code,
@@ -349,7 +349,7 @@ def prepare_anomaly_details(anomalies, resource):
         "publication_history": resource.publication_history or "N/A",
     }
 
-    # Préparer les segments avec leurs anomalies
+    # Prepares segments with their anomalies
     segments_with_anomalies = []
 
     for segment_id, segment_anomalies in segments_map.items():
@@ -359,7 +359,7 @@ def prepare_anomaly_details(anomalies, resource):
         collection = segment.collection
         library = collection.library
 
-        # Prepare segment anomalies list
+        # Prepare a segment anomalies list
         anomalies_list = []
         for anomaly in segment_anomalies:
             anomalies_list.append(
