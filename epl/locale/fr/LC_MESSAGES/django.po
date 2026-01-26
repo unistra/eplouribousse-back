@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-26 11:45+0100\n"
+"POT-Creation-Date: 2026-01-26 14:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1099,7 +1099,7 @@ msgstr "est désormais disponible pour le lancement"
 
 #: epl/apps/project/tests/views/test_resultant_report_available.py:65
 #: epl/apps/project/tests/views/test_resultant_report_available.py:170
-#: epl/services/user/email.py:504
+#: epl/services/user/email.py:510
 msgid "resultant"
 msgstr "résultante"
 
@@ -1685,13 +1685,13 @@ msgstr "création de votre compte (en attente)"
 
 #: epl/services/user/email.py:138
 #, python-brace-format
-msgid "Creation of the {project_name} project"
-msgstr "Création du projet {project_name}"
+msgid "Creation of the '{project_name}' project"
+msgstr "Création du projet '{project_name}'"
 
 #: epl/services/user/email.py:170
 #, python-brace-format
-msgid "Availability of the {project_name} project for launch"
-msgstr "Disponibilité du projet {project_name} pour le lancement"
+msgid "Availability of the '{project_name}' project for launch"
+msgstr "Disponibilité du projet '{project_name}' pour le lancement"
 
 #: epl/services/user/email.py:191
 msgid "now"
@@ -1703,8 +1703,8 @@ msgstr "à"
 
 #: epl/services/user/email.py:202
 #, python-brace-format
-msgid "Launch of the {project_name} project"
-msgstr "Lancement du projet {project_name}"
+msgid "Launch of the '{project_name}' project"
+msgstr "Lancement du projet '{project_name}'"
 
 #: epl/services/user/email.py:237
 msgid "arbitration"
@@ -1722,11 +1722,11 @@ msgstr "instruction"
 msgid "control"
 msgstr "contrôle"
 
-#: epl/services/user/email.py:424
+#: epl/services/user/email.py:430
 msgid "anomaly"
 msgstr "anomalie"
 
-#: epl/services/user/email.py:466
+#: epl/services/user/email.py:472
 msgid "anomaly resolved"
 msgstr "anomalie résolue"
 
@@ -1751,7 +1751,7 @@ msgid "For the record, your username is:"
 msgstr "Pour mémoire, votre identifiant est : "
 
 #: epl/templates/emails/confirm_account_creation.txt:7
-#: epl/templates/emails/notify_anomalies.txt:43
+#: epl/templates/emails/notify_anomalies.txt:40
 #: epl/templates/emails/notify_control.txt:13
 #: epl/templates/emails/notify_instruction_turn.txt:5
 #: epl/templates/emails/notify_positioning.txt:6
@@ -1797,14 +1797,14 @@ msgstr "veuillez contacter l'administrateur du site à l'adresse suivante"
 #: epl/templates/emails/notify_arbitration_type1.txt:8
 #: epl/templates/emails/password_changed.txt:17
 #: epl/templates/emails/password_reset.txt:14
-#: epl/templates/emails/project_launched.txt:13
+#: epl/templates/emails/project_launched.txt:12
 msgid "This is an automated message, please do not reply"
 msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
 #: epl/templates/emails/invite_project_managers_to_launch.txt:3
 #, python-format
-msgid "The project %(project_name)s is now ready for launch."
-msgstr "Le projet %(project_name)s est désormais disponible pour le lancement."
+msgid "The project '%(project_name)s' is now ready for launch."
+msgstr "Le projet '%(project_name)s' est désormais disponible pour le lancement."
 
 #: epl/templates/emails/invite_project_managers_to_launch.txt:4
 #, python-format
@@ -1905,55 +1905,55 @@ msgstr "ISSN:"
 msgid "Publication history:"
 msgstr "Historique de la publication:"
 
-#: epl/templates/emails/notify_anomalies.txt:22
+#: epl/templates/emails/notify_anomalies.txt:21
 msgid "Line:"
 msgstr "Ligne:"
 
-#: epl/templates/emails/notify_anomalies.txt:23
+#: epl/templates/emails/notify_anomalies.txt:22
 msgid "Library:"
 msgstr "Bibliothèque:"
 
-#: epl/templates/emails/notify_anomalies.txt:24
+#: epl/templates/emails/notify_anomalies.txt:23
 msgid "Collection position:"
 msgstr "Position de la collection:"
 
-#: epl/templates/emails/notify_anomalies.txt:25
+#: epl/templates/emails/notify_anomalies.txt:24
 msgid "Call number:"
 msgstr "Cote:"
 
-#: epl/templates/emails/notify_anomalies.txt:26
+#: epl/templates/emails/notify_anomalies.txt:25
 msgid "Collection form:"
 msgstr "Forme de la collection:"
 
-#: epl/templates/emails/notify_anomalies.txt:27
+#: epl/templates/emails/notify_anomalies.txt:26
 msgid "Segment:"
 msgstr "Segment:"
 
-#: epl/templates/emails/notify_anomalies.txt:28
+#: epl/templates/emails/notify_anomalies.txt:27
 msgid "Exception:"
 msgstr "Exception:"
 
-#: epl/templates/emails/notify_anomalies.txt:29
+#: epl/templates/emails/notify_anomalies.txt:28
 msgid "Improvable elements:"
 msgstr "Éléments améliorables:"
 
-#: epl/templates/emails/notify_anomalies.txt:30
+#: epl/templates/emails/notify_anomalies.txt:29
 msgid "Remediated library:"
 msgstr "Bibliothèque remédiée:"
 
-#: epl/templates/emails/notify_anomalies.txt:33
+#: epl/templates/emails/notify_anomalies.txt:31
 msgid "Anomaly details:"
 msgstr "Détails de l'anomalie:"
 
-#: epl/templates/emails/notify_anomalies.txt:34
+#: epl/templates/emails/notify_anomalies.txt:32
 msgid "Declared by:"
 msgstr "Déclarée par:"
 
-#: epl/templates/emails/notify_anomalies.txt:35
+#: epl/templates/emails/notify_anomalies.txt:33
 msgid "Type:"
 msgstr "Type:"
 
-#: epl/templates/emails/notify_anomalies.txt:36
+#: epl/templates/emails/notify_anomalies.txt:34
 msgid "Description:"
 msgstr "Description:"
 
@@ -2113,16 +2113,16 @@ msgstr "vous pouvez ignorer ce message et votre mot de passe ne changera pas"
 
 #: epl/templates/emails/project_launched.txt:3
 #, python-format
-msgid "The project %(project_name)s has been launched by %(launcher_name)s ;"
-msgstr "Le projet %(project_name)s a été lancé par %(launcher_name)s ;"
+msgid "The project '%(project_name)s' has been launched by %(launcher_name)s;"
+msgstr "Le projet '%(project_name)s' a été lancé par %(launcher_name)s ;"
 
-#: epl/templates/emails/project_launched.txt:5
+#: epl/templates/emails/project_launched.txt:4
 #, python-format
 msgid "it is possible to start working on it from now : %(project_url)s."
 msgstr ""
 "il est possible d'y travailler à compter de maintenant : %(project_url)s."
 
-#: epl/templates/emails/project_launched.txt:7
+#: epl/templates/emails/project_launched.txt:6
 #, python-format
 msgid ""
 "it is possible to start working on it from %(project_active_date)s : "
@@ -2131,7 +2131,7 @@ msgstr ""
 "il est possible d'y travailler à compter du %(project_active_date)s : "
 "%(project_url)s."
 
-#: epl/templates/emails/project_launched.txt:9
+#: epl/templates/emails/project_launched.txt:8
 #, python-format
 msgid ""
 "If you think this message was sent by error, please contact: "

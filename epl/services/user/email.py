@@ -135,7 +135,7 @@ def send_invite_project_admins_to_review_email(
 
     send_mail(
         subject=f"eplouribousse | {tenant_name} | "
-        + _("Creation of the {project_name} project").format(project_name=project_name),
+        + _("Creation of the '{project_name}' project").format(project_name=project_name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
@@ -167,7 +167,7 @@ def send_invite_project_managers_to_launch_email(
 
     send_mail(
         subject=f"eplouribousse | {tenant_name} | "
-        + _("Availability of the {project_name} project for launch").format(project_name=project.name),
+        + _("Availability of the '{project_name}' project for launch").format(project_name=project.name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
@@ -199,7 +199,7 @@ def send_project_launched_email(
 
     send_mail(
         subject=f"eplouribousse | {request.tenant.name} | "
-        + _("Launch of the {project_name} project").format(project_name=project.name),
+        + _("Launch of the '{project_name}' project").format(project_name=project.name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=project_users,
         fail_silently=False,
