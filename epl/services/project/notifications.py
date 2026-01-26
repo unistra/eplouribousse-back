@@ -366,7 +366,7 @@ def notify_controllers_of_control(resource, request, cycle):
         email.send(fail_silently=False)
 
 
-def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
+def notify_anomaly_reported(resource: Resource, request, reporter_user: User, anomalies: list = None):
     """
     Sends notification emails when anomalies are reported on a resource.
 
@@ -434,6 +434,7 @@ def notify_anomaly_reported(resource: Resource, request, reporter_user: User):
             request=request,
             resource=resource,
             reporter_user=reporter_user,
+            anomalies=anomalies or [],
         )
         email_message.send(fail_silently=False)
 

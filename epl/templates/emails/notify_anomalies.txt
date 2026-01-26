@@ -8,6 +8,34 @@
 {% trans "An intervention from a project administrator is required. They will save the maximum number of lines and then restart the circulation of the form." %}
 {{ modal_url }}
 
+{% if anomaly_data %}
+{% trans "Current open anomalies for this resource:" %} ({% now "d/m/Y H:i" %})
+
+{% trans "Resource:" %}
+{% trans "Name:" %} {{ anomaly_data.resource_info.resource_name|safe }}
+{% trans "Resource id:" %} {{ anomaly_data.resource_info.resource_code }}
+{% trans "ISSN:" %} {{ anomaly_data.resource_info.issn }}
+{% trans "Publication history:" %} {{ anomaly_data.resource_info.publication_history|safe }}
+{% for segment in anomaly_data.segments %}
+---
+{% trans "Line:" %} {{ segment.segment_order }}
+{% trans "Library:" %} {{ segment.owner_library }}
+{% trans "Collection position:" %} {{ segment.collection_position }}
+{% trans "Call number:" %} {{ segment.collection_call_number }}
+{% trans "Collection form:" %} {{ segment.segment_type }}
+{% trans "Segment:" %} {{ segment.segment_line }}
+{% if segment.exception %}{% trans "Exception:" %} {{ segment.exception }}{% endif %}
+{% if segment.improvable_elements %}{% trans "Improvable elements:" %} {{ segment.improvable_elements|safe }}{% endif %}
+{% if segment.remediated_library %}{% trans "Remediated library:" %} {{ segment.remediated_library|safe }}{% endif %}
+{% for anomaly in segment.anomalies %}
+  {% trans "Anomaly details:" %}
+  {% trans "Declared by:" %} {{ anomaly.declared_by|safe }} ({{ anomaly.declared_date|date:"d/m/Y H:i" }})
+  {% trans "Type:" %} {{ anomaly.anomaly_type|safe }}
+  {% if anomaly.description %}{% trans "Description:" %} {{ anomaly.description|safe }}{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
 ---{{ " " }}
 {% trans "This is an automated message, please do not reply." %}
 Eplouribousse
