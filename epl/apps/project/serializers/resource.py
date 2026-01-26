@@ -173,8 +173,18 @@ class ReportAnomaliesSerializer(serializers.ModelSerializer):
                     }
                 )
         self.instance.save(update_fields=["status"])
-        # 2 Send notifications
-        notify_anomaly_reported(self.instance, self.context["request"], self.context["request"].user)
+
+        # 2 Get all active anomalies of the resource
+        anomalies = (
+            self.instance.anomalies.filter(fixed=False)
+            .select_related("segment__collection__library")
+            .order_by("-created_at")
+        )
+
+        # 3 Send notifications
+        notify_anomaly_reported(
+            self.instance, self.context["request"], self.context["request"].user, anomalies=list(anomalies)
+        )
 
         return self.instance
 
