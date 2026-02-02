@@ -42,7 +42,7 @@ SAML_CONFIG = {
     },
     "metadata": {
         "remote": [
-            {"url": "https://pub.federation.renater.fr/metadata/test/idps.xml"},
+            {"url": "{{ IDP_METADATA_URL }}"},
         ],
     },
     "key_file": path.join(SITE_ROOT / "keys",  "saml2-private.key"),

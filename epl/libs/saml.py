@@ -43,7 +43,11 @@ def saml_config_loader(request: HttpRequest) -> SPConfig:
 
     settings_file = settings.SITE_ROOT / "epl/settings/saml2/saml_config.py"
     if settings_file.exists():
-        context = {"SITE_DOMAIN": tenant_domain.rstrip("/"), "ENV": environ.get("ENVIRONMENT")}
+        context = {
+            "SITE_DOMAIN": tenant_domain.rstrip("/"),
+            "IDP_METADATA_URL": environ.get("SAML2_IDP_METADATA_URL"),
+            "ENV": environ.get("ENVIRONMENT"),
+        }
         config = load_config(settings_file, context)
     else:
         config = settings.SAML_CONFIG
