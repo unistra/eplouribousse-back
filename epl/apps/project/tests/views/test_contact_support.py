@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.core import mail
-from django.utils.translation import gettext_lazy as _
 from django_tenants.urlresolvers import reverse
 
 from epl.apps.project.serializers.contact import SubjectChoices
@@ -32,9 +31,10 @@ class ContactSupportViewTests(TestCase):
         )
         self.assertEqual(
             mail.outbox[0].subject,
-            f"{_('Contact form')}: {SubjectChoices.INFO.label}",
+            f"Eplouribousse - Contact form: {SubjectChoices.INFO.label}",
         )
-        self.assertEqual(mail.outbox[0].from_email, "user@eplouribousse.fr")
+        self.assertEqual(mail.outbox[0].from_email, settings.CONTACT_EMAIL)
+        self.assertEqual(mail.outbox[0].reply_to, ["user@eplouribousse.fr"])
 
     def test_contact_support_with_authenticated_user_does_not_require_email(self):
         data = {
@@ -53,12 +53,10 @@ class ContactSupportViewTests(TestCase):
         )
         self.assertEqual(
             mail.outbox[0].subject,
-            f"{_('Contact form')}: {SubjectChoices.BUG.label}",
+            f"Eplouribousse - Contact form: {SubjectChoices.BUG.label}",
         )
-        self.assertEqual(
-            mail.outbox[0].from_email,
-            self.user.email,
-        )
+        self.assertEqual(mail.outbox[0].from_email, settings.CONTACT_EMAIL)
+        self.assertEqual(mail.outbox[0].reply_to, [self.user.email])
 
     def test_recipient_is_contact_email(self):
         data = {

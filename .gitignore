@@ -47,3 +47,4 @@ coverage.xml
 *.db
 .env
 keys
+docker-compose.override.yaml

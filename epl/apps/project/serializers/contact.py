@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.db.models import TextChoices
 from django.utils import html
 from django.utils.html import strip_tags
@@ -38,14 +38,16 @@ class ContactSupportSerializer(serializers.Serializer):
             email = user.email
         else:
             email = self.validated_data["email"]
-        subject = _("Contact form: {subject_label}").format(
+        subject = _("Eplouribousse - Contact form: {subject_label}").format(
             subject_label=str(SubjectChoices(self.validated_data["subject"]).label)
         )
         message = self.validated_data["message"]
 
-        send_mail(
+        email = EmailMessage(
             subject=subject,
-            message=message,
-            from_email=email,
-            recipient_list=[settings.CONTACT_EMAIL],
+            body=message,
+            from_email=settings.CONTACT_EMAIL,
+            to=[settings.CONTACT_EMAIL],
+            reply_to=[email],
         )
+        email.send()

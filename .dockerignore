@@ -7,7 +7,6 @@
 /fabfile/
 /htmlcov/
 /keys/
-/keys/
 /.pre-commit-config.yaml
 /.safety-project.ini
 /generate-requirements.sh

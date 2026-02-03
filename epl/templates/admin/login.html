@@ -1,0 +1,34 @@
+{% extends "admin/login.html" %}
+{% load i18n %}
+
+{% block extrabody %}
+    <div class="login-links-container">
+        <btn class="login-links">
+            <a href="{% url 'saml2_login' %}?next=/admin/">{% translate 'Connect with Shibboleth' %}</a>
+        </btn>
+    </div>
+{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        div.login-links-container {
+            text-align: center;
+        }
+
+        .login-links {
+            text-align: center;
+            border-radius: 4px;
+            background: var(--button-bg);
+            padding: 10px 15px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .login-links a:visited {
+            color: white;
+        }
+    </style>
+{% endblock %}

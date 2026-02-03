@@ -236,6 +236,8 @@ class BaseCollectionPositioningSerializer(
         Set resource status to EXCLUDED if:
         1. All collections are excluded (position 0).
         2. One collection is at position 1 and all others are excluded.
+
+        If resource is EXCLUDED but conditions are no longer met, reset to POSITIONING.
         """
         num_collections = len(collections)
         if not num_collections:
@@ -253,6 +255,9 @@ class BaseCollectionPositioningSerializer(
             if resource.status != ResourceStatus.EXCLUDED:
                 resource.status = ResourceStatus.EXCLUDED
                 resource.save(update_fields=["status"])
+        elif resource.status == ResourceStatus.EXCLUDED:
+            resource.status = ResourceStatus.POSITIONING
+            resource.save(update_fields=["status"])
 
     def calculate_arbitration(
         self,
@@ -514,7 +519,7 @@ class FinishInstructionTurnSerializer(serializers.ModelSerializer):
                 )
                 resource.instruction_turns[cycle_key]["turns"] = []
                 resource.save(update_fields=["instruction_turns", "status"])
-                notify_controllers_of_control(resource, self.context["request"], cycle.label)
+                notify_controllers_of_control(resource, self.context["request"], cycle.value)
                 ActionLog.log(
                     f"Resource status moved to {ResourceStatus(resource.status).name}",
                     actor=self.context["request"].user,

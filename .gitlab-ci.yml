@@ -21,7 +21,7 @@ variables:
   SENTRY_REPO: "di / eplouribousse / eplback"
 
 services:
-  - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:12
+  - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/postgres:17
     alias: postgres
 
 before_script:
@@ -39,8 +39,11 @@ unittest:
   image: registry.app.unistra.fr/docker/python$PYTHON_VERSION-ci:latest
   script:
     - apt-get update && apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
-    - pip3 install tox
-    - tox -e py312
+    - pip install -U pip
+    - pip install -r requirements/dev.txt
+    - coverage run --source . run_tests.py
+    - coverage xml
+    - coverage report
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
     paths:

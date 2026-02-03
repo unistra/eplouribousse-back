@@ -1,6 +1,11 @@
 # Changelog
 
-## Next release
+## 1.0.5 - 03-02-2026
+
+- ⬆️ Django 5.2.10
+- 🗑️ Remove and update configuration files (PAAS deployment)
+- 📧 Update contact form email template
+- 🔊 Refactor logging of user log in
 
 ## 1.0.4 - 20-01-2026
 

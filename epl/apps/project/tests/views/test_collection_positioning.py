@@ -17,14 +17,46 @@ from epl.apps.user.models import User
 from epl.tests import TestCase
 
 
-class CollectionPositionViewSetTest(TestCase):
+class BaseCollectionPositioningTest(TestCase):
+    """Base class for collection positioning tests with common helper methods."""
+
+    def setup_in_tenant_context(self, setup_func):
+        with tenant_context(self.tenant):
+            return setup_func()
+
+    def create_library_with_instructor_and_collection(self, project, resource=None):
+        library = LibraryFactory(project=project)
+        instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=project, library=library)
+        collection = CollectionFactory(
+            library=library,
+            project=project,
+            resource=resource if resource else ResourceFactory(project=project),
+        )
+        return library, instructor, collection
+
+    def create_project_with_resource(self, resource_status=ResourceStatus.POSITIONING):
+        project = ProjectFactory()
+        resource = ResourceFactory(project=project)
+        resource.status = resource_status
+        resource.save()
+        return project, resource
+
+    def setup_multiple_libraries(self, project, resource, num_libraries=3):
+        libraries_data = []
+        for _ in range(num_libraries):
+            library, instructor, collection = self.create_library_with_instructor_and_collection(project, resource)
+            libraries_data.append((library, instructor, collection))
+        return libraries_data
+
+
+class CollectionPositionViewSetTest(BaseCollectionPositioningTest):
     def setUp(self):
         super().setUp()
-        with tenant_context(self.tenant):
+
+        def _setup():
             self.instructor = UserFactory()
             self.project = ProjectFactory()
             self.library = LibraryFactory()
-
             self.collection = CollectionFactory(library=self.library, project=self.project, created_by=self.instructor)
 
             UserRole.objects.create(
@@ -34,6 +66,8 @@ class CollectionPositionViewSetTest(TestCase):
                 role=Role.INSTRUCTOR,
                 assigned_by=self.instructor,
             )
+
+        self.setup_in_tenant_context(_setup)
 
     # Positioning a collection - tests / PATCH /api/collections/{id}/position/
 
@@ -252,22 +286,20 @@ class CollectionPositionViewSetTest(TestCase):
         self.assertEqual(resource.status, ResourceStatus.POSITIONING)
 
 
-class ResourceExclusionTest(TestCase):
+class ResourceExclusionTest(BaseCollectionPositioningTest):
     def setUp(self):
         super().setUp()
-        with tenant_context(self.tenant):
-            self.project = ProjectFactory()
-            self.resource = ResourceFactory(project=self.project)
-            self.resource.status = ResourceStatus.POSITIONING
-            self.resource.save()
 
-            for i in range(1, 4):
-                library = LibraryFactory(project=self.project)
-                instructor = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=library)
-                collection = CollectionFactory(library=library, project=self.project, resource=self.resource)
+        def _setup():
+            self.project, self.resource = self.create_project_with_resource()
+
+            libraries_data = self.setup_multiple_libraries(self.project, self.resource, num_libraries=3)
+            for i, (library, instructor, collection) in enumerate(libraries_data, start=1):
                 setattr(self, f"library_{i}", library)
                 setattr(self, f"instructor_{i}", instructor)
                 setattr(self, f"collection_{i}", collection)
+
+        self.setup_in_tenant_context(_setup)
 
     def test_resource_status_change_to_excluded_after_last_library_excludes(self):
         """
@@ -388,24 +420,24 @@ class ResourceExclusionTest(TestCase):
         self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
 
 
-class ArbitrationNotificationTest(TestCase):
+class ArbitrationNotificationTest(BaseCollectionPositioningTest):
     def setUp(self):
         super().setUp()
-        with tenant_context(self.tenant):
+
+        def _setup():
             self.project = ProjectFactory()
             self.resource = ResourceFactory(project=self.project)
             self.resource.arbitration = Arbitration.NONE
+            self.resource.save()
 
-            self.library_1 = LibraryFactory(project=self.project)
-            self.instructor_1 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_1)
-            self.collection_1 = CollectionFactory(library=self.library_1, project=self.project, resource=self.resource)
-
-            self.library_2 = LibraryFactory(project=self.project)
-            self.instructor_2 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_2)
-            self.collection_2 = CollectionFactory(library=self.library_2, project=self.project, resource=self.resource)
+            libraries_data = self.setup_multiple_libraries(self.project, self.resource, num_libraries=2)
+            self.library_1, self.instructor_1, self.collection_1 = libraries_data[0]
+            self.library_2, self.instructor_2, self.collection_2 = libraries_data[1]
 
             self.project.settings["alerts"][AlertType.ARBITRATION.value] = True
             self.project.save()
+
+        self.setup_in_tenant_context(_setup)
 
     def test_arbitration_type_1_sends_notification_user_alerts_settings_by_default(self):
         """
@@ -626,11 +658,9 @@ class ArbitrationNotificationTest(TestCase):
         """
         Only instructors of rank 1 collections should receive an email.
         """
-
-        with tenant_context(self.tenant):
-            library_3 = LibraryFactory(project=self.project)
-            instructor_3 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=library_3)
-            collection_3 = CollectionFactory(library=library_3, project=self.project, resource=self.resource)
+        _library_3, instructor_3, collection_3 = self.setup_in_tenant_context(
+            lambda: self.create_library_with_instructor_and_collection(self.project, self.resource)
+        )
 
         self.patch(
             reverse("collection-position", kwargs={"pk": collection_3.id}),
@@ -680,10 +710,9 @@ class ArbitrationNotificationTest(TestCase):
         """
         Only instructors of non excluded collections should receive an email.
         """
-        with tenant_context(self.tenant):
-            library_3 = LibraryFactory(project=self.project)
-            instructor_3 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=library_3)
-            collection_3 = CollectionFactory(library=library_3, project=self.project, resource=self.resource)
+        _library_3, instructor_3, collection_3 = self.setup_in_tenant_context(
+            lambda: self.create_library_with_instructor_and_collection(self.project, self.resource)
+        )
 
         # collection 1 and 2 are rank 2
         self.patch(
@@ -729,28 +758,25 @@ class ArbitrationNotificationTest(TestCase):
         self.assertEqual(actual_recipients, expected_recipients)
 
 
-class PositioningNotificationTest(TestCase):
+class PositioningNotificationTest(BaseCollectionPositioningTest):
     def setUp(self):
         super().setUp()
-        with tenant_context(self.tenant):
+
+        def _setup():
             self.project = ProjectFactory()
             self.resource = ResourceFactory(project=self.project)
             self.resource.arbitration = Arbitration.NONE
+            self.resource.save()
 
-            self.library_1 = LibraryFactory(project=self.project)
-            self.instructor_1 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_1)
-            self.collection_1 = CollectionFactory(library=self.library_1, project=self.project, resource=self.resource)
-
-            self.library_2 = LibraryFactory(project=self.project)
-            self.instructor_2 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_2)
-            self.collection_2 = CollectionFactory(library=self.library_2, project=self.project, resource=self.resource)
-
-            self.library_3 = LibraryFactory(project=self.project)
-            self.instructor_3 = UserWithRoleFactory(role=Role.INSTRUCTOR, project=self.project, library=self.library_3)
-            self.collection_3 = CollectionFactory(library=self.library_3, project=self.project, resource=self.resource)
+            libraries_data = self.setup_multiple_libraries(self.project, self.resource, num_libraries=3)
+            self.library_1, self.instructor_1, self.collection_1 = libraries_data[0]
+            self.library_2, self.instructor_2, self.collection_2 = libraries_data[1]
+            self.library_3, self.instructor_3, self.collection_3 = libraries_data[2]
 
             self.project.settings["alerts"][AlertType.POSITIONING.value] = True
             self.project.save()
+
+        self.setup_in_tenant_context(_setup)
 
     def test_positioning_sends_notification(self):
         # Position the collection_1 to rank 2
@@ -825,3 +851,218 @@ class PositioningNotificationTest(TestCase):
         self.collection_1.refresh_from_db()
         self.assertEqual(self.collection_1.position, 2)
         self.assertEqual(len(mail.outbox), 0)
+
+
+class ExcludedStatusTransitionTest(BaseCollectionPositioningTest):
+    def setUp(self):
+        super().setUp()
+
+        def _setup():
+            self.project, self.resource = self.create_project_with_resource()
+
+            libraries_data = self.setup_multiple_libraries(self.project, self.resource, num_libraries=2)
+            self.library_a, self.instructor_a, self.collection_a = libraries_data[0]
+            self.library_b, self.instructor_b, self.collection_b = libraries_data[1]
+
+        self.setup_in_tenant_context(_setup)
+
+    def test_excluded_status_cleared_when_collection_repositioned_from_exclusion(self):
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_a.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_a,
+        )
+
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_b.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_b,
+        )
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
+
+        response = self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_b.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_b,
+        )
+        self.response_ok(response)
+
+        self.resource.refresh_from_db()
+        self.assertNotEqual(
+            self.resource.status,
+            ResourceStatus.EXCLUDED,
+            "Resource should no longer be EXCLUDED after lib B repositions from exclusion",
+        )
+        self.assertEqual(
+            self.resource.status,
+            ResourceStatus.INSTRUCTION_BOUND,
+            "Resource should move to INSTRUCTION_BOUND when all positioned and no arbitration needed",
+        )
+
+    def test_excluded_status_cleared_when_collection_repositioned_to_rank_1(self):
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_a.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_a,
+        )
+
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_b.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_b,
+        )
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
+
+        response = self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_b.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_b,
+        )
+        self.response_ok(response)
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.POSITIONING)
+        self.assertEqual(self.resource.arbitration, Arbitration.ONE)
+
+    def test_excluded_status_maintained_when_conditions_still_met(self):
+        _library_c, instructor_c, collection_c = self.setup_in_tenant_context(
+            lambda: self.create_library_with_instructor_and_collection(self.project, self.resource)
+        )
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_a.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_a,
+        )
+
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_b.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_b,
+        )
+
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": collection_c.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=instructor_c,
+        )
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
+
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": collection_c.id}),
+            data={"exclusion_reason": "Other reason"},
+            content_type="application/json",
+            user=instructor_c,
+        )
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
+
+    def test_excluded_status_cleared_when_rank_1_collection_changes_position(self):
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_a.id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructor_a,
+        )
+
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collection_b.id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructor_b,
+        )
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.EXCLUDED)
+
+        response = self.patch(
+            reverse("collection-position", kwargs={"pk": self.collection_a.id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructor_a,
+        )
+        self.response_ok(response)
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.status, ResourceStatus.POSITIONING)
+        self.assertEqual(self.resource.arbitration, Arbitration.ZERO)
+
+
+class PositionSerializerEdgeCasesTest(BaseCollectionPositioningTest):
+    def setUp(self):
+        super().setUp()
+
+        def _setup():
+            self.project = ProjectFactory()
+            self.resource = ResourceFactory(project=self.project)
+
+            libraries_data = self.setup_multiple_libraries(self.project, self.resource, num_libraries=3)
+
+            self.libraries = [lib for lib, _, _ in libraries_data]
+            self.instructors = [instr for _, instr, _ in libraries_data]
+            self.collections = [coll for _, _, coll in libraries_data]
+
+        self.setup_in_tenant_context(_setup)
+
+    def test_multiple_repositioning_preserves_correct_state(self):
+        for i, collection in enumerate(self.collections):
+            self.patch(
+                reverse("collection-position", kwargs={"pk": collection.id}),
+                data={"position": 2},
+                content_type="application/json",
+                user=self.instructors[i],
+            )
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.arbitration, Arbitration.ZERO)
+        self.assertEqual(self.resource.status, ResourceStatus.POSITIONING)
+
+        self.patch(
+            reverse("collection-position", kwargs={"pk": self.collections[0].id}),
+            data={"position": 1},
+            content_type="application/json",
+            user=self.instructors[0],
+        )
+
+        self.resource.refresh_from_db()
+        self.assertEqual(self.resource.arbitration, Arbitration.NONE)
+        self.assertEqual(self.resource.status, ResourceStatus.INSTRUCTION_BOUND)
+
+    def test_repositioning_clears_exclusion_reason(self):
+        self.patch(
+            reverse("collection-exclude", kwargs={"pk": self.collections[0].id}),
+            data={"exclusion_reason": "Participation in another project"},
+            content_type="application/json",
+            user=self.instructors[0],
+        )
+
+        self.collections[0].refresh_from_db()
+        self.assertEqual(self.collections[0].exclusion_reason, "Participation in another project")
+
+        response = self.patch(
+            reverse("collection-position", kwargs={"pk": self.collections[0].id}),
+            data={"position": 2},
+            content_type="application/json",
+            user=self.instructors[0],
+        )
+        self.response_ok(response)
+
+        self.collections[0].refresh_from_db()
+        self.assertEqual(self.collections[0].exclusion_reason, "")
+        self.assertEqual(self.collections[0].position, 2)

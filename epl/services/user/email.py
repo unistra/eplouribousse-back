@@ -135,7 +135,7 @@ def send_invite_project_admins_to_review_email(
 
     send_mail(
         subject=f"eplouribousse | {tenant_name} | "
-        + _("Creation of the {project_name} project").format(project_name=project_name),
+        + _("Creation of the '{project_name}' project").format(project_name=project_name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
@@ -167,7 +167,7 @@ def send_invite_project_managers_to_launch_email(
 
     send_mail(
         subject=f"eplouribousse | {tenant_name} | "
-        + _("Availability of the {project_name} project for launch").format(project_name=project.name),
+        + _("Availability of the '{project_name}' project for launch").format(project_name=project.name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
@@ -199,7 +199,7 @@ def send_project_launched_email(
 
     send_mail(
         subject=f"eplouribousse | {request.tenant.name} | "
-        + _("Launch of the {project_name} project").format(project_name=project.name),
+        + _("Launch of the '{project_name}' project").format(project_name=project.name),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=project_users,
         fail_silently=False,
@@ -327,15 +327,91 @@ def prepare_control_notification_email(
     return subject, body
 
 
+def prepare_anomaly_details(anomalies, resource):
+    """
+    Prepares details of anomalies grouped by segment for the email.
+    """
+    from collections import defaultdict
+
+    # Group anomalies by segment
+    segments_map = defaultdict(list)
+
+    for anomaly in anomalies:
+        segment = anomaly.segment
+        segments_map[segment.id].append(anomaly)
+
+    # Prepares resource info (once)
+    resource_info = {
+        "resource_name": resource.title,
+        "resource_code": resource.code,
+        "resource_id": resource.id,
+        "issn": resource.issn or "N/A",
+        "publication_history": resource.publication_history or "N/A",
+    }
+
+    # Prepares segments with their anomalies
+    segments_with_anomalies = []
+
+    for segment_id, segment_anomalies in segments_map.items():
+        # Get segment, collection, and library from the first anomaly
+        first_anomaly = segment_anomalies[0]
+        segment = first_anomaly.segment
+        collection = segment.collection
+        library = collection.library
+
+        # Prepare a segment anomalies list
+        anomalies_list = []
+        for anomaly in segment_anomalies:
+            anomalies_list.append(
+                {
+                    "declared_by": str(anomaly.created_by) if anomaly.created_by else "N/A",
+                    "declared_date": anomaly.created_at,
+                    "anomaly_type": anomaly.get_type_display(),
+                    "description": anomaly.description,
+                }
+            )
+
+        # Add the segment details along with its anomalies
+        remediated_library = None
+        if segment.improved_segment and segment.improved_segment.collection:
+            remediated_lib_code = segment.improved_segment.collection.library.code
+            remediated_order = segment.improved_segment.order
+            remediated_library = f"{remediated_lib_code} | Ligne: {remediated_order}"
+
+        segments_with_anomalies.append(
+            {
+                "segment_order": segment.order,
+                "owner_library": library.code,
+                "segment_type": segment.get_segment_type_display(),
+                "segment_content": segment.content,
+                "exception": segment.exception,
+                "improvable_elements": segment.improvable_elements,
+                "remediated_library": remediated_library,
+                "collection_position": collection.position,
+                "collection_call_number": collection.call_number,
+                "anomalies": anomalies_list,
+            }
+        )
+
+    segments_with_anomalies.sort(key=lambda s: s["segment_order"])
+
+    return {
+        "resource_info": resource_info,
+        "segments": segments_with_anomalies,
+    }
+
+
 def prepare_anomaly_notification_email(
-    email: str,
     request: Request,
     resource: Resource,
     reporter_user: User,
-) -> tuple[str, str, str, list[str]]:
+    to_emails: list[str],
+    cc_emails: list[str] | None = None,
+    anomalies: list = None,
+) -> EmailMessage:
     """
-    Prepares anomaly notification email data for send_mass_mail.
-    Returns a tuple of (subject, message, from_email, [recipient_email])
+    Prepares anomaly notification email.
+    Returns an EmailMessage instance.
     """
     front_domain = get_front_domain(request)
     project = resource.project
@@ -348,6 +424,9 @@ def prepare_anomaly_notification_email(
     elif reporter_user.is_instructor(project):
         reporter_role_display = Role.INSTRUCTOR.label
 
+    # Préparer les détails des anomalies groupées par segment
+    anomaly_data = prepare_anomaly_details(anomalies or [], resource)
+
     subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('anomaly')}"
 
     email_content = render_to_string(
@@ -358,10 +437,19 @@ def prepare_anomaly_notification_email(
             "reporter_identifier": str(reporter_user),
             "reporter_email": reporter_user.email,
             "modal_url": modal_url,
+            "anomaly_data": anomaly_data,
         },
     )
 
-    return subject, email_content, settings.DEFAULT_FROM_EMAIL, [email]
+    email = EmailMessage(
+        subject=subject,
+        body=email_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=to_emails,
+        cc=cc_emails or [],
+    )
+
+    return email
 
 
 def prepare_anomaly_resolved_notification_email(
@@ -398,6 +486,7 @@ def prepare_anomaly_resolved_notification_email(
         subject=subject,
         body=email_content,
         from_email=settings.DEFAULT_FROM_EMAIL,
+        reply_to=[admin_user.email],
         to=to_emails,
         cc=cc_emails,
     )

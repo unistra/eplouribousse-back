@@ -1,6 +1,6 @@
 {% load i18n %}
 
-{% blocktranslate %}The project {{ project_name }} is now ready for launch.{% endblocktranslate %}
+{% blocktranslate with project_name=project_name|safe %}The project '{{ project_name }}' is now ready for launch.{% endblocktranslate %}
 {% blocktranslate %}As a pilot, you can now launch or schedule the actual launch of this project.
 To do so, go to {{ project_url }}.{% endblocktranslate %}
 

@@ -1,7 +1,6 @@
 {% load i18n %}
 
-{% blocktranslate %}The project {{ project_name }} has been launched by {{ launcher_name }} ;{% endblocktranslate %}
-{% if is_starting_now %}
+{% blocktranslate with project_name=project_name|safe launcher_name=launcher_name|safe %}The project '{{ project_name }}' has been launched by {{ launcher_name }};{% endblocktranslate %}{% if is_starting_now %}
 {% blocktranslate %}it is possible to start working on it from now : {{ project_url }}.{% endblocktranslate %}
 {% else %}
 {% blocktranslate %}it is possible to start working on it from {{ project_active_date }} : {{ project_url }}.{% endblocktranslate %}

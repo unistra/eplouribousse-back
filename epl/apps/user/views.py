@@ -154,7 +154,6 @@ def login_success(request) -> HttpResponseRedirect:
         f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}/handshake?t={authentication_token}"
     )
     logger.info(f"Successful login: redirect to front at {front_url}")
-    ActionLog.log(message="User has logged in", actor=request.user, obj=request.user, ip=get_client_ip(request)[0])
 
     return HttpResponseRedirect(iri_to_uri(front_url))
 
@@ -295,9 +294,21 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 return Response({"is_project_creator": user.is_project_creator})
             case "POST":
                 user.set_is_project_creator(True, request.user)
+                ActionLog.log(
+                    message=f"Role <project_creator> assigned to user <{user.username}>",
+                    actor=request.user,
+                    obj=user,
+                    request=request,
+                )
                 return Response({"is_project_creator": user.is_project_creator}, status=status.HTTP_201_CREATED)
             case "DELETE":
                 user.set_is_project_creator(False, request.user)
+                ActionLog.log(
+                    message=f"Role <project_creator> removed for the user <{user.username}>",
+                    actor=request.user,
+                    obj=user,
+                    request=request,
+                )
                 return Response({"is_project_creator": user.is_project_creator}, status=status.HTTP_204_NO_CONTENT)
             case _:
                 return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -335,6 +346,12 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             case "POST":
                 user.is_superuser = True
                 user.save(update_fields=["is_superuser"])
+                ActionLog.log(
+                    message=f"Role <superuser> assigned to the user <{user.username}>",
+                    actor=request.user,
+                    obj=user,
+                    request=request,
+                )
                 return Response({"is_superuser": user.is_superuser}, status=status.HTTP_201_CREATED)
             case "DELETE":
                 if not user.is_superuser:
@@ -343,6 +360,12 @@ class UserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                     raise ValidationError(_("There must remain at least one superuser in the tenant"))
                 user.is_superuser = False
                 user.save(update_fields=["is_superuser"])
+                ActionLog.log(
+                    message=f"Role <superuser> removed for the user <{user.username}>",
+                    actor=request.user,
+                    obj=user,
+                    request=request,
+                )
                 return Response(status=status.HTTP_204_NO_CONTENT)
             case _:
                 return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
