@@ -1,6 +1,6 @@
 [project]
 name = "epl"
-version = "1.0.4"
+version = "1.0.5"
 description = "Web application to facilitate the deduplication of periodicals within a group of libraries"
 authors = [
     { name = "DIP, Direction du numérique, Unistra", email = "dnum-dip@unistra.fr" }
