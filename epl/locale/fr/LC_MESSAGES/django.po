@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-26 14:40+0100\n"
+"POT-Creation-Date: 2026-02-03 12:16+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1516,7 +1516,7 @@ msgid "Your account has just been opened"
 msgstr "Votre compte vient d'être ouvert"
 
 #: epl/apps/user/tests/views/test_post_login_handshake.py:48
-#: epl/apps/user/views.py:192
+#: epl/apps/user/views.py:191
 msgid "Handshake token expired"
 msgstr "Le jeton d'authentification a expiré"
 
@@ -1550,108 +1550,108 @@ msgstr "L'email a été envoyé."
 msgid "You must be logged in to access this page"
 msgstr "Vous devez être connecté pour accéder à cette page"
 
-#: epl/apps/user/views.py:164
+#: epl/apps/user/views.py:163
 msgid "Validate a handshake token"
 msgstr "Le jeton d'authentification n'est pas valide"
 
-#: epl/apps/user/views.py:167
+#: epl/apps/user/views.py:166
 msgid "Handshake token"
 msgstr "Jeton d'authentification"
 
-#: epl/apps/user/views.py:194
+#: epl/apps/user/views.py:193
 msgid "Invalid handshake token"
 msgstr "Le jeton d'authentification n'est pas valide"
 
-#: epl/apps/user/views.py:210
+#: epl/apps/user/views.py:209
 msgid "User profile"
 msgstr "Profil utilisateur"
 
-#: epl/apps/user/views.py:236
+#: epl/apps/user/views.py:235
 msgid "List of users"
 msgstr "Liste des utilisateurs"
 
-#: epl/apps/user/views.py:242
+#: epl/apps/user/views.py:241
 msgid "Search string"
 msgstr "Chaîne de caractère de recherche"
 
-#: epl/apps/user/views.py:267
+#: epl/apps/user/views.py:266
 msgid "User is project creator"
 msgstr "L'utilisateur est monteur de projet"
 
-#: epl/apps/user/views.py:272
+#: epl/apps/user/views.py:271
 msgid "Get, set or delete a user's project creator role"
 msgstr ""
 "Obtenir, définir ou supprimer le rôle de créateur de projet d'un utilisateur"
 
-#: epl/apps/user/views.py:273
+#: epl/apps/user/views.py:272
 msgid "Check if a user has project creator role or set or delete that role"
 msgstr ""
 "Vérifier si un utilisateur a le rôle de créateur de projet ou définir ou "
 "supprimer ce rôle"
 
-#: epl/apps/user/views.py:307
+#: epl/apps/user/views.py:306
 msgid "User is superuser"
 msgstr "L'utilisateur est super-administrateur"
 
-#: epl/apps/user/views.py:312
+#: epl/apps/user/views.py:311
 msgid "Get, set or delete a user's superuser status"
 msgstr ""
 "Obtenir, définir ou supprimer le statut super-administrateur d'un utilisateur"
 
-#: epl/apps/user/views.py:313
+#: epl/apps/user/views.py:312
 msgid ""
 "Check if a user is a superuser or set or delete that status for the tenant"
 msgstr ""
 "Vérifier si un utilisateur a le status de super-administrateur du tenant ou "
 "attribuer ou supprimer ce statut"
 
-#: epl/apps/user/views.py:341
+#: epl/apps/user/views.py:340
 msgid "User is not a superuser"
 msgstr "L'utilisateur n'est pas super-administrateur"
 
-#: epl/apps/user/views.py:343
+#: epl/apps/user/views.py:342
 msgid "There must remain at least one superuser in the tenant"
 msgstr "Il doit rester au moins un super-administrateur dans le tenant"
 
-#: epl/apps/user/views.py:399
+#: epl/apps/user/views.py:398
 msgid "Send an invitation email"
 msgstr "Envoyer un email d'invitation"
 
-#: epl/apps/user/views.py:401
+#: epl/apps/user/views.py:400
 msgid ""
 "Invite someone to join Eplouribousse via a local account (outside the "
 "education and research federation). Only the email address is required; "
 "project, role and library can be assigned once the user is in the database."
 msgstr ""
 
-#: epl/apps/user/views.py:407 epl/apps/user/views.py:437
+#: epl/apps/user/views.py:406 epl/apps/user/views.py:436
 msgid "Invitation email sent successfully."
 msgstr "L'email d'invitation a été envoyé."
 
-#: epl/apps/user/views.py:446
+#: epl/apps/user/views.py:445
 msgid "Validate invitation token"
 msgstr "Valider le jeton d'invitation"
 
-#: epl/apps/user/views.py:447
+#: epl/apps/user/views.py:446
 msgid ""
 "Validates an invitation token and returns the associated email address if "
 "valid."
 msgstr ""
 "Valide un jeton d'invitation et retourne l'adresse email associée si valide."
 
-#: epl/apps/user/views.py:452
+#: epl/apps/user/views.py:451
 msgid "Email address associated with the invitation"
 msgstr "Adresse email associée à l'invitation"
 
-#: epl/apps/user/views.py:470
+#: epl/apps/user/views.py:469
 msgid "Create a new user account"
 msgstr "Créer un nouveau compte utilisateur"
 
-#: epl/apps/user/views.py:471
+#: epl/apps/user/views.py:470
 msgid "Creates a new user account based on an invitation token"
 msgstr "Crée un nouveau compte utilisateur basé sur un jeton d'invitation"
 
-#: epl/apps/user/views.py:476 epl/apps/user/views.py:489
+#: epl/apps/user/views.py:475 epl/apps/user/views.py:488
 msgid "Account created successfully."
 msgstr "Compte créé avec succès."
 
@@ -1742,6 +1742,10 @@ msgstr "Page non trouvée"
 msgid "Error"
 msgstr "Erreur"
 
+#: epl/templates/admin/login.html:7
+msgid "Connect with Shibboleth"
+msgstr "Connexion avec Shibboleth"
+
 #: epl/templates/emails/confirm_account_creation.txt:2
 msgid "Your account has just been opened; you can now log in to the site:"
 msgstr "Votre compte vient d'être ouvert; vous pouvez vous connecter au site:"
@@ -1804,7 +1808,8 @@ msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 #: epl/templates/emails/invite_project_managers_to_launch.txt:3
 #, python-format
 msgid "The project '%(project_name)s' is now ready for launch."
-msgstr "Le projet '%(project_name)s' est désormais disponible pour le lancement."
+msgstr ""
+"Le projet '%(project_name)s' est désormais disponible pour le lancement."
 
 #: epl/templates/emails/invite_project_managers_to_launch.txt:4
 #, python-format

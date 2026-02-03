@@ -154,7 +154,6 @@ def login_success(request) -> HttpResponseRedirect:
         f"{request.scheme}://{request.tenant.get_primary_domain().front_domain}/handshake?t={authentication_token}"
     )
     logger.info(f"Successful login: redirect to front at {front_url}")
-    ActionLog.log(message="User has logged in", actor=request.user, obj=request.user, ip=get_client_ip(request)[0])
 
     return HttpResponseRedirect(iri_to_uri(front_url))
 
