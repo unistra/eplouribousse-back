@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-03 12:16+0100\n"
+"POT-Creation-Date: 2026-02-03 13:47+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -666,8 +666,8 @@ msgstr "L'email est requis pour les utilisateurs non authentifiés"
 
 #: epl/apps/project/serializers/contact.py:41
 #, python-brace-format
-msgid "Contact form: {subject_label}"
-msgstr ""
+msgid "Eplouribousse - Contact form: {subject_label}"
+msgstr "Eplouribousse - Formulaire de contact: {subject_label}"
 
 #: epl/apps/project/serializers/dashboard.py:140
 msgid "Initial data"
@@ -1068,11 +1068,6 @@ msgstr "Collections supprimées avec succès pour cette bibliothèque"
 #: epl/apps/project/views/collection.py:181
 msgid "No collections found for this library in this project"
 msgstr "Aucune collection trouvée pour cette bibliothèque dans ce projet"
-
-#: epl/apps/project/tests/views/test_contact_support.py:35
-#: epl/apps/project/tests/views/test_contact_support.py:56
-msgid "Contact form"
-msgstr "Formulaire de contact"
 
 #: epl/apps/project/tests/views/test_project_status.py:127
 msgid "creating"
@@ -2207,6 +2202,9 @@ msgstr "Bibliothèque remédiée"
 #: epl/validators.py:61
 msgid "ISSN must be 8 characters long"
 msgstr "L'ISSN doit comporter 8 caractères"
+
+#~ msgid "Contact form"
+#~ msgstr "Formulaire de contact"
 
 #~ msgid "Number of initial resources before positioning"
 #~ msgstr "Nombre de Ressources initiales avant positionnement"

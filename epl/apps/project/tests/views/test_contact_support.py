@@ -31,7 +31,7 @@ class ContactSupportViewTests(TestCase):
         )
         self.assertEqual(
             mail.outbox[0].subject,
-            f"Eplouribousse: {SubjectChoices.INFO.label}",
+            f"Eplouribousse - Contact form: {SubjectChoices.INFO.label}",
         )
         self.assertEqual(mail.outbox[0].from_email, settings.CONTACT_EMAIL)
         self.assertEqual(mail.outbox[0].reply_to, ["user@eplouribousse.fr"])
@@ -53,7 +53,7 @@ class ContactSupportViewTests(TestCase):
         )
         self.assertEqual(
             mail.outbox[0].subject,
-            f"Eplouribousse: {SubjectChoices.BUG.label}",
+            f"Eplouribousse - Contact form: {SubjectChoices.BUG.label}",
         )
         self.assertEqual(mail.outbox[0].from_email, settings.CONTACT_EMAIL)
         self.assertEqual(mail.outbox[0].reply_to, [self.user.email])

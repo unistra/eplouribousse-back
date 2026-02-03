@@ -38,7 +38,7 @@ class ContactSupportSerializer(serializers.Serializer):
             email = user.email
         else:
             email = self.validated_data["email"]
-        subject = "Eplouribousse: {subject_label}".format(
+        subject = _("Eplouribousse - Contact form: {subject_label}").format(
             subject_label=str(SubjectChoices(self.validated_data["subject"]).label)
         )
         message = self.validated_data["message"]
