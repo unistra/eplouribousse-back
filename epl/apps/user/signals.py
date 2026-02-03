@@ -9,7 +9,7 @@ from epl.apps.project.models import ActionLog
 
 @receiver(user_logged_in)
 def log_user_login(sender: type[Model], request: Any, user: Any, **kwargs: Any) -> None:
-    if request.saml_session:
+    if hasattr(request, "saml_session") and request.saml_session:
         message = "User has logged in via SAML"
     else:
         message = "User has logged in"
