@@ -7,3 +7,4 @@ class UserConfig(AppConfig):
 
     def ready(self):
         import epl.apps.user.extensions  # noqa: F401
+        import epl.apps.user.signals  # noqa: F401
