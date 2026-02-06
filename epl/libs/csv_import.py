@@ -27,7 +27,7 @@ class CollectionModel(BaseModel):
 
 class ResourceModel(BaseModel):
     id: UUID
-    title: Annotated[str, Field(max_length=510, min_length=1)]
+    title: Annotated[str, Field(max_length=2048, min_length=1)]
     code: Annotated[str, Field(min_length=1, max_length=25)]
     project_id: UUID
     # issn: Annotated[str, Field(max_length=9)] = ""
