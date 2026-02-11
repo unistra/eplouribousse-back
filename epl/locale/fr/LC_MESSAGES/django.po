@@ -696,7 +696,7 @@ msgstr "Information sur le positionnement"
 
 #: epl/apps/project/serializers/dashboard.py:179
 msgid "Number of Collections positioned (exclusions included)"
-msgstr "Nombre de Collections positionnées (exclusions incluses)"
+msgstr "Nombre de Collections positionnées (dont exclusions)"
 
 #: epl/apps/project/serializers/dashboard.py:184
 msgid "Number of Collections positioned (excluding exclusions)"
