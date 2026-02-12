@@ -3,11 +3,11 @@
 {% trans "You have been invited to join Eplouribousse" %}.
 
 
-- {% trans "To access the platform" %}, {% trans "please click on the link below and complete your registration" %}:
+- {% trans "To access the platform" %}, {% trans "please click on the link below and complete your registration" %}
 
 ===>    {{ invitation_link }}
 
-- {% trans "If you believe this is an error, please contact the creator of your account" %}:
+- {% trans "If you believe this is an error, please contact the creator of your account" %}.
 
 ===>    {{ inviter }}
 

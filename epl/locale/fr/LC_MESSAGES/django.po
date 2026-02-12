@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-03 13:47+0100\n"
+"POT-Creation-Date: 2026-02-11 15:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -125,7 +125,7 @@ msgid "Positioning"
 msgstr "Positionnement"
 
 #: epl/apps/project/models/choices.py:9
-#: epl/apps/project/models/collection.py:57
+#: epl/apps/project/models/collection.py:56
 msgid "Arbitration"
 msgstr "Arbitrage"
 
@@ -300,81 +300,81 @@ msgstr "Historique de la publication"
 msgid "Numbering"
 msgstr "Numérotation"
 
-#: epl/apps/project/models/collection.py:59
-#: epl/apps/project/models/collection.py:132
+#: epl/apps/project/models/collection.py:57
+#: epl/apps/project/models/collection.py:130
 #: epl/apps/project/models/project.py:84 epl/apps/project/models/segment.py:32
 #: epl/apps/tenant/models.py:12
 msgid "Created at"
 msgstr "Créé le"
 
-#: epl/apps/project/models/collection.py:61
+#: epl/apps/project/models/collection.py:59
 msgid "Validations"
 msgstr "Validations"
 
-#: epl/apps/project/models/collection.py:73
+#: epl/apps/project/models/collection.py:71
 msgid "Resource"
 msgstr "Ressource"
 
-#: epl/apps/project/models/collection.py:74
+#: epl/apps/project/models/collection.py:72
 msgid "Resources"
 msgstr "resources"
 
-#: epl/apps/project/models/collection.py:128
+#: epl/apps/project/models/collection.py:126
 #: epl/templates/pdf/resulting-report.html:94
 #: epl/templates/pdf/resulting-report.html:100
 #: epl/templates/pdf/resulting-report.html:105
 msgid "Call number"
 msgstr "Cote"
 
-#: epl/apps/project/models/collection.py:129
+#: epl/apps/project/models/collection.py:127
 msgid "Hold statement"
 msgstr "État de conservation"
 
-#: epl/apps/project/models/collection.py:130
+#: epl/apps/project/models/collection.py:128
 msgid "Missing"
 msgstr "Manquant"
 
-#: epl/apps/project/models/collection.py:131
+#: epl/apps/project/models/collection.py:129
 msgid "Notes"
 msgstr "Notes"
 
-#: epl/apps/project/models/collection.py:133
+#: epl/apps/project/models/collection.py:131
 msgid "Created by"
 msgstr "Créé par"
 
-#: epl/apps/project/models/collection.py:136
+#: epl/apps/project/models/collection.py:134
 msgid "Alias for a duplicate collection in the same library"
 msgstr "Alias pour une collection dupliquée dans la même bibliothèque"
 
-#: epl/apps/project/models/collection.py:139
+#: epl/apps/project/models/collection.py:137
 #: epl/templates/pdf/resulting-report.html:100
 #: epl/templates/pdf/resulting-report.html:105
 msgid "Position"
 msgstr "Position"
 
-#: epl/apps/project/models/collection.py:139
+#: epl/apps/project/models/collection.py:137
 msgid "Positioning rank of a collection"
 msgstr "Positionnement du rang d'une collection"
 
-#: epl/apps/project/models/collection.py:145
+#: epl/apps/project/models/collection.py:143
 #: epl/apps/project/serializers/collection.py:349
 msgid "Reason for excluding the collection from deduplication"
 msgstr "Raison de l'exclusion de la collection de la déduplication"
 
-#: epl/apps/project/models/collection.py:148
+#: epl/apps/project/models/collection.py:146
 msgid "Is the result collection"
 msgstr "Est la collection résultante"
 
-#: epl/apps/project/models/collection.py:151
+#: epl/apps/project/models/collection.py:149
 msgid "The collection is the result of a deduplication process"
 msgstr "La collection est le résultat d'une opération de déduplication"
 
-#: epl/apps/project/models/collection.py:161
+#: epl/apps/project/models/collection.py:159
 #: epl/templates/pdf/resulting-report.html:130
 msgid "Collection"
 msgstr "Collection"
 
-#: epl/apps/project/models/collection.py:162
+#: epl/apps/project/models/collection.py:160
 msgid "Collections"
 msgstr "Collections"
 
@@ -676,7 +676,7 @@ msgstr "Données initiales"
 #: epl/apps/project/serializers/dashboard.py:144
 msgid "Number of initial collections before positioning (without singletons)"
 msgstr ""
-"Nombre de Collections initiales avant positionnement (singletons exclus)"
+"Nombre de Collections initiales avant positionnement (unica exclus)"
 
 #: epl/apps/project/serializers/dashboard.py:150
 msgid ""
@@ -688,7 +688,7 @@ msgstr ""
 
 #: epl/apps/project/serializers/dashboard.py:156
 msgid "Number of singletons (collections unique in a resource)"
-msgstr "Nombre de singletons (collections uniques dans une ressource)"
+msgstr "Nombre d'unica (collections uniques dans une ressource)"
 
 #: epl/apps/project/serializers/dashboard.py:175
 msgid "Positioning Information"
@@ -696,7 +696,7 @@ msgstr "Information sur le positionnement"
 
 #: epl/apps/project/serializers/dashboard.py:179
 msgid "Number of Collections positioned (exclusions included)"
-msgstr "Nombre de Collections positionnées (exclusions incluses)"
+msgstr "Nombre de Collections positionnées (dont exclusions)"
 
 #: epl/apps/project/serializers/dashboard.py:184
 msgid "Number of Collections positioned (excluding exclusions)"
@@ -1508,7 +1508,7 @@ msgstr "Le mot de passe est trop faible"
 
 #: epl/apps/user/tests/views/test_create_account.py:121
 msgid "Your account has just been opened"
-msgstr "Votre compte vient d'être ouvert"
+msgstr "Votre compte vient d'être ouvert ;"
 
 #: epl/apps/user/tests/views/test_post_login_handshake.py:48
 #: epl/apps/user/views.py:191
@@ -1584,69 +1584,69 @@ msgstr ""
 "Vérifier si un utilisateur a le rôle de créateur de projet ou définir ou "
 "supprimer ce rôle"
 
-#: epl/apps/user/views.py:306
+#: epl/apps/user/views.py:318
 msgid "User is superuser"
 msgstr "L'utilisateur est super-administrateur"
 
-#: epl/apps/user/views.py:311
+#: epl/apps/user/views.py:323
 msgid "Get, set or delete a user's superuser status"
 msgstr ""
 "Obtenir, définir ou supprimer le statut super-administrateur d'un utilisateur"
 
-#: epl/apps/user/views.py:312
+#: epl/apps/user/views.py:324
 msgid ""
 "Check if a user is a superuser or set or delete that status for the tenant"
 msgstr ""
 "Vérifier si un utilisateur a le status de super-administrateur du tenant ou "
 "attribuer ou supprimer ce statut"
 
-#: epl/apps/user/views.py:340
+#: epl/apps/user/views.py:358
 msgid "User is not a superuser"
 msgstr "L'utilisateur n'est pas super-administrateur"
 
-#: epl/apps/user/views.py:342
+#: epl/apps/user/views.py:360
 msgid "There must remain at least one superuser in the tenant"
 msgstr "Il doit rester au moins un super-administrateur dans le tenant"
 
-#: epl/apps/user/views.py:398
+#: epl/apps/user/views.py:422
 msgid "Send an invitation email"
 msgstr "Envoyer un email d'invitation"
 
-#: epl/apps/user/views.py:400
+#: epl/apps/user/views.py:424
 msgid ""
 "Invite someone to join Eplouribousse via a local account (outside the "
 "education and research federation). Only the email address is required; "
 "project, role and library can be assigned once the user is in the database."
 msgstr ""
 
-#: epl/apps/user/views.py:406 epl/apps/user/views.py:436
+#: epl/apps/user/views.py:430 epl/apps/user/views.py:460
 msgid "Invitation email sent successfully."
 msgstr "L'email d'invitation a été envoyé."
 
-#: epl/apps/user/views.py:445
+#: epl/apps/user/views.py:469
 msgid "Validate invitation token"
 msgstr "Valider le jeton d'invitation"
 
-#: epl/apps/user/views.py:446
+#: epl/apps/user/views.py:470
 msgid ""
 "Validates an invitation token and returns the associated email address if "
 "valid."
 msgstr ""
 "Valide un jeton d'invitation et retourne l'adresse email associée si valide."
 
-#: epl/apps/user/views.py:451
+#: epl/apps/user/views.py:475
 msgid "Email address associated with the invitation"
 msgstr "Adresse email associée à l'invitation"
 
-#: epl/apps/user/views.py:469
+#: epl/apps/user/views.py:493
 msgid "Create a new user account"
 msgstr "Créer un nouveau compte utilisateur"
 
-#: epl/apps/user/views.py:470
+#: epl/apps/user/views.py:494
 msgid "Creates a new user account based on an invitation token"
 msgstr "Crée un nouveau compte utilisateur basé sur un jeton d'invitation"
 
-#: epl/apps/user/views.py:475 epl/apps/user/views.py:488
+#: epl/apps/user/views.py:499 epl/apps/user/views.py:512
 msgid "Account created successfully."
 msgstr "Compte créé avec succès."
 
@@ -1743,7 +1743,7 @@ msgstr "Connexion avec Shibboleth"
 
 #: epl/templates/emails/confirm_account_creation.txt:2
 msgid "Your account has just been opened; you can now log in to the site:"
-msgstr "Votre compte vient d'être ouvert; vous pouvez vous connecter au site:"
+msgstr "Votre compte vient d'être ouvert ; vous pouvez vous connecter au site :"
 
 #: epl/templates/emails/confirm_account_creation.txt:4
 msgid "For the record, your username is:"
@@ -1759,9 +1759,9 @@ msgid "This is an automated message, please do not reply."
 msgstr "Ceci est un message automatique, merci de ne pas y répondre"
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:3
-#, python-format
-msgid "The project `%(project_name)s` is now available."
-msgstr "Le projet `%(project_name)s` est à présent disponible."
+#| msgid "The project `%(project_name)s` is now available."
+msgid "The project %(project_name)s is now available."
+msgstr "Le projet %(project_name)s est à présent disponible."
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:4
 #, python-format
@@ -1786,8 +1786,8 @@ msgstr "Si vous avez besoin d'aide"
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:10
 #: epl/templates/emails/invite_project_managers_to_launch.txt:13
-msgid "please contact the site administrator at the following address"
-msgstr "veuillez contacter l'administrateur du site à l'adresse suivante"
+msgid "please contact the site administrator at the following address:"
+msgstr "veuillez contacter l'administrateur du site à l'adresse suivante :"
 
 #: epl/templates/emails/invite_project_admins_to_review.txt:16
 #: epl/templates/emails/invite_project_managers_to_launch.txt:19
@@ -1835,43 +1835,42 @@ msgid "To access the platform"
 msgstr "Pour accéder à la plateforme"
 
 #: epl/templates/emails/invite_to_epl.txt:6
-msgid "please click on the link below and complete your registration"
+msgid "please click on the link below and complete your registration:"
 msgstr ""
 "s'il vous plaît cliquez sur le lien ci-dessous et complétez votre "
-"enregistrement"
+"enregistrement :"
 
 #: epl/templates/emails/invite_to_epl.txt:10
 msgid ""
 "If you believe this is an error, please contact the creator of your account"
 msgstr ""
 "Si vous pensez qu'il s'agit d'une erreur, veuillez contacter le créateur de "
-"votre compte."
+"votre compte"
 
 #: epl/templates/emails/invite_to_epl.txt:14
 msgid "This invitation will expire in 7 days"
 msgstr "Cette invitation va expirer dans 7 jours"
 
 #: epl/templates/emails/notify_anomalies.txt:4
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "One or more anomalies have been reported by the controller "
 "%(reporter_identifier)s %(reporter_email)s in the instruction of the "
-"resource: `%(resource_title)s`."
+"resource: %(resource_title)s."
 msgstr ""
 "Une ou plusieurs anomalies ont été signalées par le contrôleur "
 "%(reporter_identifier)s %(reporter_email)s dans l'instruction de la "
-"ressource : `%(resource_title)s`"
+"ressource : %(resource_title)s"
 
 #: epl/templates/emails/notify_anomalies.txt:6
-#, python-format
 msgid ""
 "One or more anomalies have been reported by the instructor "
 "%(reporter_identifier)s %(reporter_email)s in the instruction of the "
-"resource: `%(resource_title)s`."
+"resource: %(resource_title)s."
 msgstr ""
 "Une ou plusieurs anomalies ont été signalées par l'instructeur "
 "%(reporter_identifier)s %(reporter_email)s dans l'instruction de la "
-"ressource : `%(resource_title)s`."
+"ressource : %(resource_title)s."
 
 #: epl/templates/emails/notify_anomalies.txt:8
 msgid ""
@@ -2039,7 +2038,7 @@ msgid ""
 "positioned; to position yours, please go to %(modal_url)s"
 msgstr ""
 "La collection de la bibliothèque %(positioned_library_code)s vient d'être "
-"positionnée; pour positionner la vôtre rendez-vous en %(modal_url)s"
+"positionnée ; pour positionner la vôtre rendez-vous en %(modal_url)s"
 
 #: epl/templates/emails/notify_resultant_report_available.txt:3
 #, python-format

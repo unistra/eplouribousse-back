@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7 - 12-02-2026
+
+- 🌐 Fix typos
+- 🐛 Change Resource title max_length to 2048 chars
+
 ## 1.0.6 - 05-02-2026
 
 - ⬆️ Django 5.2.11

@@ -45,7 +45,7 @@ class Resource(models.Model):
     id = UUIDPrimaryKeyField()
     code = models.CharField(_("Code (PPN or other)"), max_length=25, db_index=True)  # PPN
     issn = models.CharField(_("ISSN"), max_length=9, blank=True, validators=[IssnValidator()])
-    title = models.CharField(_("Title"), max_length=510, db_index=True)
+    title = models.CharField(_("Title"), max_length=2048, db_index=True)
     project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="resources")
     status = models.IntegerField(_("Status"), choices=ResourceStatus.choices, default=ResourceStatus.POSITIONING)
     instruction_turns = models.JSONField(_("Instruction turns"), default=default_instuction_turns, blank=True)
@@ -53,9 +53,7 @@ class Resource(models.Model):
         _("Publication history"), blank=True
     )  # Historique de la publication (todo absent des exemples)
     numbering = models.CharField(_("Numbering"), blank=True)  # Numérotation (todo absent des exemples)
-    arbitration = models.IntegerField(
-        _("Arbitration"), choices=Arbitration.choices, default=Arbitration.NONE, db_index=True
-    )
+    arbitration = models.IntegerField(_("Arbitration"), choices=Arbitration, default=Arbitration.NONE, db_index=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     comments = GenericRelation(Comment)
     validations = models.JSONField(_("Validations"), default=dict, blank=True)
@@ -136,7 +134,7 @@ class Collection(models.Model):
         "Alias", max_length=255, blank=True, help_text=_("Alias for a duplicate collection in the same library")
     )
     position = models.IntegerField(
-        _("Position"), choices=Position.choices, null=True, blank=True, help_text=_("Positioning rank of a collection")
+        _("Position"), choices=Position, null=True, blank=True, help_text=_("Positioning rank of a collection")
     )
     exclusion_reason = models.CharField(
         "Exclusion reason",
