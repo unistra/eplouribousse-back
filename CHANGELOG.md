@@ -2,6 +2,7 @@
 
 ## next release
 
+- 🌐 Fix typos
 - 🐛 Change Resource title max_length to 2048 chars
 
 ## 1.0.6 - 05-02-2026
