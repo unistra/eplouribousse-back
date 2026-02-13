@@ -16,7 +16,6 @@ from epl.schema_serializers import UnauthorizedSerializer
 class ProjectLibraryViewSet(
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
-    # mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     permission_classes = [ProjectLibraryPermissions]
