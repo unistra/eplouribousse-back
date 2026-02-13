@@ -223,8 +223,8 @@ class BaseCollectionPositioningSerializer(
     Base class for positioning and exclusion of collections.
     """
 
-    arbitration = serializers.ChoiceField(Arbitration, read_only=True, source="resource.arbitration")
-    status = serializers.ChoiceField(ResourceStatus, read_only=True, source="resource.status")
+    arbitration = serializers.ChoiceField(choices=Arbitration.choices, read_only=True, source="resource.arbitration")
+    status = serializers.ChoiceField(choices=ResourceStatus.choices, read_only=True, source="resource.status")
     should_instruct = serializers.SerializerMethodField()
     should_position = serializers.SerializerMethodField()
 
