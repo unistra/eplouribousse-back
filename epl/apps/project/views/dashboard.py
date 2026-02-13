@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
 from rest_framework.exceptions import NotFound
@@ -75,7 +76,13 @@ class ProjectDashboardViewSet(viewsets.GenericViewSet):
                     "collection-occurrences-per-library",
                 ],
                 default="initial-data",
-            )
+            ),
+            OpenApiParameter(
+                name="project_pk",
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.PATH,
+                description="The UUID of the project for which to retrieve dashboard data.",
+            ),
         ],
         responses={200: InitialDataSerializer},
     )

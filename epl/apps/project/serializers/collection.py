@@ -6,7 +6,7 @@ from collections import Counter
 from django.db import models, transaction
 from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema_field, inline_serializer
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from sentry_sdk import set_tag
@@ -18,6 +18,7 @@ from epl.apps.project.models.comment import Comment
 from epl.apps.project.models.segment import CONTENT_NIHIL
 from epl.apps.project.permissions.collection import CollectionPermission
 from epl.apps.project.serializers.mixins import ResourceInstructionMixin
+from epl.apps.project.serializers.nested import NestedAnomalySerializer
 from epl.libs.csv_import import handle_import
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
@@ -420,15 +421,7 @@ class CollectionPositioningSerializer(AclSerializerMixin, serializers.ModelSeria
             return PositioningCommentSerializer(comment).data
         return None
 
-    @extend_schema_field(
-        inline_serializer(
-            "NestedAnomaliesSerializer",
-            fields={
-                "fixed": serializers.IntegerField(help_text=_("Number of fixed anomalies")),
-                "unfixed": serializers.IntegerField(help_text=_("Number of unfixed anomalies")),
-            },
-        )
-    )
+    @extend_schema_field(NestedAnomalySerializer)
     def get_anomalies(self, obj) -> dict[str, int]:
         return {
             "fixed": obj.fixed_anomalies,

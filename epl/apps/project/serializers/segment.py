@@ -2,13 +2,14 @@ from django.db import transaction
 from django.db.models import F
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema_field, inline_serializer
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
 
 from epl.apps.project.models import ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.models.segment import CONTENT_NIHIL
+from epl.apps.project.serializers.nested import NestedAnomalySerializer
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 
 
@@ -57,15 +58,7 @@ class SegmentSerializer(AclSerializerMixin, serializers.ModelSerializer):
             "created_at",
         ]
 
-    @extend_schema_field(
-        inline_serializer(
-            "NestedAnomaliesSerializer",
-            fields={
-                "fixed": serializers.IntegerField(help_text=_("Number of fixed anomalies")),
-                "unfixed": serializers.IntegerField(help_text=_("Number of unfixed anomalies")),
-            },
-        )
-    )
+    @extend_schema_field(NestedAnomalySerializer)
     def get_anomalies(self, obj):
         return {
             "fixed": getattr(obj, "fixed_anomalies", 0),
@@ -116,19 +109,19 @@ class SegmentOrderSerializer(serializers.Serializer):
     previous_segment = serializers.SerializerMethodField()
     next_segment = serializers.SerializerMethodField()
 
-    def get_current_segment(self, obj):
+    def get_current_segment(self, obj) -> dict[str, str] | None:
         current = obj.get("current")
         if current:
             return {"id": str(current.id), "order": current.order}
         return None
 
-    def get_previous_segment(self, obj):
+    def get_previous_segment(self, obj) -> dict[str, str] | None:
         previous = obj.get("previous")
         if previous:
             return {"id": str(previous.id), "order": previous.order}
         return None
 
-    def get_next_segment(self, obj):
+    def get_next_segment(self, obj) -> dict[str, str]:
         next_seg = obj.get("next")
         if next_seg:
             return {"id": str(next_seg.id), "order": next_seg.order}

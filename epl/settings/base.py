@@ -577,6 +577,18 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API documentation for the Eplouribousse project",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        # Résoudre les collisions en donnant des noms spécifiques aux enums
+        "ProjectStatus": "epl.apps.project.models.choices.ProjectStatus",
+        "ResourceStatus": "epl.apps.project.models.choices.ResourceStatus",
+        "Arbitration": "epl.apps.project.models.collection.Arbitration",
+    },
+    "OPERATION_ID_OVERRIDES": {
+        "libraries_create": "libraries_create",
+        "libraries_destroy": "libraries_destroy",
+        "projects_libraries_create": "projects_libraries_create",
+        "projects_libraries_destroy": "projects_libraries_destroy",
+    },
 }
 
 
