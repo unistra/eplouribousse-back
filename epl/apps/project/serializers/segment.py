@@ -121,7 +121,7 @@ class SegmentOrderSerializer(serializers.Serializer):
             return {"id": str(previous.id), "order": previous.order}
         return None
 
-    def get_next_segment(self, obj) -> dict[str, str]:
+    def get_next_segment(self, obj) -> dict[str, str] | None:
         next_seg = obj.get("next")
         if next_seg:
             return {"id": str(next_seg.id), "order": next_seg.order}
