@@ -111,7 +111,7 @@
         <dd>
             <ul class="inline-list">
                 {% for col in excluded_collections %}
-                <li>{{ col.call_number }}</li>
+                <li>{{ col.library.alias|default:col.library.name }} ({% translate "Position" %}: {{ col.position }} | {% translate "Call number" %}: {{ col.call_number }})</li>
                 {% endfor %}
             </ul>
         </dd>
