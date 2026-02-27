@@ -320,7 +320,8 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
 
     def reassign(self) -> Resource:
         request = self.context["request"]
-        if self.validated_data.get("controller"):
+        reassign_to_controller = self.validated_data.get("controller")
+        if reassign_to_controller:
             # Reassign to controller
             self.reassign_to_controller()
             ActionLog.log(
@@ -341,7 +342,10 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
 
         self.fix_anomalies()
         notify_anomaly_resolved(
-            resource=self.instance, request=self.context["request"], admin_user=self.context["request"].user
+            resource=self.instance,
+            request=self.context["request"],
+            admin_user=self.context["request"].user,
+            notify_controllers=reassign_to_controller,
         )
         return self.instance
 
