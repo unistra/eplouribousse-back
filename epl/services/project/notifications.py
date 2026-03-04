@@ -11,7 +11,8 @@ from epl.apps.user.models import User
 from epl.apps.user.views import _get_invite_signer
 from epl.services.user.email import (
     prepare_anomaly_notification_email,
-    prepare_anomaly_resolved_notification_email,
+    prepare_anomaly_resolved_for_controller_email,
+    prepare_anomaly_resolved_for_instructors_email,
     prepare_arbitration_notification_email,
     prepare_collection_positioned_email,
     prepare_control_notification_email,
@@ -493,13 +494,16 @@ def _get_cc_recipients_for_anomaly_resolved(project, resource, current_turn_coll
     return cc_recipients
 
 
-def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
+def notify_anomaly_resolved(resource: Resource, request, admin_user: User, notify_controllers: bool = False):
     """
     Sends notification emails when anomalies are resolved by a project administrator.
 
     Recipients:
     - TO: Instructors whose turn has come to instruct + Project administrators
     - CC: Other instructors concerned by the resource instruction
+
+    When notify_controllers=True (turn reassigned to a controller), also sends a
+    separate email to controllers notifying them that it is their turn to control.
     """
     project = resource.project
 
@@ -524,10 +528,10 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
     to_recipients = _get_to_recipients_for_anomaly_resolved(project, current_turn_collections)
     cc_recipients = _get_cc_recipients_for_anomaly_resolved(project, resource, current_turn_collections)
 
-    # Send email
+    # Send email to instructors/admins
     if to_recipients:
         library_codes_str = ", ".join(library_codes_with_turn) if library_codes_with_turn else "N/A"
-        email_message = prepare_anomaly_resolved_notification_email(
+        email_message = prepare_anomaly_resolved_for_instructors_email(
             to_emails=list(to_recipients),
             cc_emails=list(cc_recipients),
             request=request,
@@ -536,6 +540,21 @@ def notify_anomaly_resolved(resource: Resource, request, admin_user: User):
             admin_user=admin_user,
         )
         email_message.send(fail_silently=False)
+
+    # Notify controllers when the turn is reassigned to them
+    if notify_controllers and project_alerts.get(AlertType.CONTROL.value, True) is not False:
+        controllers = UserRole.objects.filter(project=project, role=Role.CONTROLLER).select_related("user").distinct()
+        controller_recipients = [
+            c.user.email for c in controllers if should_send_alert(c.user, project, AlertType.CONTROL)
+        ]
+        if controller_recipients:
+            email_message = prepare_anomaly_resolved_for_controller_email(
+                to_emails=controller_recipients,
+                request=request,
+                resource=resource,
+                admin_user=admin_user,
+            )
+            email_message.send(fail_silently=False)
 
 
 def notify_resultant_report_available(resource: Resource, request) -> None:

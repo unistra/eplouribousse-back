@@ -1,13 +1,14 @@
 from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import extend_schema_field, inline_serializer
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from epl.apps.project.models import ActionLog, Anomaly, Collection, Library, Resource, ResourceStatus, Segment
 from epl.apps.project.models.choices import SegmentType
 from epl.apps.project.serializers.collection import CollectionPositioningSerializer
 from epl.apps.project.serializers.mixins import ResourceInstructionMixin
+from epl.apps.project.serializers.nested import NestedAnomalySerializer
 from epl.libs.schema import load_json_schema
 from epl.services.permissions.serializers import AclField, AclSerializerMixin
 from epl.services.project.notifications import (
@@ -65,15 +66,7 @@ class ResourceSerializer(AclSerializerMixin, ResourceInstructionMixin, serialize
             representation.pop("anomalies", None)
         return representation
 
-    @extend_schema_field(
-        inline_serializer(
-            "NestedAnomaliesSerializer",
-            fields={
-                "fixed": serializers.IntegerField(help_text=_("Number of fixed anomalies")),
-                "unfixed": serializers.IntegerField(help_text=_("Number of unfixed anomalies")),
-            },
-        )
-    )
+    @extend_schema_field(NestedAnomalySerializer)
     def get_anomalies(self, obj: Resource) -> dict[str, int]:
         return {
             "fixed": getattr(obj, "fixed_anomalies", 0) or 0,
@@ -327,7 +320,8 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
 
     def reassign(self) -> Resource:
         request = self.context["request"]
-        if self.validated_data.get("controller"):
+        reassign_to_controller = self.validated_data.get("controller")
+        if reassign_to_controller:
             # Reassign to controller
             self.reassign_to_controller()
             ActionLog.log(
@@ -348,7 +342,10 @@ class ReassignInstructionTurnSerializer(serializers.ModelSerializer):
 
         self.fix_anomalies()
         notify_anomaly_resolved(
-            resource=self.instance, request=self.context["request"], admin_user=self.context["request"].user
+            resource=self.instance,
+            request=self.context["request"],
+            admin_user=self.context["request"].user,
+            notify_controllers=reassign_to_controller,
         )
         return self.instance
 

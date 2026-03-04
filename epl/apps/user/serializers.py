@@ -203,6 +203,7 @@ class UserSerializer(ModelSerializer):
     def get_display_name(self, user: User) -> str:
         return str(user)
 
+    @extend_schema_field(UserNestedProjectSerializer(many=True))
     def get_projects(self, user: User):
         """
         Get all projects where the user has a role.
