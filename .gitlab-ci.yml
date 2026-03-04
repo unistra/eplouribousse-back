@@ -122,7 +122,7 @@ b:docker:
     LATEST_DESTINATION: ""
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
-      when: always
+      when: manual
 
 r:docker:
   extends: .build-image
