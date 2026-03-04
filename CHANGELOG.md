@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.8 - 04-03-2026
+
+- ⬆️ Django 5.2.12
+- 🐛 Add library name to report (di/eplouribousse/eplouribousse#216)
+- ✉ Send email to controller (di/eplouribousse/eplouribousse#212)
+
 ## 1.0.7 - 12-02-2026
 
 - 🌐 Fix typos
