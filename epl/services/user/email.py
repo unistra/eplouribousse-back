@@ -452,7 +452,41 @@ def prepare_anomaly_notification_email(
     return email
 
 
-def prepare_anomaly_resolved_notification_email(
+def _prepare_anomaly_resolved_email(
+    to_emails: list[str],
+    request,
+    resource,
+    admin_user,
+    template_name: str,
+    cc_emails: list[str] | None = None,
+    extra_context: dict | None = None,
+) -> EmailMessage:
+    front_domain = get_front_domain(request)
+    project = resource.project
+    tenant = request.tenant
+    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
+
+    subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('anomaly resolved')}"
+
+    context = {
+        "resource_title": unescape(resource.title),
+        "admin_user_display_name": str(admin_user),
+        "admin_email": admin_user.email,
+        "modal_url": modal_url,
+        **(extra_context or {}),
+    }
+
+    return EmailMessage(
+        subject=subject,
+        body=render_to_string(template_name, context),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        reply_to=[admin_user.email],
+        to=to_emails,
+        cc=cc_emails or [],
+    )
+
+
+def prepare_anomaly_resolved_for_instructors_email(
     to_emails: list[str],
     cc_emails: list[str],
     request,
@@ -461,34 +495,36 @@ def prepare_anomaly_resolved_notification_email(
     admin_user,
 ) -> EmailMessage:
     """
-    Prepares anomaly resolved notification email with TO and CC recipients.
+    Prepares anomaly resolved notification email for instructors/admins with TO and CC recipients.
     Returns an EmailMessage ready to send.
     """
-    front_domain = get_front_domain(request)
-    project = resource.project
-    tenant = request.tenant
-    modal_url = f"{front_domain}/projects/{project.id}/?resource={resource.id}"
-
-    subject = f"eplouribousse | {tenant.name} | {project.name} | {resource.code} | {_('anomaly resolved')}"
-
-    email_content = render_to_string(
-        "emails/notify_anomaly_resolved.txt",
-        {
-            "library_code": library_code,
-            "resource_title": unescape(resource.title),
-            "admin_user_display_name": str(admin_user),
-            "admin_email": admin_user.email,
-            "modal_url": modal_url,
-        },
+    return _prepare_anomaly_resolved_email(
+        to_emails=to_emails,
+        request=request,
+        resource=resource,
+        admin_user=admin_user,
+        template_name="emails/notify_anomaly_resolved.txt",
+        cc_emails=cc_emails,
+        extra_context={"library_code": library_code},
     )
 
-    return EmailMessage(
-        subject=subject,
-        body=email_content,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        reply_to=[admin_user.email],
-        to=to_emails,
-        cc=cc_emails,
+
+def prepare_anomaly_resolved_for_controller_email(
+    to_emails: list[str],
+    request,
+    resource,
+    admin_user,
+) -> EmailMessage:
+    """
+    Prepares anomaly resolved notification email for controllers.
+    Returns an EmailMessage ready to send.
+    """
+    return _prepare_anomaly_resolved_email(
+        to_emails=to_emails,
+        request=request,
+        resource=resource,
+        admin_user=admin_user,
+        template_name="emails/notify_anomaly_resolved_controller.txt",
     )
 
 
