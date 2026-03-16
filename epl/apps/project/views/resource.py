@@ -276,10 +276,8 @@ class ResourceViewSet(ListModelMixin, UpdateModelMixin, RetrieveModelMixin, Gene
             "now": timezone.now(),
             "resource": resource,
             "collection": collection,
-            "main_collection": resource.collections.order_by("position").first(),
-            "participating_collections": resource.collections.exclude(id=collection.id, position=0)
-            .order_by("position")
-            .all(),
+            "main_collection": resource.collections.filter(position=1).first(),
+            "participating_collections": resource.collections.exclude(position=0).order_by("position").all(),
             "excluded_collections": resource.collections.filter(position=0).all(),
             "segments": resource.segments.order_by("order").all(),
             "language_code": language_code,
