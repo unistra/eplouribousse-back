@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.10 - 10-06-2026
+
+- ⬆️ Django 5.2.15
+
 ## 1.0.9 - 17-03-2026
 
 - 🩹 Fix collections displayed in "main_collection" & "participating_collections" for resulting PDF
