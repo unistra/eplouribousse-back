@@ -123,7 +123,7 @@ class ResourceFilter(filters.BaseFilterBackend):
 
     def filter_for_library(self, queryset, statuses, library, against_library=None):
         # Ensure list
-        if not isinstance(statuses, (list, tuple)):
+        if not isinstance(statuses, list | tuple):
             statuses = [statuses]
 
         need_has_segments = ResourceStatus.POSITIONING in statuses
@@ -165,7 +165,7 @@ class ResourceFilter(filters.BaseFilterBackend):
         return queryset
 
     def filter_no_library(self, queryset, statuses):
-        if not isinstance(statuses, (list, tuple)):
+        if not isinstance(statuses, list | tuple):
             statuses = [statuses]
 
         need_has_segments = ResourceStatus.POSITIONING in statuses

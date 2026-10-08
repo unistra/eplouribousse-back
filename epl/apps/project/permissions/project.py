@@ -49,9 +49,11 @@ class ProjectPermissions(BasePermission):
             (ProjectStatus.READY, lambda: user.is_project_manager(project=project)),
             (
                 ProjectStatus.LAUNCHED,
-                lambda: user.is_controller(project=project)
-                or user.is_instructor(project=project)
-                or user.is_guest(project=project),
+                lambda: (
+                    user.is_controller(project=project)
+                    or user.is_instructor(project=project)
+                    or user.is_guest(project=project)
+                ),
             ),
         ]
 

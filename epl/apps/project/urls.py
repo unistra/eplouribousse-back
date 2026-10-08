@@ -3,8 +3,8 @@ from rest_framework_nested.routers import NestedSimpleRouter, SimpleRouter
 
 from epl.apps.project.views.anomaly import AnomalyViewSet
 from epl.apps.project.views.collection import CollectionViewSet
-from epl.apps.project.views.dashboard import ProjectDashboardViewSet
 from epl.apps.project.views.contact import support
+from epl.apps.project.views.dashboard import ProjectDashboardViewSet
 from epl.apps.project.views.library import LibraryViewset
 from epl.apps.project.views.project import ProjectAlertSettingsViewSet, ProjectViewSet
 from epl.apps.project.views.projectlibrary import ProjectLibraryViewSet
