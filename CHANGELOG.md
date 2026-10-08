@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 - 08-10-2026
+
+- ⬆️ Dependencies update + pre-commit hook update
+
 ## 1.0.10 - 10-06-2026
 
 - ⬆️ Django 5.2.15

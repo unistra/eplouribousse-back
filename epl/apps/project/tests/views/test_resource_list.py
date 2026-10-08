@@ -234,7 +234,7 @@ class FilterResourceOnStatusTest(TestCase):
 
         params = []
         for k, v in query_params.items():
-            if isinstance(v, (list, tuple)):
+            if isinstance(v, list | tuple):
                 for item in v:
                     params.append((f"{k}[]", item))
             else:
