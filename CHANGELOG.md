@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.1 - 29-10-2026
 
 - ⬆ Upgrade brotli (fixes CVE-2026-111497 vulnerability)
 
